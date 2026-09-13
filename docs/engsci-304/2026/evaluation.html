@@ -1,0 +1,1625 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.549">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>ENGSCI 304: Engineering Machine Learning II - 9&nbsp; Evaluation of detection models</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./object_detection.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles/print.css">
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./visual.html">Visual data</a></li><li class="breadcrumb-item"><a href="./evaluation.html"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Evaluation of detection models</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">ENGSCI 304: Engineering Machine Learning II</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">About these notes</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./recommended_reading.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Recommended reading</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Overview</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./visual.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Visual data</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./basketball_application.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Application: From amateur basketball video footage to player trajectories</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dataset.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Obtaining and visualising the dataset</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./camera_models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Camera models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./image_tasks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Image analysis tasks</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./image_modelling.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Image modelling: From pixels to learned features</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./training.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Training and inference</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./object_detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Object detection</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./evaluation.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Evaluation of detection models</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#what-are-we-evaluating" id="toc-what-are-we-evaluating" class="nav-link active" data-scroll-target="#what-are-we-evaluating"><span class="header-section-number">9.1</span> What are we evaluating?</a></li>
+  <li><a href="#comparing-two-boxes" id="toc-comparing-two-boxes" class="nav-link" data-scroll-target="#comparing-two-boxes"><span class="header-section-number">9.2</span> Comparing two boxes</a>
+  <ul class="collapse">
+  <li><a href="#calculating-box-areas-in-python" id="toc-calculating-box-areas-in-python" class="nav-link" data-scroll-target="#calculating-box-areas-in-python"><span class="header-section-number">9.2.1</span> Calculating box areas in Python</a></li>
+  <li><a href="#calculating-the-intersection" id="toc-calculating-the-intersection" class="nav-link" data-scroll-target="#calculating-the-intersection"><span class="header-section-number">9.2.2</span> Calculating the intersection</a></li>
+  <li><a href="#calculating-the-union-and-iou" id="toc-calculating-the-union-and-iou" class="nav-link" data-scroll-target="#calculating-the-union-and-iou"><span class="header-section-number">9.2.3</span> Calculating the union and IoU</a></li>
+  </ul></li>
+  <li><a href="#comparing-sets-of-boxes" id="toc-comparing-sets-of-boxes" class="nav-link" data-scroll-target="#comparing-sets-of-boxes"><span class="header-section-number">9.3</span> Comparing sets of boxes</a>
+  <ul class="collapse">
+  <li><a href="#choosing-matches-together" id="toc-choosing-matches-together" class="nav-link" data-scroll-target="#choosing-matches-together"><span class="header-section-number">9.3.1</span> Choosing matches together</a></li>
+  <li><a href="#calculating-the-iou-matrix-in-python" id="toc-calculating-the-iou-matrix-in-python" class="nav-link" data-scroll-target="#calculating-the-iou-matrix-in-python"><span class="header-section-number">9.3.2</span> Calculating the IoU matrix in Python</a></li>
+  <li><a href="#selecting-candidate-matches-in-python" id="toc-selecting-candidate-matches-in-python" class="nav-link" data-scroll-target="#selecting-candidate-matches-in-python"><span class="header-section-number">9.3.3</span> Selecting candidate matches in Python</a></li>
+  <li><a href="#applying-the-minimum-iou-in-python" id="toc-applying-the-minimum-iou-in-python" class="nav-link" data-scroll-target="#applying-the-minimum-iou-in-python"><span class="header-section-number">9.3.4</span> Applying the minimum IoU in Python</a></li>
+  <li><a href="#counting-true-positives-false-positives-and-false-negatives" id="toc-counting-true-positives-false-positives-and-false-negatives" class="nav-link" data-scroll-target="#counting-true-positives-false-positives-and-false-negatives"><span class="header-section-number">9.3.5</span> Counting true positives, false positives and false negatives</a></li>
+  <li><a href="#precision-and-recall" id="toc-precision-and-recall" class="nav-link" data-scroll-target="#precision-and-recall"><span class="header-section-number">9.3.6</span> Precision and recall</a></li>
+  </ul></li>
+  <li><a href="#choosing-and-interpreting-evaluation-measures" id="toc-choosing-and-interpreting-evaluation-measures" class="nav-link" data-scroll-target="#choosing-and-interpreting-evaluation-measures"><span class="header-section-number">9.4</span> Choosing and interpreting evaluation measures</a>
+  <ul class="collapse">
+  <li><a href="#confusion-matrices-and-accuracy" id="toc-confusion-matrices-and-accuracy" class="nav-link" data-scroll-target="#confusion-matrices-and-accuracy"><span class="header-section-number">9.4.1</span> Confusion matrices and accuracy</a></li>
+  <li><a href="#which-measure-of-performance-is-best" id="toc-which-measure-of-performance-is-best" class="nav-link" data-scroll-target="#which-measure-of-performance-is-best"><span class="header-section-number">9.4.2</span> Which measure of performance is best?</a></li>
+  <li><a href="#training-loss-and-evaluation-data" id="toc-training-loss-and-evaluation-data" class="nav-link" data-scroll-target="#training-loss-and-evaluation-data"><span class="header-section-number">9.4.3</span> Training loss and evaluation data</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./visual.html">Visual data</a></li><li class="breadcrumb-item"><a href="./evaluation.html"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Evaluation of detection models</span></a></li></ol></nav>
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Evaluation of detection models</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="what-are-we-evaluating" class="level2" data-number="9.1">
+<h2 data-number="9.1" class="anchored" data-anchor-id="what-are-we-evaluating"><span class="header-section-number">9.1</span> What are we evaluating?</h2>
+<p>We now want to compare our predicted boxes with the supplied annotation boxes. As discussed earlier, our application requires detections of the <strong>six active players</strong>, rather than every person in the image. A box around an observer may be a valid <code>person</code> detection, but it is not a detection we want for this task.</p>
+<p>The annotations provide a reference for this comparison, though they may themselves contain errors. We want to know whether each player has been detected, whether there are unwanted or duplicate detections, and how closely the predicted box boundaries agree with the annotations.</p>
+<p>Simply counting boxes is not enough. For example, six predicted boxes could still include an observer while missing one of the players. Even when a predicted box identifies the intended player, its boundaries may differ substantially from the annotation.</p>
+<p>We therefore need a way to compare individual boxes before summarising agreement between the two sets. We will start by measuring how much two boxes overlap. For now, we evaluate detections within a single frame; linking player identities across frames is a separate tracking task.</p>
+</section>
+<section id="comparing-two-boxes" class="level2" data-number="9.2">
+<h2 data-number="9.2" class="anchored" data-anchor-id="comparing-two-boxes"><span class="header-section-number">9.2</span> Comparing two boxes</h2>
+<p>We can compare a predicted box with an annotation box by measuring their overlap. Consider the following simple example.</p>
+<div id="fig-evaluation-iou" class="quarto-figure quarto-figure-center quarto-float anchored" data-fig-pos="H" alt="Two synthetic boxes, each with area 12 square pixels. The left panel shades their intersection, with area 4; the right shades their union, with area 20. Image x increases rightwards and y downwards.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-evaluation-iou-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="attachments/evaluation/iou_intersection_union.png" class="img-fluid figure-img" style="width:100.0%" data-fig-pos="H" alt="Two synthetic boxes, each with area 12 square pixels. The left panel shades their intersection, with area 4; the right shades their union, with area 20. Image x increases rightwards and y downwards.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-evaluation-iou-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;9.1: The same two illustrative boxes in both panels. Shading marks their intersection on the left and their union on the right.
+</figcaption>
+</figure>
+</div>
+<p>Each box is 4 pixels wide and 3 pixels high, so each has an area of <span class="math inline">\(4\times3=12\)</span> square pixels.</p>
+<p>The <strong>intersection</strong> is the region covered by both boxes. In this example, it is 2 pixels wide and 2 pixels high, giving an area of <span class="math inline">\(2\times2=4\)</span> square pixels.</p>
+<p>The <strong>union</strong> is the region covered by at least one box. Adding the two box areas counts the intersection twice, so we subtract it once:</p>
+<p><span class="math display">\[
+\text{area of union}=12+12-4=20.
+\]</span></p>
+<p><strong>Intersection over union</strong>, usually abbreviated <strong>IoU</strong>, is the ratio of these two areas:</p>
+<p><span class="math display">\[
+\operatorname{IoU}
+=\frac{\text{area of intersection}}{\text{area of union}}
+=\frac{4}{20}
+=0.20.
+\]</span></p>
+<p>Thus, 20% of the area covered by either box is shared by both. For boxes with positive area, IoU ranges from 0 for no overlap to 1 for identical boxes. It depends on the box coordinates, not the detector’s confidence score.</p>
+<section id="calculating-box-areas-in-python" class="level3" data-number="9.2.1">
+<h3 data-number="9.2.1" class="anchored" data-anchor-id="calculating-box-areas-in-python"><span class="header-section-number">9.2.1</span> Calculating box areas in Python</h3>
+<p>We will use the corner-coordinate format introduced for our predicted boxes:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>[x_min, y_min, x_max, y_max]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The first pair gives the upper-left corner, and the second gives the lower-right corner. We calculate width and height by subtracting the corresponding coordinates:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> box_area(box):</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    x_min, y_min, x_max, y_max <span class="op">=</span> box</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    width <span class="op">=</span> x_max <span class="op">-</span> x_min</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    height <span class="op">=</span> y_max <span class="op">-</span> y_min</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> width <span class="op">*</span> height</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The first line inside the function <strong>unpacks</strong> the four coordinates into separate variables. The remaining lines calculate the dimensions and return their product.</p>
+<p>For the two boxes in our diagram:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>box_a <span class="op">=</span> [<span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">6</span>, <span class="dv">4</span>]</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>box_b <span class="op">=</span> [<span class="dv">4</span>, <span class="dv">2</span>, <span class="dv">8</span>, <span class="dv">5</span>]</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(box_area(box_a))</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(box_area(box_b))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This gives:</p>
+<pre class="text"><code>12
+12</code></pre>
+<p>These agree with the areas calculated earlier. The function also works with floating-point coordinates; box boundaries need not have integer coordinates. Here we assume correctly ordered corners: <code>x_min &lt;= x_max</code> and <code>y_min &lt;= y_max</code>.</p>
+</section>
+<section id="calculating-the-intersection" class="level3" data-number="9.2.2">
+<h3 data-number="9.2.2" class="anchored" data-anchor-id="calculating-the-intersection"><span class="header-section-number">9.2.2</span> Calculating the intersection</h3>
+<p>The intersection must lie inside both boxes. Its left edge therefore uses the <strong>larger</strong> of the two left-edge coordinates, while its right edge uses the <strong>smaller</strong> of the two right-edge coordinates.</p>
+<p>For our example, these are <span class="math inline">\(\max(2,4)=4\)</span> and <span class="math inline">\(\min(6,8)=6\)</span>, giving a width of 2 pixels. Applying the same rule to the top and bottom coordinates gives a height of 2 pixels.</p>
+<p>If the boxes do not overlap, the calculated width or height may be negative. The intersection area should then be zero, so we replace any negative width or height with zero:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> intersection_area(box_a, box_b):</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    intersection_x_min <span class="op">=</span> <span class="bu">max</span>(box_a[<span class="dv">0</span>], box_b[<span class="dv">0</span>])</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    intersection_y_min <span class="op">=</span> <span class="bu">max</span>(box_a[<span class="dv">1</span>], box_b[<span class="dv">1</span>])</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    intersection_x_max <span class="op">=</span> <span class="bu">min</span>(box_a[<span class="dv">2</span>], box_b[<span class="dv">2</span>])</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    intersection_y_max <span class="op">=</span> <span class="bu">min</span>(box_a[<span class="dv">3</span>], box_b[<span class="dv">3</span>])</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    intersection_width <span class="op">=</span> <span class="bu">max</span>(<span class="dv">0</span>, intersection_x_max <span class="op">-</span> intersection_x_min)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    intersection_height <span class="op">=</span> <span class="bu">max</span>(<span class="dv">0</span>, intersection_y_max <span class="op">-</span> intersection_y_min)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> intersection_width <span class="op">*</span> intersection_height</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The indices <code>0</code>, <code>1</code>, <code>2</code> and <code>3</code> correspond to <code>x_min</code>, <code>y_min</code>, <code>x_max</code> and <code>y_max</code>, respectively. The <code>max(0, ...)</code> calls ensure that separated boxes have zero intersection area.</p>
+<p>For the same two boxes:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(intersection_area(box_a, box_b))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This gives:</p>
+<pre class="text"><code>4</code></pre>
+</section>
+<section id="calculating-the-union-and-iou" class="level3" data-number="9.2.3">
+<h3 data-number="9.2.3" class="anchored" data-anchor-id="calculating-the-union-and-iou"><span class="header-section-number">9.2.3</span> Calculating the union and IoU</h3>
+<p>We can now calculate the union area by adding the two box areas and subtracting their intersection once. We reuse the functions we have already written:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> union_area(box_a, box_b):</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    area_a <span class="op">=</span> box_area(box_a)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    area_b <span class="op">=</span> box_area(box_b)</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    overlap <span class="op">=</span> intersection_area(box_a, box_b)</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> area_a <span class="op">+</span> area_b <span class="op">-</span> overlap</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>To obtain IoU, we divide the intersection area by the union area:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> box_iou(box_a, box_b):</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    overlap <span class="op">=</span> intersection_area(box_a, box_b)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    combined_area <span class="op">=</span> union_area(box_a, box_b)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> combined_area <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"IoU is undefined when both boxes have zero area"</span>)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> overlap <span class="op">/</span> combined_area</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The check catches a zero-area union, for which the ratio is undefined. Otherwise, the function returns the intersection divided by the union.</p>
+<p>For our two example boxes:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(union_area(box_a, box_b))</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(box_iou(box_a, box_b))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This gives:</p>
+<pre class="text"><code>20
+0.2</code></pre>
+<p>These reproduce the union area and IoU calculated from the diagram. We now have a function for comparing one predicted box with one annotation box.</p>
+</section>
+</section>
+<section id="comparing-sets-of-boxes" class="level2" data-number="9.3">
+<h2 data-number="9.3" class="anchored" data-anchor-id="comparing-sets-of-boxes"><span class="header-section-number">9.3</span> Comparing sets of boxes</h2>
+<p>For a frame containing several boxes, we need a way to match predicted boxes to annotation boxes. A standard way to do this is to first calculate IoU for every annotation–prediction pair. This can then be used to determine a set of matches.</p>
+<p>First, to extend our example, let us add a second annotation box and a second predicted box:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>annotation_boxes <span class="op">=</span> [</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">6</span>, <span class="dv">4</span>],</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">2</span>, <span class="dv">2</span>],</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>prediction_boxes <span class="op">=</span> [</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">4</span>, <span class="dv">2</span>, <span class="dv">8</span>, <span class="dv">5</span>],</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">6</span>, <span class="dv">4</span>],</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Each row contains the four corner coordinates of one box. With two annotations and two predictions, there are four pairs to compare.</p>
+<p>Applying <code>box_iou</code> to each pair gives the following <strong>IoU matrix</strong>, with annotation boxes as rows and predicted boxes as columns:</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th style="text-align: right;">Predicted box 1</th>
+<th style="text-align: right;">Predicted box 2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Annotation box 1</td>
+<td style="text-align: right;">0.20</td>
+<td style="text-align: right;">1.00</td>
+</tr>
+<tr class="even">
+<td>Annotation box 2</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+</tbody>
+</table>
+<p>For example, the top-right entry comes from <code>box_iou(annotation_boxes[0], prediction_boxes[1])</code>, which returns 1.0.</p>
+<p>Here, both predicted boxes overlap annotation box 1. We can match this annotation to predicted box 2, which has the larger IoU. Predicted box 1 and annotation box 2 remain unmatched.</p>
+<p>In general, a predicted box can overlap several annotation boxes. We then need to choose the matches together, so that each annotation box and each predicted box appears in at most one match.</p>
+<section id="choosing-matches-together" class="level3" data-number="9.3.1">
+<h3 data-number="9.3.1" class="anchored" data-anchor-id="choosing-matches-together"><span class="header-section-number">9.3.1</span> Choosing matches together</h3>
+<p>Suppose we move the second annotation box and adjust the predicted boxes so that each prediction overlaps both annotations:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>annotation_boxes <span class="op">=</span> [</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">6</span>, <span class="dv">4</span>],</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">4</span>, <span class="dv">1</span>, <span class="dv">8</span>, <span class="dv">4</span>],</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>prediction_boxes <span class="op">=</span> [</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">7</span>, <span class="dv">4</span>],</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">5</span>, <span class="dv">4</span>],</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The IoU matrix is now, rounded to two decimal places:</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th style="text-align: right;">Predicted box 1</th>
+<th style="text-align: right;">Predicted box 2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Annotation box 1</td>
+<td style="text-align: right;">0.80</td>
+<td style="text-align: right;">0.60</td>
+</tr>
+<tr class="even">
+<td>Annotation box 2</td>
+<td style="text-align: right;">0.50</td>
+<td style="text-align: right;">0.14</td>
+</tr>
+</tbody>
+</table>
+<p>Both annotations have their highest IoU with predicted box 1. To choose one-to-one matches, we can compare the <strong>total IoU</strong> for each possible way of pairing both annotations with different predictions:</p>
+<ul>
+<li>Annotation 1 with prediction 1, and annotation 2 with prediction 2: total IoU approximately <strong>0.94</strong>.</li>
+<li>Annotation 1 with prediction 2, and annotation 2 with prediction 1: total IoU <strong>1.10</strong>.</li>
+</ul>
+<p>The second pairing gives the larger total. We therefore match annotation 1 to prediction 2, and annotation 2 to prediction 1.</p>
+<p>This is a small <strong>assignment problem</strong> that can be expressed as a linear programming problem (as in ENGSCI 391). For larger tables, we can use an assignment algorithm to find the one-to-one matches with the largest total IoU.</p>
+</section>
+<section id="calculating-the-iou-matrix-in-python" class="level3" data-number="9.3.2">
+<h3 data-number="9.3.2" class="anchored" data-anchor-id="calculating-the-iou-matrix-in-python"><span class="header-section-number">9.3.2</span> Calculating the IoU matrix in Python</h3>
+<p>We can build the whole IoU matrix by calling <code>box_iou</code> for each annotation–prediction pair and storing the results in a NumPy array:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> pairwise_iou(annotation_boxes, prediction_boxes):</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    ious <span class="op">=</span> np.zeros(</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>        (<span class="bu">len</span>(annotation_boxes), <span class="bu">len</span>(prediction_boxes)),</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>        dtype<span class="op">=</span><span class="bu">float</span>,</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> row, annotation_box <span class="kw">in</span> <span class="bu">enumerate</span>(annotation_boxes):</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> column, prediction_box <span class="kw">in</span> <span class="bu">enumerate</span>(prediction_boxes):</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>            ious[row, column] <span class="op">=</span> box_iou(</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>                annotation_box, prediction_box</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ious</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><code>np.zeros</code> creates a floating-point array with one row per annotation and one column per prediction, initially filled with zeros. <code>enumerate</code> gives us both the position and the box at each step, with positions starting at zero.</p>
+<p>Using our current example:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>ious <span class="op">=</span> pairwise_iou(annotation_boxes, prediction_boxes)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(np.<span class="bu">round</span>(ious, <span class="dv">2</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>This gives:</p>
+<pre class="text"><code>[[0.8  0.6 ]
+ [0.5  0.14]]</code></pre>
+<p>as in our table before. We use rounding for display only.</p>
+<p>The same function works with different numbers of boxes of each type. For example, six annotations and eight predictions produce a matrix with shape <code>(6, 8)</code>.</p>
+</section>
+<section id="selecting-candidate-matches-in-python" class="level3" data-number="9.3.3">
+<h3 data-number="9.3.3" class="anchored" data-anchor-id="selecting-candidate-matches-in-python"><span class="header-section-number">9.3.3</span> Selecting candidate matches in Python</h3>
+<p>Each annotation box is either unmatched or matched to exactly one predicted box. Each predicted box is either unmatched or matched to exactly one annotation box.</p>
+<p>For our two-by-two example, let <span class="math inline">\(x_{ij}\)</span> be the decision variable for pairing annotation box <span class="math inline">\(i\)</span> with predicted box <span class="math inline">\(j\)</span>. We can formulate this assignment problem as a linear programme, as in ENGSCI 255/ENGSCI 391:</p>
+<p><span class="math display">\[
+\begin{aligned}
+\text{maximise}\quad
+&amp;0.80x_{11}+0.60x_{12}+0.50x_{21}+0.14x_{22}\\
+\text{subject to}\quad
+&amp;x_{11}+x_{12}\leq 1 &amp;&amp;\text{(annotation 1)},\\
+&amp;x_{21}+x_{22}\leq 1 &amp;&amp;\text{(annotation 2)},\\
+&amp;x_{11}+x_{21}\leq 1 &amp;&amp;\text{(prediction 1)},\\
+&amp;x_{12}+x_{22}\leq 1 &amp;&amp;\text{(prediction 2)},\\
+&amp;x_{ij}\geq 0 &amp;&amp;\text{for }i,j\in\{1,2\}.
+\end{aligned}
+\]</span></p>
+<p>This LP has an optimal solution in which each <span class="math inline">\(x_{ij}\)</span> is 0 or 1. A value of 1 selects that pair.</p>
+<p>SciPy provides a specialised solver for this assignment problem, <code>linear_sum_assignment</code>. It minimises total cost, so we supply <code>-ious</code> to obtain the pairing with the largest total IoU:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.optimize <span class="im">import</span> linear_sum_assignment</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>annotation_indices, prediction_indices <span class="op">=</span> linear_sum_assignment(<span class="op">-</span>ious)</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(annotation_indices)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(prediction_indices)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>For our current example, this gives:</p>
+<pre class="text"><code>[0 1]
+[1 0]</code></pre>
+<p>This indicates a selected solution, with Python’s zero-based indexing, of linking annotation box 1 with predicted box 2, and annotation box 2 with predicted box 1, as before.</p>
+<p>SciPy handles rectangular assignments directly, pairing each box in the smaller set with a distinct box in the larger set. With six annotations and eight predictions, this gives six candidate pairs and leaves two predictions unpaired.</p>
+<p>We generally require a minimum IoU to count a candidate pair as a match. The selected pair of annotation box 2 and predicted box 1 has an IoU of 0.50. If we require an IoU of at least 0.60, we reject this pair, leaving these two boxes unmatched.</p>
+</section>
+<section id="applying-the-minimum-iou-in-python" class="level3" data-number="9.3.4">
+<h3 data-number="9.3.4" class="anchored" data-anchor-id="applying-the-minimum-iou-in-python"><span class="header-section-number">9.3.4</span> Applying the minimum IoU in Python</h3>
+<p>We now check each selected annotation–prediction pair against the minimum IoU. We use <code>zip</code> to loop over selected pairs of elements from the two arrays:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>minimum_iou <span class="op">=</span> <span class="fl">0.60</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>matches <span class="op">=</span> []</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> annotation_index, prediction_index <span class="kw">in</span> <span class="bu">zip</span>(</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    annotation_indices, prediction_indices</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>):</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>    iou <span class="op">=</span> <span class="bu">float</span>(ious[annotation_index, prediction_index])</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> iou <span class="op">&gt;=</span> minimum_iou:</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>        matches.append(</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>            {</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>                <span class="st">"annotation_index"</span>: <span class="bu">int</span>(annotation_index),</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>                <span class="st">"prediction_index"</span>: <span class="bu">int</span>(prediction_index),</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>                <span class="st">"iou"</span>: iou,</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>            }</span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(matches)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>For our current example, this gives:</p>
+<pre class="text"><code>[{'annotation_index': 0, 'prediction_index': 1, 'iou': 0.6}]</code></pre>
+<p>The list <code>matches</code> contains one dictionary per accepted pair. This result records annotation box 1 matched to predicted box 2. Annotation box 2 and predicted box 1 remain unmatched.</p>
+</section>
+<section id="counting-true-positives-false-positives-and-false-negatives" class="level3" data-number="9.3.5">
+<h3 data-number="9.3.5" class="anchored" data-anchor-id="counting-true-positives-false-positives-and-false-negatives"><span class="header-section-number">9.3.5</span> Counting true positives, false positives and false negatives</h3>
+<p>We use the supplied <a href="./dataset.html#view-the-annotations">player annotations</a> as our ‘ground truth’ reference for the six-player task. For this evaluation, we count an annotated player as detected when our one-to-one assignment selects a pair between that player’s annotation box and a <code>person</code> prediction, and the pair’s IoU is at least the chosen minimum.</p>
+<p>Using these criteria, we define:</p>
+<ul>
+<li><strong>True positives (TP):</strong> the number of accepted pairings of a <code>person</code> prediction box with a player annotation box.</li>
+<li><strong>False positives (FP):</strong> the number of <code>person</code> prediction boxes with no accepted match to a player annotation box.</li>
+<li><strong>False negatives (FN):</strong> the number of player annotation boxes with no accepted match to a <code>person</code> prediction box.</li>
+</ul>
+<p>False positives are false alarms for our player-detection task, while false negatives are misses. This is analogous to the distinction between Type I and Type II errors in hypothesis testing. Here, the errors are defined by the player annotations and our matching criterion. As in hypothesis testing, there is often a trade-off or tension between reducing these errors, i.e., reducing one tends to increase the other.</p>
+<p>Each accepted match accounts for one predicted box and one annotation box, so we can calculate the counts as follows:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>true_positives <span class="op">=</span> <span class="bu">len</span>(matches)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>false_positives <span class="op">=</span> <span class="bu">len</span>(prediction_boxes) <span class="op">-</span> true_positives</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>false_negatives <span class="op">=</span> <span class="bu">len</span>(annotation_boxes) <span class="op">-</span> true_positives</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"TP:"</span>, true_positives)</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"FP:"</span>, false_positives)</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"FN:"</span>, false_negatives)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>For our two-by-two example, this gives:</p>
+<pre class="text"><code>TP: 1
+FP: 1
+FN: 1</code></pre>
+<p>The rejected pair contributes one FP (predicted box 1) and one FN (annotation box 2). These counts describe agreement under our chosen matching rule and IoU threshold.</p>
+</section>
+<section id="precision-and-recall" class="level3" data-number="9.3.6">
+<h3 data-number="9.3.6" class="anchored" data-anchor-id="precision-and-recall"><span class="header-section-number">9.3.6</span> Precision and recall</h3>
+<p><strong>Precision</strong> is the proportion of <code>person</code> predictions that have an accepted match to a player annotation:</p>
+<p><span class="math display">\[
+\text{precision} = \frac{\mathrm{TP}}{\mathrm{TP} + \mathrm{FP}}.
+\]</span></p>
+<p><strong>Recall</strong> is the proportion of player annotations that have an accepted match to a <code>person</code> prediction:</p>
+<p><span class="math display">\[
+\text{recall} = \frac{\mathrm{TP}}{\mathrm{TP} + \mathrm{FN}}.
+\]</span></p>
+<p>Here, <span class="math inline">\(\mathrm{TP} + \mathrm{FP}\)</span> is the total number of predictions, while <span class="math inline">\(\mathrm{TP} + \mathrm{FN}\)</span> is the total number of player annotations.</p>
+<p>Precision is undefined when there are no predictions, and recall is undefined when there are no annotations. We use <code>0.0</code> as a coding convention for these cases. The inline <code>if ... else</code> expressions use the ratio when its denominator is positive, and return <code>0.0</code> otherwise:</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>predicted_count <span class="op">=</span> true_positives <span class="op">+</span> false_positives</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>annotation_count <span class="op">=</span> true_positives <span class="op">+</span> false_negatives</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>precision <span class="op">=</span> true_positives <span class="op">/</span> predicted_count <span class="cf">if</span> predicted_count <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">else</span> <span class="fl">0.0</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>recall <span class="op">=</span> true_positives <span class="op">/</span> annotation_count <span class="cf">if</span> annotation_count <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">else</span> <span class="fl">0.0</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Precision:"</span>, precision)</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Recall:"</span>, recall)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>For our two-by-two example, this gives:</p>
+<pre class="text"><code>Precision: 0.5
+Recall: 0.5</code></pre>
+<p>Precision is 0.5 because one of the two <code>person</code> predictions has an accepted match. Recall is 0.5 because one of the two annotated players is counted as detected.</p>
+<p>As with false positives and false negatives, precision and recall often trade off when we vary the detector’s confidence threshold. For example, keeping only higher-scoring predictions may reduce false positives and increase precision, but can also discard predictions that would have matched player annotations, increasing false negatives and therefore lowering recall. This effect is not guaranteed and depends on context and how predictions correspond to targets. Here, for example, a high-scoring <code>person</code> prediction may still correspond to an observer rather than an active player.</p>
+</section>
+</section>
+<section id="choosing-and-interpreting-evaluation-measures" class="level2" data-number="9.4">
+<h2 data-number="9.4" class="anchored" data-anchor-id="choosing-and-interpreting-evaluation-measures"><span class="header-section-number">9.4</span> Choosing and interpreting evaluation measures</h2>
+<section id="confusion-matrices-and-accuracy" class="level3" data-number="9.4.1">
+<h3 data-number="9.4.1" class="anchored" data-anchor-id="confusion-matrices-and-accuracy"><span class="header-section-number">9.4.1</span> Confusion matrices and accuracy</h3>
+<p>For a simple two-class classification problem, we label the class of interest <strong>positive</strong> and the other class <strong>negative</strong>. Each example has a supplied class label and one predicted label. A <strong>confusion matrix</strong> counts the resulting outcomes:</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Supplied label</th>
+<th style="text-align: left;">Predicted positive</th>
+<th style="text-align: left;">Predicted negative</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Positive</td>
+<td style="text-align: left;">TP</td>
+<td style="text-align: left;">FN</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Negative</td>
+<td style="text-align: left;">FP</td>
+<td style="text-align: left;">TN</td>
+</tr>
+</tbody>
+</table>
+<p>A <strong>true negative (TN)</strong> is a negative example correctly classified as negative. For these labelled examples, <strong>classification accuracy</strong> is the fraction counted in the TP and TN cells:</p>
+<p><span class="math display">\[
+\text{accuracy} = \frac{\mathrm{TP} + \mathrm{TN}}{\mathrm{TP} + \mathrm{FP} + \mathrm{FN} + \mathrm{TN}}.
+\]</span></p>
+<p>In <strong>object detection</strong>, the number and locations of predicted boxes are themselves part of the output. Matching gives us TP, FP and FN, but there is no natural count of all the background boxes that the detector correctly did not report, i.e.&nbsp;TN. Ordinary classification accuracy is therefore not an appropriate summary of our box-matching evaluation. Note though that precision and recall can be calculated without a TN count:</p>
+<p><span class="math display">\[
+\text{precision} = \frac{\mathrm{TP}}{\mathrm{TP} + \mathrm{FP}},
+\qquad
+\text{recall} = \frac{\mathrm{TP}}{\mathrm{TP} + \mathrm{FN}}.
+\]</span></p>
+</section>
+<section id="which-measure-of-performance-is-best" class="level3" data-number="9.4.2">
+<h3 data-number="9.4.2" class="anchored" data-anchor-id="which-measure-of-performance-is-best"><span class="header-section-number">9.4.2</span> Which measure of performance is best?</h3>
+<p>There is no universally best measure of object detection performance: the choice depends on which errors matter for the application. For our player-detection task, we will read the TP, FP and FN counts and precision/recall together with the box IoUs and overlays to check for ‘localisation’ quality in addition to 0/1 detection. <strong>F1</strong> combines precision and recall into one measure but can hide the balance between false positives and false negatives.</p>
+<p>So far, we have chosen one confidence threshold. Keeping the images, annotations and matching criterion fixed, we can also vary the detector’s confidence threshold and calculate precision and recall at different settings. A <strong>precision–recall curve</strong> plots the resulting pairs, with recall on the horizontal axis and precision on the vertical axis. Each plotted point represents a confidence-threshold choice for which both measures are defined. For a given object class, <strong>average precision (AP)</strong> is based on the area under a precision–recall curve.</p>
+</section>
+<section id="training-loss-and-evaluation-data" class="level3" data-number="9.4.3">
+<h3 data-number="9.4.3" class="anchored" data-anchor-id="training-loss-and-evaluation-data"><span class="header-section-number">9.4.3</span> Training loss and evaluation data</h3>
+<p>Note that the <a href="./training.html#training-loss"><strong>training loss</strong></a> refers to the quantity minimised when fitting model parameters. Here we are using a pre-trained model fitted to other data, and evaluating it on our own data without updating its weights. A loss function can also be used to evaluate new predictions. In this example, we use IoU, accepted-match counts, precision and recall, rather than recomputing YOLO’s training loss.</p>
+<p>We are still choosing settings for the whole pipeline, such as the confidence threshold and court-filter margin. These can be thought of as <strong>hyperparameters</strong> of the pipeline. Since we use this clip to make those choices, we should treat it as <strong>development (or validation) data</strong>, not an untouched test set.</p>
+<p>To assess how the chosen pipeline performs on new recordings, we would need <strong>test recordings</strong> not used for those choices. Note that just randomly separating neighbouring frames from the same clip would provide a much weaker test, as those frames are very similar (i.e.&nbsp;correspond to highly correlated data points).</p>
+
+
+<!-- -->
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./object_detection.html" class="pagination-link  aria-label=" &lt;span="" detection&lt;="" span&gt;"="">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Object detection</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb25" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Evaluation of detection models</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="fu">## What are we evaluating?</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>We now want to compare our predicted boxes with the supplied annotation boxes. As discussed earlier, our application requires detections of the **six active players**, rather than every person in the image. A box around an observer may be a valid <span class="in">`person`</span> detection, but it is not a detection we want for this task.</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>The annotations provide a reference for this comparison, though they may themselves contain errors. We want to know whether each player has been detected, whether there are unwanted or duplicate detections, and how closely the predicted box boundaries agree with the annotations.</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>Simply counting boxes is not enough. For example, six predicted boxes could still include an observer while missing one of the players. Even when a predicted box identifies the intended player, its boundaries may differ substantially from the annotation.</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>We therefore need a way to compare individual boxes before summarising agreement between the two sets. We will start by measuring how much two boxes overlap. For now, we evaluate detections within a single frame; linking player identities across frames is a separate tracking task.</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a><span class="fu">## Comparing two boxes</span></span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>We can compare a predicted box with an annotation box by measuring their overlap. Consider the following simple example.</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a><span class="al">![The same two illustrative boxes in both panels. Shading marks their intersection on the left and their union on the right.](&lt;attachments/evaluation/iou_intersection_union.png&gt;)</span>{#fig-evaluation-iou width=100% fig-pos="H" fig-alt="Two synthetic boxes, each with area 12 square pixels. The left panel shades their intersection, with area 4; the right shades their union, with area 20. Image x increases rightwards and y downwards."}</span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>Each box is 4 pixels wide and 3 pixels high, so each has an area of $4\times3=12$ square pixels.</span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a>The **intersection** is the region covered by both boxes. In this example, it is 2 pixels wide and 2 pixels high, giving an area of $2\times2=4$ square pixels.</span>
+<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a>The **union** is the region covered by at least one box. Adding the two box areas counts the intersection twice, so we subtract it once:</span>
+<span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-25"><a href="#cb25-25" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb25-26"><a href="#cb25-26" aria-hidden="true" tabindex="-1"></a>\text{area of union}=12+12-4=20.</span>
+<span id="cb25-27"><a href="#cb25-27" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb25-28"><a href="#cb25-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-29"><a href="#cb25-29" aria-hidden="true" tabindex="-1"></a>**Intersection over union**, usually abbreviated **IoU**, is the ratio of these two areas:</span>
+<span id="cb25-30"><a href="#cb25-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-31"><a href="#cb25-31" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb25-32"><a href="#cb25-32" aria-hidden="true" tabindex="-1"></a>\operatorname{IoU}</span>
+<span id="cb25-33"><a href="#cb25-33" aria-hidden="true" tabindex="-1"></a>=\frac{\text{area of intersection}}{\text{area of union}}</span>
+<span id="cb25-34"><a href="#cb25-34" aria-hidden="true" tabindex="-1"></a>=\frac{4}{20}</span>
+<span id="cb25-35"><a href="#cb25-35" aria-hidden="true" tabindex="-1"></a>=0.20.</span>
+<span id="cb25-36"><a href="#cb25-36" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb25-37"><a href="#cb25-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-38"><a href="#cb25-38" aria-hidden="true" tabindex="-1"></a>Thus, 20% of the area covered by either box is shared by both. For boxes with positive area, IoU ranges from 0 for no overlap to 1 for identical boxes. It depends on the box coordinates, not the detector’s confidence score.</span>
+<span id="cb25-39"><a href="#cb25-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-40"><a href="#cb25-40" aria-hidden="true" tabindex="-1"></a><span class="fu">### Calculating box areas in Python</span></span>
+<span id="cb25-41"><a href="#cb25-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-42"><a href="#cb25-42" aria-hidden="true" tabindex="-1"></a>We will use the corner-coordinate format introduced for our predicted boxes:</span>
+<span id="cb25-43"><a href="#cb25-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-44"><a href="#cb25-44" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb25-45"><a href="#cb25-45" aria-hidden="true" tabindex="-1"></a>[x_min, y_min, x_max, y_max]</span>
+<span id="cb25-46"><a href="#cb25-46" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-47"><a href="#cb25-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-48"><a href="#cb25-48" aria-hidden="true" tabindex="-1"></a>The first pair gives the upper-left corner, and the second gives the lower-right corner. We calculate width and height by subtracting the corresponding coordinates:</span>
+<span id="cb25-49"><a href="#cb25-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-50"><a href="#cb25-50" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb25-51"><a href="#cb25-51" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> box_area(box):</span>
+<span id="cb25-52"><a href="#cb25-52" aria-hidden="true" tabindex="-1"></a>    x_min, y_min, x_max, y_max <span class="op">=</span> box</span>
+<span id="cb25-53"><a href="#cb25-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-54"><a href="#cb25-54" aria-hidden="true" tabindex="-1"></a>    width <span class="op">=</span> x_max <span class="op">-</span> x_min</span>
+<span id="cb25-55"><a href="#cb25-55" aria-hidden="true" tabindex="-1"></a>    height <span class="op">=</span> y_max <span class="op">-</span> y_min</span>
+<span id="cb25-56"><a href="#cb25-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-57"><a href="#cb25-57" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> width <span class="op">*</span> height</span>
+<span id="cb25-58"><a href="#cb25-58" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-59"><a href="#cb25-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-60"><a href="#cb25-60" aria-hidden="true" tabindex="-1"></a>The first line inside the function **unpacks** the four coordinates into separate variables. The remaining lines calculate the dimensions and return their product.</span>
+<span id="cb25-61"><a href="#cb25-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-62"><a href="#cb25-62" aria-hidden="true" tabindex="-1"></a>For the two boxes in our diagram:</span>
+<span id="cb25-63"><a href="#cb25-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-64"><a href="#cb25-64" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb25-65"><a href="#cb25-65" aria-hidden="true" tabindex="-1"></a>box_a <span class="op">=</span> [<span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">6</span>, <span class="dv">4</span>]</span>
+<span id="cb25-66"><a href="#cb25-66" aria-hidden="true" tabindex="-1"></a>box_b <span class="op">=</span> [<span class="dv">4</span>, <span class="dv">2</span>, <span class="dv">8</span>, <span class="dv">5</span>]</span>
+<span id="cb25-67"><a href="#cb25-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-68"><a href="#cb25-68" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(box_area(box_a))</span>
+<span id="cb25-69"><a href="#cb25-69" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(box_area(box_b))</span>
+<span id="cb25-70"><a href="#cb25-70" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-71"><a href="#cb25-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-72"><a href="#cb25-72" aria-hidden="true" tabindex="-1"></a>This gives:</span>
+<span id="cb25-73"><a href="#cb25-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-74"><a href="#cb25-74" aria-hidden="true" tabindex="-1"></a><span class="in">```text</span></span>
+<span id="cb25-75"><a href="#cb25-75" aria-hidden="true" tabindex="-1"></a><span class="in">12</span></span>
+<span id="cb25-76"><a href="#cb25-76" aria-hidden="true" tabindex="-1"></a><span class="in">12</span></span>
+<span id="cb25-77"><a href="#cb25-77" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-78"><a href="#cb25-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-79"><a href="#cb25-79" aria-hidden="true" tabindex="-1"></a>These agree with the areas calculated earlier. The function also works with floating-point coordinates; box boundaries need not have integer coordinates. Here we assume correctly ordered corners: <span class="in">`x_min &lt;= x_max`</span> and <span class="in">`y_min &lt;= y_max`</span>.</span>
+<span id="cb25-80"><a href="#cb25-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-81"><a href="#cb25-81" aria-hidden="true" tabindex="-1"></a><span class="fu">### Calculating the intersection</span></span>
+<span id="cb25-82"><a href="#cb25-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-83"><a href="#cb25-83" aria-hidden="true" tabindex="-1"></a>The intersection must lie inside both boxes. Its left edge therefore uses the **larger** of the two left-edge coordinates, while its right edge uses the **smaller** of the two right-edge coordinates.</span>
+<span id="cb25-84"><a href="#cb25-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-85"><a href="#cb25-85" aria-hidden="true" tabindex="-1"></a>For our example, these are $\max(2,4)=4$ and $\min(6,8)=6$, giving a width of 2 pixels. Applying the same rule to the top and bottom coordinates gives a height of 2 pixels.</span>
+<span id="cb25-86"><a href="#cb25-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-87"><a href="#cb25-87" aria-hidden="true" tabindex="-1"></a>If the boxes do not overlap, the calculated width or height may be negative. The intersection area should then be zero, so we replace any negative width or height with zero:</span>
+<span id="cb25-88"><a href="#cb25-88" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-89"><a href="#cb25-89" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb25-90"><a href="#cb25-90" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> intersection_area(box_a, box_b):</span>
+<span id="cb25-91"><a href="#cb25-91" aria-hidden="true" tabindex="-1"></a>    intersection_x_min <span class="op">=</span> <span class="bu">max</span>(box_a[<span class="dv">0</span>], box_b[<span class="dv">0</span>])</span>
+<span id="cb25-92"><a href="#cb25-92" aria-hidden="true" tabindex="-1"></a>    intersection_y_min <span class="op">=</span> <span class="bu">max</span>(box_a[<span class="dv">1</span>], box_b[<span class="dv">1</span>])</span>
+<span id="cb25-93"><a href="#cb25-93" aria-hidden="true" tabindex="-1"></a>    intersection_x_max <span class="op">=</span> <span class="bu">min</span>(box_a[<span class="dv">2</span>], box_b[<span class="dv">2</span>])</span>
+<span id="cb25-94"><a href="#cb25-94" aria-hidden="true" tabindex="-1"></a>    intersection_y_max <span class="op">=</span> <span class="bu">min</span>(box_a[<span class="dv">3</span>], box_b[<span class="dv">3</span>])</span>
+<span id="cb25-95"><a href="#cb25-95" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-96"><a href="#cb25-96" aria-hidden="true" tabindex="-1"></a>    intersection_width <span class="op">=</span> <span class="bu">max</span>(<span class="dv">0</span>, intersection_x_max <span class="op">-</span> intersection_x_min)</span>
+<span id="cb25-97"><a href="#cb25-97" aria-hidden="true" tabindex="-1"></a>    intersection_height <span class="op">=</span> <span class="bu">max</span>(<span class="dv">0</span>, intersection_y_max <span class="op">-</span> intersection_y_min)</span>
+<span id="cb25-98"><a href="#cb25-98" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-99"><a href="#cb25-99" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> intersection_width <span class="op">*</span> intersection_height</span>
+<span id="cb25-100"><a href="#cb25-100" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-101"><a href="#cb25-101" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-102"><a href="#cb25-102" aria-hidden="true" tabindex="-1"></a>The indices <span class="in">`0`</span>, <span class="in">`1`</span>, <span class="in">`2`</span> and <span class="in">`3`</span> correspond to <span class="in">`x_min`</span>, <span class="in">`y_min`</span>, <span class="in">`x_max`</span> and <span class="in">`y_max`</span>, respectively. The <span class="in">`max(0, ...)`</span> calls ensure that separated boxes have zero intersection area.</span>
+<span id="cb25-103"><a href="#cb25-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-104"><a href="#cb25-104" aria-hidden="true" tabindex="-1"></a>For the same two boxes:</span>
+<span id="cb25-105"><a href="#cb25-105" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-106"><a href="#cb25-106" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb25-107"><a href="#cb25-107" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(intersection_area(box_a, box_b))</span>
+<span id="cb25-108"><a href="#cb25-108" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-109"><a href="#cb25-109" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-110"><a href="#cb25-110" aria-hidden="true" tabindex="-1"></a>This gives:</span>
+<span id="cb25-111"><a href="#cb25-111" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-112"><a href="#cb25-112" aria-hidden="true" tabindex="-1"></a><span class="in">```text</span></span>
+<span id="cb25-113"><a href="#cb25-113" aria-hidden="true" tabindex="-1"></a><span class="in">4</span></span>
+<span id="cb25-114"><a href="#cb25-114" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-115"><a href="#cb25-115" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-116"><a href="#cb25-116" aria-hidden="true" tabindex="-1"></a><span class="fu">### Calculating the union and IoU</span></span>
+<span id="cb25-117"><a href="#cb25-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-118"><a href="#cb25-118" aria-hidden="true" tabindex="-1"></a>We can now calculate the union area by adding the two box areas and subtracting their intersection once. We reuse the functions we have already written:</span>
+<span id="cb25-119"><a href="#cb25-119" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-120"><a href="#cb25-120" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb25-121"><a href="#cb25-121" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> union_area(box_a, box_b):</span>
+<span id="cb25-122"><a href="#cb25-122" aria-hidden="true" tabindex="-1"></a>    area_a <span class="op">=</span> box_area(box_a)</span>
+<span id="cb25-123"><a href="#cb25-123" aria-hidden="true" tabindex="-1"></a>    area_b <span class="op">=</span> box_area(box_b)</span>
+<span id="cb25-124"><a href="#cb25-124" aria-hidden="true" tabindex="-1"></a>    overlap <span class="op">=</span> intersection_area(box_a, box_b)</span>
+<span id="cb25-125"><a href="#cb25-125" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-126"><a href="#cb25-126" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> area_a <span class="op">+</span> area_b <span class="op">-</span> overlap</span>
+<span id="cb25-127"><a href="#cb25-127" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-128"><a href="#cb25-128" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-129"><a href="#cb25-129" aria-hidden="true" tabindex="-1"></a>To obtain IoU, we divide the intersection area by the union area:</span>
+<span id="cb25-130"><a href="#cb25-130" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-131"><a href="#cb25-131" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb25-132"><a href="#cb25-132" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> box_iou(box_a, box_b):</span>
+<span id="cb25-133"><a href="#cb25-133" aria-hidden="true" tabindex="-1"></a>    overlap <span class="op">=</span> intersection_area(box_a, box_b)</span>
+<span id="cb25-134"><a href="#cb25-134" aria-hidden="true" tabindex="-1"></a>    combined_area <span class="op">=</span> union_area(box_a, box_b)</span>
+<span id="cb25-135"><a href="#cb25-135" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-136"><a href="#cb25-136" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> combined_area <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb25-137"><a href="#cb25-137" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"IoU is undefined when both boxes have zero area"</span>)</span>
+<span id="cb25-138"><a href="#cb25-138" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-139"><a href="#cb25-139" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> overlap <span class="op">/</span> combined_area</span>
+<span id="cb25-140"><a href="#cb25-140" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-141"><a href="#cb25-141" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-142"><a href="#cb25-142" aria-hidden="true" tabindex="-1"></a>The check catches a zero-area union, for which the ratio is undefined. Otherwise, the function returns the intersection divided by the union.</span>
+<span id="cb25-143"><a href="#cb25-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-144"><a href="#cb25-144" aria-hidden="true" tabindex="-1"></a>For our two example boxes:</span>
+<span id="cb25-145"><a href="#cb25-145" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-146"><a href="#cb25-146" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb25-147"><a href="#cb25-147" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(union_area(box_a, box_b))</span>
+<span id="cb25-148"><a href="#cb25-148" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(box_iou(box_a, box_b))</span>
+<span id="cb25-149"><a href="#cb25-149" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-150"><a href="#cb25-150" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-151"><a href="#cb25-151" aria-hidden="true" tabindex="-1"></a>This gives:</span>
+<span id="cb25-152"><a href="#cb25-152" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-153"><a href="#cb25-153" aria-hidden="true" tabindex="-1"></a><span class="in">```text</span></span>
+<span id="cb25-154"><a href="#cb25-154" aria-hidden="true" tabindex="-1"></a><span class="in">20</span></span>
+<span id="cb25-155"><a href="#cb25-155" aria-hidden="true" tabindex="-1"></a><span class="in">0.2</span></span>
+<span id="cb25-156"><a href="#cb25-156" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-157"><a href="#cb25-157" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-158"><a href="#cb25-158" aria-hidden="true" tabindex="-1"></a>These reproduce the union area and IoU calculated from the diagram. We now have a function for comparing one predicted box with one annotation box.</span>
+<span id="cb25-159"><a href="#cb25-159" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-160"><a href="#cb25-160" aria-hidden="true" tabindex="-1"></a><span class="fu">## Comparing sets of boxes</span></span>
+<span id="cb25-161"><a href="#cb25-161" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-162"><a href="#cb25-162" aria-hidden="true" tabindex="-1"></a>For a frame containing several boxes, we need a way to match predicted boxes to annotation boxes. A standard way to do this is to first calculate IoU for every annotation–prediction pair. This can then be used to determine a set of matches.</span>
+<span id="cb25-163"><a href="#cb25-163" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-164"><a href="#cb25-164" aria-hidden="true" tabindex="-1"></a>First, to extend our example, let us add a second annotation box and a second predicted box:</span>
+<span id="cb25-165"><a href="#cb25-165" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-166"><a href="#cb25-166" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb25-167"><a href="#cb25-167" aria-hidden="true" tabindex="-1"></a>annotation_boxes <span class="op">=</span> [</span>
+<span id="cb25-168"><a href="#cb25-168" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">6</span>, <span class="dv">4</span>],</span>
+<span id="cb25-169"><a href="#cb25-169" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">0</span>, <span class="dv">0</span>, <span class="dv">2</span>, <span class="dv">2</span>],</span>
+<span id="cb25-170"><a href="#cb25-170" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb25-171"><a href="#cb25-171" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-172"><a href="#cb25-172" aria-hidden="true" tabindex="-1"></a>prediction_boxes <span class="op">=</span> [</span>
+<span id="cb25-173"><a href="#cb25-173" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">4</span>, <span class="dv">2</span>, <span class="dv">8</span>, <span class="dv">5</span>],</span>
+<span id="cb25-174"><a href="#cb25-174" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">6</span>, <span class="dv">4</span>],</span>
+<span id="cb25-175"><a href="#cb25-175" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb25-176"><a href="#cb25-176" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-177"><a href="#cb25-177" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-178"><a href="#cb25-178" aria-hidden="true" tabindex="-1"></a>Each row contains the four corner coordinates of one box. With two annotations and two predictions, there are four pairs to compare.</span>
+<span id="cb25-179"><a href="#cb25-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-180"><a href="#cb25-180" aria-hidden="true" tabindex="-1"></a>Applying <span class="in">`box_iou`</span> to each pair gives the following **IoU matrix**, with annotation boxes as rows and predicted boxes as columns:</span>
+<span id="cb25-181"><a href="#cb25-181" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-182"><a href="#cb25-182" aria-hidden="true" tabindex="-1"></a>| | Predicted box 1 | Predicted box 2 |</span>
+<span id="cb25-183"><a href="#cb25-183" aria-hidden="true" tabindex="-1"></a>|---|---:|---:|</span>
+<span id="cb25-184"><a href="#cb25-184" aria-hidden="true" tabindex="-1"></a>| Annotation box 1 | 0.20 | 1.00 |</span>
+<span id="cb25-185"><a href="#cb25-185" aria-hidden="true" tabindex="-1"></a>| Annotation box 2 | 0.00 | 0.00 |</span>
+<span id="cb25-186"><a href="#cb25-186" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-187"><a href="#cb25-187" aria-hidden="true" tabindex="-1"></a>For example, the top-right entry comes from <span class="in">`box_iou(annotation_boxes[0], prediction_boxes[1])`</span>, which returns 1.0.</span>
+<span id="cb25-188"><a href="#cb25-188" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-189"><a href="#cb25-189" aria-hidden="true" tabindex="-1"></a>Here, both predicted boxes overlap annotation box 1. We can match this annotation to predicted box 2, which has the larger IoU. Predicted box 1 and annotation box 2 remain unmatched.</span>
+<span id="cb25-190"><a href="#cb25-190" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-191"><a href="#cb25-191" aria-hidden="true" tabindex="-1"></a>In general, a predicted box can overlap several annotation boxes. We then need to choose the matches together, so that each annotation box and each predicted box appears in at most one match.</span>
+<span id="cb25-192"><a href="#cb25-192" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-193"><a href="#cb25-193" aria-hidden="true" tabindex="-1"></a><span class="fu">### Choosing matches together</span></span>
+<span id="cb25-194"><a href="#cb25-194" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-195"><a href="#cb25-195" aria-hidden="true" tabindex="-1"></a>Suppose we move the second annotation box and adjust the predicted boxes so that each prediction overlaps both annotations:</span>
+<span id="cb25-196"><a href="#cb25-196" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-197"><a href="#cb25-197" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb25-198"><a href="#cb25-198" aria-hidden="true" tabindex="-1"></a>annotation_boxes <span class="op">=</span> [</span>
+<span id="cb25-199"><a href="#cb25-199" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">6</span>, <span class="dv">4</span>],</span>
+<span id="cb25-200"><a href="#cb25-200" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">4</span>, <span class="dv">1</span>, <span class="dv">8</span>, <span class="dv">4</span>],</span>
+<span id="cb25-201"><a href="#cb25-201" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb25-202"><a href="#cb25-202" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-203"><a href="#cb25-203" aria-hidden="true" tabindex="-1"></a>prediction_boxes <span class="op">=</span> [</span>
+<span id="cb25-204"><a href="#cb25-204" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">7</span>, <span class="dv">4</span>],</span>
+<span id="cb25-205"><a href="#cb25-205" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">5</span>, <span class="dv">4</span>],</span>
+<span id="cb25-206"><a href="#cb25-206" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb25-207"><a href="#cb25-207" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-208"><a href="#cb25-208" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-209"><a href="#cb25-209" aria-hidden="true" tabindex="-1"></a>The IoU matrix is now, rounded to two decimal places:</span>
+<span id="cb25-210"><a href="#cb25-210" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-211"><a href="#cb25-211" aria-hidden="true" tabindex="-1"></a>| | Predicted box 1 | Predicted box 2 |</span>
+<span id="cb25-212"><a href="#cb25-212" aria-hidden="true" tabindex="-1"></a>|---|---:|---:|</span>
+<span id="cb25-213"><a href="#cb25-213" aria-hidden="true" tabindex="-1"></a>| Annotation box 1 | 0.80 | 0.60 |</span>
+<span id="cb25-214"><a href="#cb25-214" aria-hidden="true" tabindex="-1"></a>| Annotation box 2 | 0.50 | 0.14 |</span>
+<span id="cb25-215"><a href="#cb25-215" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-216"><a href="#cb25-216" aria-hidden="true" tabindex="-1"></a>Both annotations have their highest IoU with predicted box 1. To choose one-to-one matches, we can compare the **total IoU** for each possible way of pairing both annotations with different predictions:</span>
+<span id="cb25-217"><a href="#cb25-217" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-218"><a href="#cb25-218" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Annotation 1 with prediction 1, and annotation 2 with prediction 2: total IoU approximately **0.94**.</span>
+<span id="cb25-219"><a href="#cb25-219" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Annotation 1 with prediction 2, and annotation 2 with prediction 1: total IoU **1.10**.</span>
+<span id="cb25-220"><a href="#cb25-220" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-221"><a href="#cb25-221" aria-hidden="true" tabindex="-1"></a>The second pairing gives the larger total. We therefore match annotation 1 to prediction 2, and annotation 2 to prediction 1.</span>
+<span id="cb25-222"><a href="#cb25-222" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-223"><a href="#cb25-223" aria-hidden="true" tabindex="-1"></a>This is a small **assignment problem** that can be expressed as a linear programming problem (as in ENGSCI 391). For larger tables, we can use an assignment algorithm to find the one-to-one matches with the largest total IoU.</span>
+<span id="cb25-224"><a href="#cb25-224" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-225"><a href="#cb25-225" aria-hidden="true" tabindex="-1"></a><span class="fu">### Calculating the IoU matrix in Python</span></span>
+<span id="cb25-226"><a href="#cb25-226" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-227"><a href="#cb25-227" aria-hidden="true" tabindex="-1"></a>We can build the whole IoU matrix by calling <span class="in">`box_iou`</span> for each annotation–prediction pair and storing the results in a NumPy array:</span>
+<span id="cb25-228"><a href="#cb25-228" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-229"><a href="#cb25-229" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb25-230"><a href="#cb25-230" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb25-231"><a href="#cb25-231" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-232"><a href="#cb25-232" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-233"><a href="#cb25-233" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> pairwise_iou(annotation_boxes, prediction_boxes):</span>
+<span id="cb25-234"><a href="#cb25-234" aria-hidden="true" tabindex="-1"></a>    ious <span class="op">=</span> np.zeros(</span>
+<span id="cb25-235"><a href="#cb25-235" aria-hidden="true" tabindex="-1"></a>        (<span class="bu">len</span>(annotation_boxes), <span class="bu">len</span>(prediction_boxes)),</span>
+<span id="cb25-236"><a href="#cb25-236" aria-hidden="true" tabindex="-1"></a>        dtype<span class="op">=</span><span class="bu">float</span>,</span>
+<span id="cb25-237"><a href="#cb25-237" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb25-238"><a href="#cb25-238" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-239"><a href="#cb25-239" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> row, annotation_box <span class="kw">in</span> <span class="bu">enumerate</span>(annotation_boxes):</span>
+<span id="cb25-240"><a href="#cb25-240" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> column, prediction_box <span class="kw">in</span> <span class="bu">enumerate</span>(prediction_boxes):</span>
+<span id="cb25-241"><a href="#cb25-241" aria-hidden="true" tabindex="-1"></a>            ious[row, column] <span class="op">=</span> box_iou(</span>
+<span id="cb25-242"><a href="#cb25-242" aria-hidden="true" tabindex="-1"></a>                annotation_box, prediction_box</span>
+<span id="cb25-243"><a href="#cb25-243" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb25-244"><a href="#cb25-244" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-245"><a href="#cb25-245" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ious</span>
+<span id="cb25-246"><a href="#cb25-246" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-247"><a href="#cb25-247" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-248"><a href="#cb25-248" aria-hidden="true" tabindex="-1"></a><span class="in">`np.zeros`</span> creates a floating-point array with one row per annotation and one column per prediction, initially filled with zeros. <span class="in">`enumerate`</span> gives us both the position and the box at each step, with positions starting at zero.</span>
+<span id="cb25-249"><a href="#cb25-249" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-250"><a href="#cb25-250" aria-hidden="true" tabindex="-1"></a>Using our current example:</span>
+<span id="cb25-251"><a href="#cb25-251" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-252"><a href="#cb25-252" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb25-253"><a href="#cb25-253" aria-hidden="true" tabindex="-1"></a>ious <span class="op">=</span> pairwise_iou(annotation_boxes, prediction_boxes)</span>
+<span id="cb25-254"><a href="#cb25-254" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(np.<span class="bu">round</span>(ious, <span class="dv">2</span>))</span>
+<span id="cb25-255"><a href="#cb25-255" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-256"><a href="#cb25-256" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-257"><a href="#cb25-257" aria-hidden="true" tabindex="-1"></a>This gives:</span>
+<span id="cb25-258"><a href="#cb25-258" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-259"><a href="#cb25-259" aria-hidden="true" tabindex="-1"></a><span class="in">```text</span></span>
+<span id="cb25-260"><a href="#cb25-260" aria-hidden="true" tabindex="-1"></a><span class="in">[[0.8  0.6 ]</span></span>
+<span id="cb25-261"><a href="#cb25-261" aria-hidden="true" tabindex="-1"></a><span class="in"> [0.5  0.14]]</span></span>
+<span id="cb25-262"><a href="#cb25-262" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-263"><a href="#cb25-263" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-264"><a href="#cb25-264" aria-hidden="true" tabindex="-1"></a>as in our table before. We use rounding for display only.</span>
+<span id="cb25-265"><a href="#cb25-265" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-266"><a href="#cb25-266" aria-hidden="true" tabindex="-1"></a>The same function works with different numbers of boxes of each type. For example, six annotations and eight predictions produce a matrix with shape <span class="in">`(6, 8)`</span>.</span>
+<span id="cb25-267"><a href="#cb25-267" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-268"><a href="#cb25-268" aria-hidden="true" tabindex="-1"></a><span class="fu">### Selecting candidate matches in Python</span></span>
+<span id="cb25-269"><a href="#cb25-269" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-270"><a href="#cb25-270" aria-hidden="true" tabindex="-1"></a>Each annotation box is either unmatched or matched to exactly one predicted box. Each predicted box is either unmatched or matched to exactly one annotation box.</span>
+<span id="cb25-271"><a href="#cb25-271" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-272"><a href="#cb25-272" aria-hidden="true" tabindex="-1"></a>For our two-by-two example, let $x_{ij}$ be the decision variable for pairing annotation box $i$ with predicted box $j$. We can formulate this assignment problem as a linear programme, as in ENGSCI 255/ENGSCI 391:</span>
+<span id="cb25-273"><a href="#cb25-273" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-274"><a href="#cb25-274" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb25-275"><a href="#cb25-275" aria-hidden="true" tabindex="-1"></a>\begin{aligned}</span>
+<span id="cb25-276"><a href="#cb25-276" aria-hidden="true" tabindex="-1"></a>\text{maximise}\quad</span>
+<span id="cb25-277"><a href="#cb25-277" aria-hidden="true" tabindex="-1"></a>&amp;0.80x_{11}+0.60x_{12}+0.50x_{21}+0.14x_{22}<span class="sc">\\</span></span>
+<span id="cb25-278"><a href="#cb25-278" aria-hidden="true" tabindex="-1"></a>\text{subject to}\quad</span>
+<span id="cb25-279"><a href="#cb25-279" aria-hidden="true" tabindex="-1"></a>&amp;x_{11}+x_{12}\leq 1 &amp;&amp;\text{(annotation 1)},<span class="sc">\\</span></span>
+<span id="cb25-280"><a href="#cb25-280" aria-hidden="true" tabindex="-1"></a>&amp;x_{21}+x_{22}\leq 1 &amp;&amp;\text{(annotation 2)},<span class="sc">\\</span></span>
+<span id="cb25-281"><a href="#cb25-281" aria-hidden="true" tabindex="-1"></a>&amp;x_{11}+x_{21}\leq 1 &amp;&amp;\text{(prediction 1)},<span class="sc">\\</span></span>
+<span id="cb25-282"><a href="#cb25-282" aria-hidden="true" tabindex="-1"></a>&amp;x_{12}+x_{22}\leq 1 &amp;&amp;\text{(prediction 2)},<span class="sc">\\</span></span>
+<span id="cb25-283"><a href="#cb25-283" aria-hidden="true" tabindex="-1"></a>&amp;x_{ij}\geq 0 &amp;&amp;\text{for }i,j\in<span class="sc">\{</span>1,2<span class="sc">\}</span>.</span>
+<span id="cb25-284"><a href="#cb25-284" aria-hidden="true" tabindex="-1"></a>\end{aligned}</span>
+<span id="cb25-285"><a href="#cb25-285" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb25-286"><a href="#cb25-286" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-287"><a href="#cb25-287" aria-hidden="true" tabindex="-1"></a>This LP has an optimal solution in which each $x_{ij}$ is 0 or 1. A value of 1 selects that pair.</span>
+<span id="cb25-288"><a href="#cb25-288" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-289"><a href="#cb25-289" aria-hidden="true" tabindex="-1"></a>SciPy provides a specialised solver for this assignment problem, <span class="in">`linear_sum_assignment`</span>. It minimises total cost, so we supply <span class="in">`-ious`</span> to obtain the pairing with the largest total IoU:</span>
+<span id="cb25-290"><a href="#cb25-290" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-291"><a href="#cb25-291" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb25-292"><a href="#cb25-292" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.optimize <span class="im">import</span> linear_sum_assignment</span>
+<span id="cb25-293"><a href="#cb25-293" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-294"><a href="#cb25-294" aria-hidden="true" tabindex="-1"></a>annotation_indices, prediction_indices <span class="op">=</span> linear_sum_assignment(<span class="op">-</span>ious)</span>
+<span id="cb25-295"><a href="#cb25-295" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-296"><a href="#cb25-296" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(annotation_indices)</span>
+<span id="cb25-297"><a href="#cb25-297" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(prediction_indices)</span>
+<span id="cb25-298"><a href="#cb25-298" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-299"><a href="#cb25-299" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-300"><a href="#cb25-300" aria-hidden="true" tabindex="-1"></a>For our current example, this gives:</span>
+<span id="cb25-301"><a href="#cb25-301" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-302"><a href="#cb25-302" aria-hidden="true" tabindex="-1"></a><span class="in">```text</span></span>
+<span id="cb25-303"><a href="#cb25-303" aria-hidden="true" tabindex="-1"></a><span class="in">[0 1]</span></span>
+<span id="cb25-304"><a href="#cb25-304" aria-hidden="true" tabindex="-1"></a><span class="in">[1 0]</span></span>
+<span id="cb25-305"><a href="#cb25-305" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-306"><a href="#cb25-306" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-307"><a href="#cb25-307" aria-hidden="true" tabindex="-1"></a>This indicates a selected solution, with Python's zero-based indexing, of linking annotation box 1 with predicted box 2, and annotation box 2 with predicted box 1, as before.</span>
+<span id="cb25-308"><a href="#cb25-308" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-309"><a href="#cb25-309" aria-hidden="true" tabindex="-1"></a>SciPy handles rectangular assignments directly, pairing each box in the smaller set with a distinct box in the larger set. With six annotations and eight predictions, this gives six candidate pairs and leaves two predictions unpaired.</span>
+<span id="cb25-310"><a href="#cb25-310" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-311"><a href="#cb25-311" aria-hidden="true" tabindex="-1"></a>We generally require a minimum IoU to count a candidate pair as a match. The selected pair of annotation box 2 and predicted box 1 has an IoU of 0.50. If we require an IoU of at least 0.60, we reject this pair, leaving these two boxes unmatched.</span>
+<span id="cb25-312"><a href="#cb25-312" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-313"><a href="#cb25-313" aria-hidden="true" tabindex="-1"></a><span class="fu">### Applying the minimum IoU in Python</span></span>
+<span id="cb25-314"><a href="#cb25-314" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-315"><a href="#cb25-315" aria-hidden="true" tabindex="-1"></a>We now check each selected annotation–prediction pair against the minimum IoU. We use <span class="in">`zip`</span> to loop over selected pairs of elements from the two arrays:</span>
+<span id="cb25-316"><a href="#cb25-316" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-317"><a href="#cb25-317" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb25-318"><a href="#cb25-318" aria-hidden="true" tabindex="-1"></a>minimum_iou <span class="op">=</span> <span class="fl">0.60</span></span>
+<span id="cb25-319"><a href="#cb25-319" aria-hidden="true" tabindex="-1"></a>matches <span class="op">=</span> []</span>
+<span id="cb25-320"><a href="#cb25-320" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-321"><a href="#cb25-321" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> annotation_index, prediction_index <span class="kw">in</span> <span class="bu">zip</span>(</span>
+<span id="cb25-322"><a href="#cb25-322" aria-hidden="true" tabindex="-1"></a>    annotation_indices, prediction_indices</span>
+<span id="cb25-323"><a href="#cb25-323" aria-hidden="true" tabindex="-1"></a>):</span>
+<span id="cb25-324"><a href="#cb25-324" aria-hidden="true" tabindex="-1"></a>    iou <span class="op">=</span> <span class="bu">float</span>(ious[annotation_index, prediction_index])</span>
+<span id="cb25-325"><a href="#cb25-325" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-326"><a href="#cb25-326" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> iou <span class="op">&gt;=</span> minimum_iou:</span>
+<span id="cb25-327"><a href="#cb25-327" aria-hidden="true" tabindex="-1"></a>        matches.append(</span>
+<span id="cb25-328"><a href="#cb25-328" aria-hidden="true" tabindex="-1"></a>            {</span>
+<span id="cb25-329"><a href="#cb25-329" aria-hidden="true" tabindex="-1"></a>                <span class="st">"annotation_index"</span>: <span class="bu">int</span>(annotation_index),</span>
+<span id="cb25-330"><a href="#cb25-330" aria-hidden="true" tabindex="-1"></a>                <span class="st">"prediction_index"</span>: <span class="bu">int</span>(prediction_index),</span>
+<span id="cb25-331"><a href="#cb25-331" aria-hidden="true" tabindex="-1"></a>                <span class="st">"iou"</span>: iou,</span>
+<span id="cb25-332"><a href="#cb25-332" aria-hidden="true" tabindex="-1"></a>            }</span>
+<span id="cb25-333"><a href="#cb25-333" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb25-334"><a href="#cb25-334" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-335"><a href="#cb25-335" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(matches)</span>
+<span id="cb25-336"><a href="#cb25-336" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-337"><a href="#cb25-337" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-338"><a href="#cb25-338" aria-hidden="true" tabindex="-1"></a>For our current example, this gives:</span>
+<span id="cb25-339"><a href="#cb25-339" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-340"><a href="#cb25-340" aria-hidden="true" tabindex="-1"></a><span class="in">```text</span></span>
+<span id="cb25-341"><a href="#cb25-341" aria-hidden="true" tabindex="-1"></a><span class="in">[{'annotation_index': 0, 'prediction_index': 1, 'iou': 0.6}]</span></span>
+<span id="cb25-342"><a href="#cb25-342" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-343"><a href="#cb25-343" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-344"><a href="#cb25-344" aria-hidden="true" tabindex="-1"></a>The list <span class="in">`matches`</span> contains one dictionary per accepted pair. This result records annotation box 1 matched to predicted box 2. Annotation box 2 and predicted box 1 remain unmatched.</span>
+<span id="cb25-345"><a href="#cb25-345" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-346"><a href="#cb25-346" aria-hidden="true" tabindex="-1"></a><span class="fu">### Counting true positives, false positives and false negatives</span></span>
+<span id="cb25-347"><a href="#cb25-347" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-348"><a href="#cb25-348" aria-hidden="true" tabindex="-1"></a>We use the supplied <span class="co">[</span><span class="ot">player annotations</span><span class="co">](dataset.qmd#view-the-annotations)</span> as our ‘ground truth’ reference for the six-player task. For this evaluation, we count an annotated player as detected when our one-to-one assignment selects a pair between that player's annotation box and a <span class="in">`person`</span> prediction, and the pair's IoU is at least the chosen minimum.</span>
+<span id="cb25-349"><a href="#cb25-349" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-350"><a href="#cb25-350" aria-hidden="true" tabindex="-1"></a>Using these criteria, we define:</span>
+<span id="cb25-351"><a href="#cb25-351" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-352"><a href="#cb25-352" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**True positives (TP):** the number of accepted pairings of a <span class="in">`person`</span> prediction box with a player annotation box.</span>
+<span id="cb25-353"><a href="#cb25-353" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**False positives (FP):** the number of <span class="in">`person`</span> prediction boxes with no accepted match to a player annotation box.</span>
+<span id="cb25-354"><a href="#cb25-354" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**False negatives (FN):** the number of player annotation boxes with no accepted match to a <span class="in">`person`</span> prediction box.</span>
+<span id="cb25-355"><a href="#cb25-355" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-356"><a href="#cb25-356" aria-hidden="true" tabindex="-1"></a>False positives are false alarms for our player-detection task, while false negatives are misses. This is analogous to the distinction between Type I and Type II errors in hypothesis testing. Here, the errors are defined by the player annotations and our matching criterion. As in hypothesis testing, there is often a trade-off or tension between reducing these errors, i.e., reducing one tends to increase the other.</span>
+<span id="cb25-357"><a href="#cb25-357" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-358"><a href="#cb25-358" aria-hidden="true" tabindex="-1"></a>Each accepted match accounts for one predicted box and one annotation box, so we can calculate the counts as follows:</span>
+<span id="cb25-359"><a href="#cb25-359" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-360"><a href="#cb25-360" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb25-361"><a href="#cb25-361" aria-hidden="true" tabindex="-1"></a>true_positives <span class="op">=</span> <span class="bu">len</span>(matches)</span>
+<span id="cb25-362"><a href="#cb25-362" aria-hidden="true" tabindex="-1"></a>false_positives <span class="op">=</span> <span class="bu">len</span>(prediction_boxes) <span class="op">-</span> true_positives</span>
+<span id="cb25-363"><a href="#cb25-363" aria-hidden="true" tabindex="-1"></a>false_negatives <span class="op">=</span> <span class="bu">len</span>(annotation_boxes) <span class="op">-</span> true_positives</span>
+<span id="cb25-364"><a href="#cb25-364" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-365"><a href="#cb25-365" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"TP:"</span>, true_positives)</span>
+<span id="cb25-366"><a href="#cb25-366" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"FP:"</span>, false_positives)</span>
+<span id="cb25-367"><a href="#cb25-367" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"FN:"</span>, false_negatives)</span>
+<span id="cb25-368"><a href="#cb25-368" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-369"><a href="#cb25-369" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-370"><a href="#cb25-370" aria-hidden="true" tabindex="-1"></a>For our two-by-two example, this gives:</span>
+<span id="cb25-371"><a href="#cb25-371" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-372"><a href="#cb25-372" aria-hidden="true" tabindex="-1"></a><span class="in">```text</span></span>
+<span id="cb25-373"><a href="#cb25-373" aria-hidden="true" tabindex="-1"></a><span class="in">TP: 1</span></span>
+<span id="cb25-374"><a href="#cb25-374" aria-hidden="true" tabindex="-1"></a><span class="in">FP: 1</span></span>
+<span id="cb25-375"><a href="#cb25-375" aria-hidden="true" tabindex="-1"></a><span class="in">FN: 1</span></span>
+<span id="cb25-376"><a href="#cb25-376" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-377"><a href="#cb25-377" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-378"><a href="#cb25-378" aria-hidden="true" tabindex="-1"></a>The rejected pair contributes one FP (predicted box 1) and one FN (annotation box 2). These counts describe agreement under our chosen matching rule and IoU threshold.</span>
+<span id="cb25-379"><a href="#cb25-379" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-380"><a href="#cb25-380" aria-hidden="true" tabindex="-1"></a><span class="fu">### Precision and recall</span></span>
+<span id="cb25-381"><a href="#cb25-381" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-382"><a href="#cb25-382" aria-hidden="true" tabindex="-1"></a>**Precision** is the proportion of <span class="in">`person`</span> predictions that have an accepted match to a player annotation:</span>
+<span id="cb25-383"><a href="#cb25-383" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-384"><a href="#cb25-384" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb25-385"><a href="#cb25-385" aria-hidden="true" tabindex="-1"></a>\text{precision} = \frac{\mathrm{TP}}{\mathrm{TP} + \mathrm{FP}}.</span>
+<span id="cb25-386"><a href="#cb25-386" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb25-387"><a href="#cb25-387" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-388"><a href="#cb25-388" aria-hidden="true" tabindex="-1"></a>**Recall** is the proportion of player annotations that have an accepted match to a <span class="in">`person`</span> prediction:</span>
+<span id="cb25-389"><a href="#cb25-389" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-390"><a href="#cb25-390" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb25-391"><a href="#cb25-391" aria-hidden="true" tabindex="-1"></a>\text{recall} = \frac{\mathrm{TP}}{\mathrm{TP} + \mathrm{FN}}.</span>
+<span id="cb25-392"><a href="#cb25-392" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb25-393"><a href="#cb25-393" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-394"><a href="#cb25-394" aria-hidden="true" tabindex="-1"></a>Here, $\mathrm{TP} + \mathrm{FP}$ is the total number of predictions, while $\mathrm{TP} + \mathrm{FN}$ is the total number of player annotations.</span>
+<span id="cb25-395"><a href="#cb25-395" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-396"><a href="#cb25-396" aria-hidden="true" tabindex="-1"></a>Precision is undefined when there are no predictions, and recall is undefined when there are no annotations. We use <span class="in">`0.0`</span> as a coding convention for these cases. The inline <span class="in">`if ... else`</span> expressions use the ratio when its denominator is positive, and return <span class="in">`0.0`</span> otherwise:</span>
+<span id="cb25-397"><a href="#cb25-397" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-398"><a href="#cb25-398" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb25-399"><a href="#cb25-399" aria-hidden="true" tabindex="-1"></a>predicted_count <span class="op">=</span> true_positives <span class="op">+</span> false_positives</span>
+<span id="cb25-400"><a href="#cb25-400" aria-hidden="true" tabindex="-1"></a>annotation_count <span class="op">=</span> true_positives <span class="op">+</span> false_negatives</span>
+<span id="cb25-401"><a href="#cb25-401" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-402"><a href="#cb25-402" aria-hidden="true" tabindex="-1"></a>precision <span class="op">=</span> true_positives <span class="op">/</span> predicted_count <span class="cf">if</span> predicted_count <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">else</span> <span class="fl">0.0</span></span>
+<span id="cb25-403"><a href="#cb25-403" aria-hidden="true" tabindex="-1"></a>recall <span class="op">=</span> true_positives <span class="op">/</span> annotation_count <span class="cf">if</span> annotation_count <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">else</span> <span class="fl">0.0</span></span>
+<span id="cb25-404"><a href="#cb25-404" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-405"><a href="#cb25-405" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Precision:"</span>, precision)</span>
+<span id="cb25-406"><a href="#cb25-406" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Recall:"</span>, recall)</span>
+<span id="cb25-407"><a href="#cb25-407" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-408"><a href="#cb25-408" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-409"><a href="#cb25-409" aria-hidden="true" tabindex="-1"></a>For our two-by-two example, this gives:</span>
+<span id="cb25-410"><a href="#cb25-410" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-411"><a href="#cb25-411" aria-hidden="true" tabindex="-1"></a><span class="in">```text</span></span>
+<span id="cb25-412"><a href="#cb25-412" aria-hidden="true" tabindex="-1"></a><span class="in">Precision: 0.5</span></span>
+<span id="cb25-413"><a href="#cb25-413" aria-hidden="true" tabindex="-1"></a><span class="in">Recall: 0.5</span></span>
+<span id="cb25-414"><a href="#cb25-414" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-415"><a href="#cb25-415" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-416"><a href="#cb25-416" aria-hidden="true" tabindex="-1"></a>Precision is 0.5 because one of the two <span class="in">`person`</span> predictions has an accepted match. Recall is 0.5 because one of the two annotated players is counted as detected.</span>
+<span id="cb25-417"><a href="#cb25-417" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-418"><a href="#cb25-418" aria-hidden="true" tabindex="-1"></a>As with false positives and false negatives, precision and recall often trade off when we vary the detector’s confidence threshold. For example, keeping only higher-scoring predictions may reduce false positives and increase precision, but can also discard predictions that would have matched player annotations, increasing false negatives and therefore lowering recall. This effect is not guaranteed and depends on context and how predictions correspond to targets. Here, for example, a high-scoring <span class="in">`person`</span> prediction may still correspond to an observer rather than an active player.</span>
+<span id="cb25-419"><a href="#cb25-419" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-420"><a href="#cb25-420" aria-hidden="true" tabindex="-1"></a><span class="fu">## Choosing and interpreting evaluation measures</span></span>
+<span id="cb25-421"><a href="#cb25-421" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-422"><a href="#cb25-422" aria-hidden="true" tabindex="-1"></a><span class="fu">### Confusion matrices and accuracy</span></span>
+<span id="cb25-423"><a href="#cb25-423" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-424"><a href="#cb25-424" aria-hidden="true" tabindex="-1"></a>For a simple two-class classification problem, we label the class of interest **positive** and the other class **negative**. Each example has a supplied class label and one predicted label. A **confusion matrix** counts the resulting outcomes:</span>
+<span id="cb25-425"><a href="#cb25-425" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-426"><a href="#cb25-426" aria-hidden="true" tabindex="-1"></a>| Supplied label | Predicted positive | Predicted negative |</span>
+<span id="cb25-427"><a href="#cb25-427" aria-hidden="true" tabindex="-1"></a>|:--|:--|:--|</span>
+<span id="cb25-428"><a href="#cb25-428" aria-hidden="true" tabindex="-1"></a>| Positive | TP | FN |</span>
+<span id="cb25-429"><a href="#cb25-429" aria-hidden="true" tabindex="-1"></a>| Negative | FP | TN |</span>
+<span id="cb25-430"><a href="#cb25-430" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-431"><a href="#cb25-431" aria-hidden="true" tabindex="-1"></a>A **true negative (TN)** is a negative example correctly classified as negative. For these labelled examples, **classification accuracy** is the fraction counted in the TP and TN cells:</span>
+<span id="cb25-432"><a href="#cb25-432" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-433"><a href="#cb25-433" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb25-434"><a href="#cb25-434" aria-hidden="true" tabindex="-1"></a>\text{accuracy} = \frac{\mathrm{TP} + \mathrm{TN}}{\mathrm{TP} + \mathrm{FP} + \mathrm{FN} + \mathrm{TN}}.</span>
+<span id="cb25-435"><a href="#cb25-435" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb25-436"><a href="#cb25-436" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-437"><a href="#cb25-437" aria-hidden="true" tabindex="-1"></a>In **object detection**, the number and locations of predicted boxes are themselves part of the output. Matching gives us TP, FP and FN, but there is no natural count of all the background boxes that the detector correctly did not report, i.e. TN. Ordinary classification accuracy is therefore not an appropriate summary of our box-matching evaluation. Note though that precision and recall can be calculated without a TN count:</span>
+<span id="cb25-438"><a href="#cb25-438" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-439"><a href="#cb25-439" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb25-440"><a href="#cb25-440" aria-hidden="true" tabindex="-1"></a>\text{precision} = \frac{\mathrm{TP}}{\mathrm{TP} + \mathrm{FP}},</span>
+<span id="cb25-441"><a href="#cb25-441" aria-hidden="true" tabindex="-1"></a>\qquad</span>
+<span id="cb25-442"><a href="#cb25-442" aria-hidden="true" tabindex="-1"></a>\text{recall} = \frac{\mathrm{TP}}{\mathrm{TP} + \mathrm{FN}}.</span>
+<span id="cb25-443"><a href="#cb25-443" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb25-444"><a href="#cb25-444" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-445"><a href="#cb25-445" aria-hidden="true" tabindex="-1"></a><span class="fu">### Which measure of performance is best?</span></span>
+<span id="cb25-446"><a href="#cb25-446" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-447"><a href="#cb25-447" aria-hidden="true" tabindex="-1"></a>There is no universally best measure of object detection performance: the choice depends on which errors matter for the application. For our player-detection task, we will read the TP, FP and FN counts and precision/recall together with the box IoUs and overlays to check for ‘localisation’ quality in addition to 0/1 detection. **F1** combines precision and recall into one measure but can hide the balance between false positives and false negatives.</span>
+<span id="cb25-448"><a href="#cb25-448" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-449"><a href="#cb25-449" aria-hidden="true" tabindex="-1"></a>So far, we have chosen one confidence threshold. Keeping the images, annotations and matching criterion fixed, we can also vary the detector's confidence threshold and calculate precision and recall at different settings. A **precision–recall curve** plots the resulting pairs, with recall on the horizontal axis and precision on the vertical axis. Each plotted point represents a confidence-threshold choice for which both measures are defined. For a given object class, **average precision (AP)** is based on the area under a precision–recall curve.</span>
+<span id="cb25-450"><a href="#cb25-450" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-451"><a href="#cb25-451" aria-hidden="true" tabindex="-1"></a><span class="fu">### Training loss and evaluation data</span></span>
+<span id="cb25-452"><a href="#cb25-452" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-453"><a href="#cb25-453" aria-hidden="true" tabindex="-1"></a>Note that the <span class="co">[</span><span class="ot">**training loss**</span><span class="co">](training.qmd#training-loss)</span> refers to the quantity minimised when fitting model parameters. Here we are using a pre-trained model fitted to other data, and evaluating it on our own data without updating its weights. A loss function can also be used to evaluate new predictions. In this example, we use IoU, accepted-match counts, precision and recall, rather than recomputing YOLO's training loss.</span>
+<span id="cb25-454"><a href="#cb25-454" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-455"><a href="#cb25-455" aria-hidden="true" tabindex="-1"></a>We are still choosing settings for the whole pipeline, such as the confidence threshold and court-filter margin. These can be thought of as **hyperparameters** of the pipeline. Since we use this clip to make those choices, we should treat it as **development (or validation) data**, not an untouched test set.</span>
+<span id="cb25-456"><a href="#cb25-456" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-457"><a href="#cb25-457" aria-hidden="true" tabindex="-1"></a>To assess how the chosen pipeline performs on new recordings, we would need **test recordings** not used for those choices. Note that just randomly separating neighbouring frames from the same clip would provide a much weaker test, as those frames are very similar (i.e. correspond to highly correlated data points).</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p><a href="attribution.txt">Third-party sources and licences</a></p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

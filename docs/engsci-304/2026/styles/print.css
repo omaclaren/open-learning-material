@@ -1,0 +1,31 @@
+/* Browser-print layout only; leave the on-screen book unchanged. */
+@media print {
+  /* Keep short examples together. Oversized blocks can still span pages. */
+  main div.sourceCode,
+  main pre,
+  main table {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Keep headings with the following content rather than at a page foot. */
+  main h1,
+  main h2,
+  main h3,
+  main h4,
+  main h5,
+  main h6 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  main thead {
+    display: table-header-group;
+  }
+
+  /* Screen-only controls are not useful on paper. */
+  .code-copy-button,
+  .code-tools-button {
+    display: none !important;
+  }
+}

@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.549">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>ENGSCI 304: Engineering Machine Learning II - 8&nbsp; Object detection</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./evaluation.html" rel="next">
+<link href="./training.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles/print.css">
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./visual.html">Visual data</a></li><li class="breadcrumb-item"><a href="./object_detection.html"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Object detection</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">ENGSCI 304: Engineering Machine Learning II</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">About these notes</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./recommended_reading.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Recommended reading</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Overview</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./visual.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Visual data</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./basketball_application.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Application: From amateur basketball video footage to player trajectories</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dataset.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Obtaining and visualising the dataset</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./camera_models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Camera models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./image_tasks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Image analysis tasks</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./image_modelling.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Image modelling: From pixels to learned features</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./training.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Training and inference</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./object_detection.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Object detection</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Evaluation of detection models</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#predicting-classes-and-locations" id="toc-predicting-classes-and-locations" class="nav-link active" data-scroll-target="#predicting-classes-and-locations"><span class="header-section-number">8.1</span> Predicting classes and locations</a></li>
+  <li><a href="#feature-maps-and-image-locations" id="toc-feature-maps-and-image-locations" class="nav-link" data-scroll-target="#feature-maps-and-image-locations"><span class="header-section-number">8.2</span> Feature maps and image locations</a></li>
+  <li><a href="#predicting-one-candidate-box" id="toc-predicting-one-candidate-box" class="nav-link" data-scroll-target="#predicting-one-candidate-box"><span class="header-section-number">8.3</span> Predicting one candidate box</a></li>
+  <li><a href="#multiple-candidate-predictions" id="toc-multiple-candidate-predictions" class="nav-link" data-scroll-target="#multiple-candidate-predictions"><span class="header-section-number">8.4</span> Multiple candidate predictions</a></li>
+  <li><a href="#filtering-candidates-by-class-score" id="toc-filtering-candidates-by-class-score" class="nav-link" data-scroll-target="#filtering-candidates-by-class-score"><span class="header-section-number">8.5</span> Filtering candidates by class score</a></li>
+  <li><a href="#non-maximum-suppression" id="toc-non-maximum-suppression" class="nav-link" data-scroll-target="#non-maximum-suppression"><span class="header-section-number">8.6</span> Non-maximum suppression</a></li>
+  <li><a href="#from-our-simple-detector-to-yolo11" id="toc-from-our-simple-detector-to-yolo11" class="nav-link" data-scroll-target="#from-our-simple-detector-to-yolo11"><span class="header-section-number">8.7</span> From our simple detector to YOLO11</a>
+  <ul class="collapse">
+  <li><a href="#building-the-heads-in-pytorch" id="toc-building-the-heads-in-pytorch" class="nav-link" data-scroll-target="#building-the-heads-in-pytorch"><span class="header-section-number">8.7.1</span> Building the heads in PyTorch</a></li>
+  <li><a href="#what-changes-in-yolo11" id="toc-what-changes-in-yolo11" class="nav-link" data-scroll-target="#what-changes-in-yolo11"><span class="header-section-number">8.7.2</span> What changes in YOLO11?</a></li>
+  </ul></li>
+  <li><a href="#returning-to-the-basketball-example" id="toc-returning-to-the-basketball-example" class="nav-link" data-scroll-target="#returning-to-the-basketball-example"><span class="header-section-number">8.8</span> Returning to the basketball example</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./visual.html">Visual data</a></li><li class="breadcrumb-item"><a href="./object_detection.html"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Object detection</span></a></li></ol></nav>
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Object detection</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="predicting-classes-and-locations" class="level2" data-number="8.1">
+<h2 data-number="8.1" class="anchored" data-anchor-id="predicting-classes-and-locations"><span class="header-section-number">8.1</span> Predicting classes and locations</h2>
+<p>For each detected object, we need a <strong>class</strong> and a <strong>location</strong>. In our basketball example, the class is <code>person</code>, while the location is represented by a bounding box:</p>
+<p><span class="math display">\[
+(x_{\min},\,y_{\min},\,x_{\max},\,y_{\max}).
+\]</span></p>
+<p>These four numbers specify the box’s left, top, right and bottom boundaries in image coordinates.</p>
+<p>We have already seen how a CNN can turn image features into class scores. To predict a bounding box, we also need a learned mapping from features to numerical coordinates. Predicting a category is a <strong>classification</strong> task; predicting these coordinates is a <strong>regression</strong> task.</p>
+<p>For a simple model that predicts one object, we can use the same learned features for both tasks:</p>
+<ul>
+<li>A <strong>classification head</strong> maps the features to class scores.</li>
+<li>A <strong>box-regression head</strong> maps the features to four box coordinates.</li>
+</ul>
+<p>Here a <strong>head</strong> means the part of the network that produces a particular output. The classification head plays the role of the final classification layers in our earlier CNN.</p>
+<p>Training such a model requires class labels and bounding-box annotations. Its loss must account for both the class prediction and the predicted location. The forward-pass, loss, backpropagation and parameter-update procedure remains the same.</p>
+<p>This describes one class-and-box prediction. We next need to consider how a detector produces multiple candidate predictions within the same image.</p>
+</section>
+<section id="feature-maps-and-image-locations" class="level2" data-number="8.2">
+<h2 data-number="8.2" class="anchored" data-anchor-id="feature-maps-and-image-locations"><span class="header-section-number">8.2</span> Feature maps and image locations</h2>
+<p>Our earlier CNN produced six <span class="math inline">\(14\times14\)</span> feature maps. Each map is an array of numbers arranged in rows and columns. Each number holds a filter response after ReLU and pooling. We can view the array as an image, with larger values appearing brighter.</p>
+<div id="fig-feature-map-location" class="quarto-figure quarto-figure-center quarto-float anchored" alt="A 28-by-28 MNIST image and a 14-by-14 pooled feature map, both outlined in blue. Pink outlines connect input rows 10–15 and columns 14–19 to feature-map row 6, column 8, whose value is approximately 0.665. Indices start at zero.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-feature-map-location-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="attachments/object-detection/feature-map-location.svg" class="img-fluid figure-img" style="width:100.0%" alt="A 28-by-28 MNIST image and a 14-by-14 pooled feature map, both outlined in blue. Pink outlines connect input rows 10–15 and columns 14–19 to feature-map row 6, column 8, whose value is approximately 0.665. Indices start at zero.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-feature-map-location-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8.1: Example pooled feature map from a hand-specified <span class="math inline">\(5\times5\)</span> edge filter (stride 1, padding 2), followed by ReLU and <span class="math inline">\(2\times2\)</span> max pooling (stride 2). Blue frames mark the whole arrays; pink outlines link the local input region to its pooled output cell. Input image: MNIST.
+</figcaption>
+</figure>
+</div>
+<p>A pair of indices locates an entry in this array. In the figure, the entry at row 6, column 8 has value approximately 0.665. The pink outline on the left shows the input region used to calculate it: rows 10–15 and columns 14–19. The four overlapping <span class="math inline">\(5\times5\)</span> filter positions feeding this pooling cell together cover this <span class="math inline">\(6\times6\)</span> input region. Moving one cell to the right in the feature map shifts the associated input region two pixels to the right.</p>
+<p>All six maps share this spatial grid. At row 6, column 8, we can read six responses, one from each map. These form a six-number feature vector that a prediction head can use.</p>
+<p>In our earlier classifier, we flattened all six <span class="math inline">\(14\times14\)</span> feature maps into one vector of 1176 values. We passed this vector to a classification head to predict the class of the whole image.</p>
+<p>For detection, we can group the values differently. At row 6, column 8 of the feature maps, for example, we take one entry from each of the six maps. These six values describe different filter responses associated with the same input region of the original image: rows 10–15 and columns 14–19 of the original image, highlighted in the figure.</p>
+<p>We can pass this six-value vector to classification and box-regression heads to produce a candidate detection. Repeating this operation at other rows and columns of the feature maps produces candidates based on different regions of the input image. Each candidate is therefore indexed by the feature-map position from which it was calculated.</p>
+</section>
+<section id="predicting-one-candidate-box" class="level2" data-number="8.3">
+<h2 data-number="8.3" class="anchored" data-anchor-id="predicting-one-candidate-box"><span class="header-section-number">8.3</span> Predicting one candidate box</h2>
+<p>Consider the candidate at row 6, column 8 of the feature maps. Its six feature values come from applying the six filters within the pink region of the original image, followed by ReLU and pooling. We choose the centre of this input region as a <strong>reference point</strong> for the candidate’s box. The orange box shows an example bounding-box prediction for the digit as a whole.</p>
+<p>We use image coordinates measured in pixels, with <span class="math inline">\(x\)</span> giving the column position and <span class="math inline">\(y\)</span> the row position. Pixel centres have integer coordinates, starting at <span class="math inline">\((0,0)\)</span> for the top-left pixel. Reference points and bounding-box edges can lie between pixel centres, so their coordinates can be fractional.</p>
+<p>We find the centre of the pink input region by averaging its first and last column coordinates, 14 and 19, and its first and last row coordinates, 10 and 15. This gives, in pixels,</p>
+<p><span class="math display">\[
+x_0=\frac{14+19}{2}=16.5,
+\qquad
+y_0=\frac{10+15}{2}=12.5.
+\]</span></p>
+<p>For this worked example, we use illustrative head outputs. Suppose the classification head gives digit 7 as the highest-scoring class, with a score of 0.90. The box-regression head predicts four distances, in image pixels, from the reference point to the box edges:</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th style="text-align: right;">Left</th>
+<th style="text-align: right;">Top</th>
+<th style="text-align: right;">Right</th>
+<th style="text-align: right;">Bottom</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">14</td>
+</tr>
+</tbody>
+</table>
+<div id="fig-candidate-box" class="quarto-figure quarto-figure-center quarto-float anchored" alt="Illustrative digit-7 candidate with class score 0.90. A pink six-by-six input region surrounds a green reference point at image coordinates (16.5, 12.5). An orange predicted box extends beyond that region. The same image coordinates on the right show distances 11 left, 6 top, 6 right and 14 bottom from the reference point to the box edges.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-candidate-box-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="attachments/object-detection/candidate-box.svg" class="img-fluid figure-img" style="width:100.0%" alt="Illustrative digit-7 candidate with class score 0.90. A pink six-by-six input region surrounds a green reference point at image coordinates (16.5, 12.5). An orange predicted box extends beyond that region. The same image coordinates on the right show distances 11 left, 6 top, 6 right and 14 bottom from the reference point to the box edges.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-candidate-box-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8.2: An illustrative candidate using supplied head outputs. The pink region supplies the features, the green point is the reference point, and the orange box is the proposed object extent. The right panel shows the four distances to the bounding box edges in the same original-image coordinates.
+</figcaption>
+</figure>
+</div>
+<p>To obtain the box coordinates, we subtract the left and top distances from the reference coordinates and add the right and bottom distances. Image rows increase downwards, so the top edge has a smaller <span class="math inline">\(y\)</span> coordinate than the reference point.</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Box edge</th>
+<th>Calculation</th>
+<th style="text-align: right;">Image coordinate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Left</td>
+<td><span class="math inline">\(x_{\min}=16.5-11\)</span></td>
+<td style="text-align: right;">5.5</td>
+</tr>
+<tr class="even">
+<td>Top</td>
+<td><span class="math inline">\(y_{\min}=12.5-6\)</span></td>
+<td style="text-align: right;">6.5</td>
+</tr>
+<tr class="odd">
+<td>Right</td>
+<td><span class="math inline">\(x_{\max}=16.5+6\)</span></td>
+<td style="text-align: right;">22.5</td>
+</tr>
+<tr class="even">
+<td>Bottom</td>
+<td><span class="math inline">\(y_{\max}=12.5+14\)</span></td>
+<td style="text-align: right;">26.5</td>
+</tr>
+</tbody>
+</table>
+<p>The resulting candidate has class <code>7</code>, score 0.90 and box coordinates</p>
+<p><span class="math display">\[
+(x_{\min},y_{\min},x_{\max},y_{\max})=(5.5,6.5,22.5,26.5).
+\]</span></p>
+<p>Note that the reference point comes from the feature-map position, while the predicted distances determine where the box edges lie in the original image.</p>
+</section>
+<section id="multiple-candidate-predictions" class="level2" data-number="8.4">
+<h2 data-number="8.4" class="anchored" data-anchor-id="multiple-candidate-predictions"><span class="header-section-number">8.4</span> Multiple candidate predictions</h2>
+<p>At each feature-map position, we pass the six-value feature vector to the classification and box-regression heads, i.e.&nbsp;our learned models for predicting class scores and box-edge distances. We reuse each head’s parameters across the grid, meaning we use the same feature-vector-to-class-scores model and the same feature-vector-to-box-distances model at every feature-grid point. The head outputs vary only because the input feature vectors differ between points. With one candidate per position, the <span class="math inline">\(14\times14\)</span> grid therefore produces 196 candidate outputs.</p>
+<p>For this simple detector, we include a <strong>background</strong> class alongside the ten digit classes. This allows the classification head to give a high score to background at positions with no object to detect.</p>
+<p>The following example shows three selected candidate outputs. Prediction P1 is the candidate from our previous example. The other boxes and all scores are illustrative values. We show the scores for digit 7 and background; the other nine digit-class scores are omitted from the table.</p>
+<table class="table">
+<colgroup>
+<col style="width: 15%">
+<col style="width: 21%">
+<col style="width: 21%">
+<col style="width: 21%">
+<col style="width: 21%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Candidate</th>
+<th style="text-align: right;">Feature-map row</th>
+<th style="text-align: right;">Feature-map column</th>
+<th style="text-align: right;">Score for digit 7</th>
+<th style="text-align: right;">Background score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>P1</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">0.90</td>
+<td style="text-align: right;">0.02</td>
+</tr>
+<tr class="even">
+<td>P2</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">0.80</td>
+<td style="text-align: right;">0.10</td>
+</tr>
+<tr class="odd">
+<td>P3</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.05</td>
+<td style="text-align: right;">0.90</td>
+</tr>
+</tbody>
+</table>
+<div id="fig-multiple-candidates" class="quarto-figure quarto-figure-center quarto-float anchored" alt="Three illustrative candidate predictions from a 14-by-14 feature-map grid, with one candidate per position. P1 and P2 originate at rows 6 and 7 of column 8 and have overlapping orange and purple boxes around the MNIST digit 7. P3 originates at row 2, column 1 and has a grey box over background. Green dots mark their reference points in the original image. All three image boxes are predictions.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-multiple-candidates-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="attachments/object-detection/multiple-candidates.svg" class="img-fluid figure-img" style="width:100.0%" alt="Three illustrative candidate predictions from a 14-by-14 feature-map grid, with one candidate per position. P1 and P2 originate at rows 6 and 7 of column 8 and have overlapping orange and purple boxes around the MNIST digit 7. P3 originates at row 2, column 1 and has a grey box over background. Green dots mark their reference points in the original image. All three image boxes are predictions.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-multiple-candidates-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8.3: Three selected positions in the shared feature-map grid and their corresponding candidate boxes in the original image. Each marked grid position supplies six feature values. The green dots in the image mark the reference points for those positions. All three boxes on the right are candidate predictions.
+</figcaption>
+</figure>
+</div>
+<p>P1 and P2 both give high scores to digit 7, and their boxes overlap around the same digit. P3 gives a high score to background and a low score to digit 7. Each feature-grid position contributes one candidate box and its class scores. As P1 and P2 illustrate, different positions can produce candidates for the same object. We now need to choose which candidates from across the grid to return as object detections.</p>
+<p><strong>Note:</strong> Here we are selecting among predictions. When we compare overlapping candidates, we compare predicted boxes with other predicted boxes. Later, in <a href="./evaluation.html#comparing-sets-of-boxes">Comparing sets of boxes</a>, we will match the returned predicted boxes (which may still include some that are competing predictions in the same region) to annotation boxes to evaluate their agreement with the supplied annotations.</p>
+</section>
+<section id="filtering-candidates-by-class-score" class="level2" data-number="8.5">
+<h2 data-number="8.5" class="anchored" data-anchor-id="filtering-candidates-by-class-score"><span class="header-section-number">8.5</span> Filtering candidates by class score</h2>
+<p>We first choose the highest-scoring class for each candidate prediction. For our simple digit detector, we discard a candidate if that class is <strong>background</strong>. Otherwise, we keep it for the next stage only if its class score is at least a chosen <strong>score threshold</strong>.</p>
+<p>For the three candidates shown earlier, a score threshold of 0.50 gives:</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Candidate</th>
+<th>Highest-scoring class</th>
+<th style="text-align: right;">Score for that class</th>
+<th>Decision</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>P1</td>
+<td>Digit 7</td>
+<td style="text-align: right;">0.90</td>
+<td>Keep</td>
+</tr>
+<tr class="even">
+<td>P2</td>
+<td>Digit 7</td>
+<td style="text-align: right;">0.80</td>
+<td>Keep</td>
+</tr>
+<tr class="odd">
+<td>P3</td>
+<td>Background</td>
+<td style="text-align: right;">0.90</td>
+<td>Discard: background</td>
+</tr>
+</tbody>
+</table>
+<p>Score filtering considers each candidate separately. P1 and P2 both pass this step, even though their boxes overlap around the same digit. We next need to consider the overlap between the remaining predicted boxes.</p>
+</section>
+<section id="non-maximum-suppression" class="level2" data-number="8.6">
+<h2 data-number="8.6" class="anchored" data-anchor-id="non-maximum-suppression"><span class="header-section-number">8.6</span> Non-maximum suppression</h2>
+<p>P1 and P2 both passed score filtering, but their boxes overlap around the same digit. A common procedure for reducing duplicate detections is <strong>non-maximum suppression (NMS)</strong>. It keeps a high-scoring prediction and suppresses lower-scoring predictions of the same class that overlap strongly with it.</p>
+<p>We measure box overlap using <strong>intersection over union (IoU)</strong>:</p>
+<p><span class="math display">\[
+\operatorname{IoU}
+=\frac{\text{area covered by both boxes}}{\text{area covered by at least one box}}.
+\]</span></p>
+<p>For boxes with positive area, IoU ranges from 0 for no overlap to 1 for identical boxes. The area calculation is explained in detail in <a href="./evaluation.html#comparing-two-boxes">Comparing two boxes</a>.</p>
+<p>For P1 and P2, the IoU is approximately 0.85. Suppose we use an <strong>overlap threshold</strong> of 0.70. We keep P1, which has the higher class score of 0.90. We <strong>suppress</strong>, i.e.&nbsp;discard, P2, whose class score is 0.80, because its IoU with P1 is greater than 0.70.</p>
+<p>The class-score threshold of 0.50 decided whether each candidate entered this step. The overlap threshold of 0.70 decides whether another prediction is suppressed after we keep a box.</p>
+<p>More generally, starting with the candidates that passed score filtering:</p>
+<ol type="1">
+<li>Move the candidate with the highest class score into the list of detections to return.</li>
+<li>Suppress any remaining candidate of the same class whose IoU with that kept box is greater than the overlap threshold.</li>
+<li>Repeat with the remaining candidates until none remain.</li>
+</ol>
+<p>Here, both boxes in each overlap comparison are predictions. Different real objects can also have strongly overlapping boxes, so NMS can suppress a valid detection. We will examine this limitation when we return to the basketball example.</p>
+</section>
+<section id="from-our-simple-detector-to-yolo11" class="level2" data-number="8.7">
+<h2 data-number="8.7" class="anchored" data-anchor-id="from-our-simple-detector-to-yolo11"><span class="header-section-number">8.7</span> From our simple detector to YOLO11</h2>
+<p>The simple detector we’ve described conceptually uses image features to predict both boxes and class scores across a grid. <strong>YOLO</strong>, short for <strong>You Only Look Once</strong>, uses this general approach. It is a <strong>single-stage detector</strong>: it predicts box and class outputs together from the image feature maps, without a separate region-proposal stage. A two-stage detector first proposes regions, then classifies and refines those regions.</p>
+<p>The original YOLO detector was introduced by Joseph Redmon, Santosh Divvala, Ross Girshick and Ali Farhadi <span class="citation" data-cites="redmon2016yolo">(<a href="#ref-redmon2016yolo" role="doc-biblioref">Redmon et al. 2016</a>)</span>. Since then, <strong>YOLO</strong> has become a family name rather than a single sequence of versions: related detectors have been developed by different research groups and organisations. Here we use <a href="https://docs.ultralytics.com/models/yolo11/">Ultralytics’ YOLO11</a>, released in 2024, and specifically the small YOLO11n model used in the lab.</p>
+<p>The details differ among models, but the terms <strong>backbone</strong>, <strong>neck</strong> and <strong>head</strong> are commonly used for modern detectors. A backbone extracts image features, a neck combines information across spatial scales, and heads produce box and class outputs. The explanation below is based on Ultralytics’ <a href="https://docs.ultralytics.com/guides/yolo-architecture/">YOLO architecture guide</a> and the <a href="https://github.com/ultralytics/ultralytics/blob/v8.4.52/ultralytics/cfg/models/11/yolo11.yaml">YOLO11 configuration in Ultralytics 8.4.52</a>, the package version pinned in the lab. This material is just intended to illustrate the general ideas of a real-world object detection model; I don’t expect you to memorise all the details.</p>
+<div id="fig-yolo11-overview" class="quarto-figure quarto-figure-center quarto-float anchored" alt="A basketball frame is resized and padded, then passed through a backbone and neck. The neck provides separate feature grids at three scales, from finer to coarser, each feeding box and class heads. Their outputs are decoded and filtered to produce boxes in original-image coordinates. The displayed detections are reused cached outputs." data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-yolo11-overview-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="attachments/object-detection/yolo11-overview.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" alt="A basketball frame is resized and padded, then passed through a backbone and neck. The neck provides separate feature grids at three scales, from finer to coarser, each feeding box and class heads. Their outputs are decoded and filtered to produce boxes in original-image coordinates. The displayed detections are reused cached outputs.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-yolo11-overview-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8.4: YOLO11’s main components. The frame-50 detections shown at the right are the saved predictions with confidence at least 0.50. Frame from TrackID3x3 <span class="citation" data-cites="trackid3x3">(<a href="#ref-trackid3x3" role="doc-biblioref">Yamada et al. 2025</a>)</span>, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>; overlays and diagram added.
+</figcaption>
+</figure>
+</div>
+<p>The feature extractor is called the <strong>backbone</strong>. In our small CNN, this was the convolution, ReLU and pooling block. YOLO11 uses a much deeper backbone.</p>
+<p>Our earlier CNN used pooling to reduce each <span class="math inline">\(28\times28\)</span> feature map to <span class="math inline">\(14\times14\)</span>. As information passes through YOLO11’s deeper backbone, further downsampling produces feature maps with progressively fewer rows and columns. Moving by one position on a finer grid corresponds to a smaller movement across the image. A position in a deeper, coarser grid draws on a larger region of the input image and provides broader context.</p>
+<p>Rather than using only the final, coarsest output, the <strong>neck</strong> combines information from selected backbone outputs and produces separate fine, medium and coarse feature grids. This use of features at several spatial resolutions is commonly called a <strong>feature pyramid</strong> <span class="citation" data-cites="lin2017fpn">(<a href="#ref-lin2017fpn" role="doc-biblioref">Lin et al. 2017</a>)</span>. YOLO11 supplies three such grids to its detection head; the number and exact resolutions used will depend on the specific detector. Finer grids retain more spatial detail, which is useful for small objects, while coarser grids provide broader context.</p>
+<p>At each scale resulting from the neck, the <strong>heads</strong> produce box outputs and class scores. The box outputs are decoded into coordinates, and score filtering and NMS select the detections to return. The library accounts for the input resizing and padding when reporting box coordinates in the original image. These are the coordinates we use with our court mapping.</p>
+<section id="building-the-heads-in-pytorch" class="level3" data-number="8.7.1">
+<h3 data-number="8.7.1" class="anchored" data-anchor-id="building-the-heads-in-pytorch"><span class="header-section-number">8.7.1</span> Building the heads in PyTorch</h3>
+<p>We can make the two-head structure explicit by briefly considering our single-grid digit example and earlier CNN feature extractor, rather than the full YOLO11 model. Here the CNN feature extractor plays the role of the <code>backbone</code>, and this simple example does not use a neck.</p>
+<p>The backbone produces <strong>six output channels</strong>, each containing a <span class="math inline">\(14\times14\)</span> grid of feature values. For one image, the output of the backbone has shape <code>(1, 6, 14, 14)</code>, ordered as <code>(batch, channels, height, width)</code>. These numbers come from:</p>
+<ul>
+<li><strong>1:</strong> one image in the batch.</li>
+<li><strong>6:</strong> the number of output channels we chose for the backbone convolution layer, <code>nn.Conv2d(1, 6, ...)</code>. Each of its six learned filters produces one output channel.</li>
+<li><strong>14, 14:</strong> the height and width after pooling. The <span class="math inline">\(5\times5\)</span> convolution, with padding 2 and stride 1, preserves the input’s <span class="math inline">\(28\times28\)</span> dimensions. ReLU leaves the shape unchanged. The <span class="math inline">\(2\times2\)</span> pooling with stride 2 then halves each dimension to 14.</li>
+</ul>
+<p>Each <strong>head</strong> below consists of a <span class="math inline">\(1\times1\)</span> convolution followed by an activation function. A convolution forms weighted sums over input channels and spatial positions. With a <span class="math inline">\(1\times1\)</span> kernel there is only one spatial position in the window, so each output is a weighted sum of the six channels at that location, with a bias added. However, even with a <span class="math inline">\(1\times1\)</span> kernel, the convolution structure ensures that the same weights and biases are used at every location. This operation mixes channels without mixing neighbouring grid locations.</p>
+<p>Since there is no neck in this example, both heads take the backbone’s output directly as input. The heads change the number of channels while preserving the <span class="math inline">\(14\times14\)</span> spatial grid:</p>
+<table class="table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Head</th>
+<th>Mapping at each grid location</th>
+<th>Output shape for one image</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Box head</td>
+<td>Six features → four edge distances</td>
+<td><code>(1, 4, 14, 14)</code></td>
+</tr>
+<tr class="even">
+<td>Classification head</td>
+<td>Six features → eleven class scores</td>
+<td><code>(1, 11, 14, 14)</code></td>
+</tr>
+</tbody>
+</table>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch <span class="im">import</span> nn</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>backbone <span class="op">=</span> nn.Sequential(</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    nn.Conv2d(<span class="dv">1</span>, <span class="dv">6</span>, kernel_size<span class="op">=</span><span class="dv">5</span>, stride<span class="op">=</span><span class="dv">1</span>, padding<span class="op">=</span><span class="dv">2</span>),</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    nn.ReLU(),</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    nn.MaxPool2d(kernel_size<span class="op">=</span><span class="dv">2</span>, stride<span class="op">=</span><span class="dv">2</span>),</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>box_head <span class="op">=</span> nn.Sequential(</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    nn.Conv2d(<span class="dv">6</span>, <span class="dv">4</span>, kernel_size<span class="op">=</span><span class="dv">1</span>),</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    nn.ReLU(),</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>class_head <span class="op">=</span> nn.Sequential(</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    nn.Conv2d(<span class="dv">6</span>, <span class="dv">11</span>, kernel_size<span class="op">=</span><span class="dv">1</span>),</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    nn.Softmax(dim<span class="op">=</span><span class="dv">1</span>),</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>The box head’s ReLU makes its four distances non-negative, in the order left, top, right, bottom. The class head’s softmax normalises the eleven scores separately at each grid location; channel 10 represents background.</p>
+<div class="toy-forward-example" style="break-inside: avoid; page-break-inside: avoid;">
+<p>To pass one random <span class="math inline">\(28\times28\)</span> single-channel array through the backbone and both heads we would do:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>images <span class="op">=</span> torch.rand(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">28</span>, <span class="dv">28</span>)</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> torch.no_grad():</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>    features <span class="op">=</span> backbone(images)</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    distances <span class="op">=</span> box_head(features)</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    class_scores <span class="op">=</span> class_head(features)</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Features:"</span>, features.shape)</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Box distances:"</span>, distances.shape)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Class scores:"</span>, class_scores.shape)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<pre class="text"><code>Features: torch.Size([1, 6, 14, 14])
+Box distances: torch.Size([1, 4, 14, 14])
+Class scores: torch.Size([1, 11, 14, 14])</code></pre>
+</div>
+<p>There are <span class="math inline">\(14\times14=196\)</span> candidate locations. At row 6, column 8, <code>distances[0, :, 6, 8]</code> contains the four distances, and <code>class_scores[0, :, 6, 8]</code> contains the eleven class scores. The first index selects the image in the batch.</p>
+<p>In the snippet above, the input is random and the parameters are untrained. Hence, we only print the shapes of the outputs. Training would require annotated images and losses for the class and box predictions. The box loss can be based on IoU between predicted and matched reference boxes.</p>
+</section>
+<section id="what-changes-in-yolo11" class="level3" data-number="8.7.2">
+<h3 data-number="8.7.2" class="anchored" data-anchor-id="what-changes-in-yolo11"><span class="header-section-number">8.7.2</span> What changes in YOLO11?</h3>
+<p>Returning to YOLO11, our example illustrates the basic ideas, but the model used in the lab has a deeper backbone, a neck and three feature scales, as shown above. It also uses a more elaborate box-output representation that its decoder converts into coordinates.</p>
+<p>Our digit example uses softmax over ten classes plus background. The pretrained YOLO11 detector instead produces scores for <strong>80 object classes</strong>, applying a sigmoid to each class output. The choice of independent sigmoids, rather than a softmax across the outputs, means that each score again lies between 0 and 1, but the scores need not sum to one. Background candidates can have low scores for every object class, rather than a high score for an explicit background class. Several classes can also score highly for the same candidate. In the usual inference workflow, the highest-scoring class is selected and its score is the returned confidence.</p>
+<p>Note: when we load <code>yolo11n.pt</code>, we load the <strong>complete pretrained detector</strong>, including its backbone, neck and heads. The basketball example uses these learned parameters.</p>
+</section>
+</section>
+<section id="returning-to-the-basketball-example" class="level2" data-number="8.8">
+<h2 data-number="8.8" class="anchored" data-anchor-id="returning-to-the-basketball-example"><span class="header-section-number">8.8</span> Returning to the basketball example</h2>
+<p>We now return to the saved YOLO11n <code>person</code> detections for frame 50 of our basketball video and interpret the settings in our <a href="./dataset.html#generate-your-own-detections">earlier detector call</a>:</p>
+<ul>
+<li><code>classes=[0]</code> selected the model’s <code>person</code> category.</li>
+<li><code>conf=0.01</code> set the initial confidence threshold.</li>
+<li><code>iou=0.70</code> set the NMS overlap threshold.</li>
+</ul>
+<p>The CSV contains the library’s returned detections after this processing, rather than all raw candidate predictions, though with a permissive initial confidence threshold. This threshold gives 31 saved detections for frame 50. If we further filter by keeping those with confidence at least 0.50, we obtain the eight shown below.</p>
+<div id="fig-basketball-return-predictions" class="quarto-figure quarto-figure-center quarto-float anchored" alt="Eight saved YOLO11n person boxes on basketball frame 50, each labelled with a confidence score of at least 0.50. The box labelled 0.83 is towards the upper left. The boxes labelled 0.85 and 0.59 at the right partly overlap but enclose different people.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-basketball-return-predictions-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="attachments/trackid3x3-s1t4/frame50_predictions_conf050.png" class="img-fluid figure-img" style="width:100.0%" alt="Eight saved YOLO11n person boxes on basketball frame 50, each labelled with a confidence score of at least 0.50. The box labelled 0.83 is towards the upper left. The boxes labelled 0.85 and 0.59 at the right partly overlap but enclose different people.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-basketball-return-predictions-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;8.5: Saved YOLO11n person detections for frame 50, labelled by confidence (at least 0.50). Frame from <a href="https://doi.org/10.1145/3728423.3759400">TrackID3x3</a>, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>; prediction overlays added for the course.
+</figcaption>
+</figure>
+</div>
+<p>For example, the box labelled 0.83 has the following values, with confidence and coordinates rounded to two decimal places:</p>
+<table class="table">
+<colgroup>
+<col style="width: 13%">
+<col style="width: 17%">
+<col style="width: 17%">
+<col style="width: 17%">
+<col style="width: 17%">
+<col style="width: 17%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Class</th>
+<th style="text-align: right;">Confidence</th>
+<th style="text-align: right;"><span class="math inline">\(x_{\min}\)</span></th>
+<th style="text-align: right;"><span class="math inline">\(y_{\min}\)</span></th>
+<th style="text-align: right;"><span class="math inline">\(x_{\max}\)</span></th>
+<th style="text-align: right;"><span class="math inline">\(y_{\max}\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>person</code></td>
+<td style="text-align: right;">0.83</td>
+<td style="text-align: right;">332.86</td>
+<td style="text-align: right;">310.63</td>
+<td style="text-align: right;">363.40</td>
+<td style="text-align: right;">396.43</td>
+</tr>
+</tbody>
+</table>
+<p>These coordinates are in pixels in the original <span class="math inline">\(1280\times720\)</span> image.</p>
+<p>The boxes labelled 0.85 and 0.59 at the right partly overlap, although they enclose different people. However, their IoU is approximately 0.07, well below the NMS threshold of 0.70. This particular overlap therefore does not trigger suppression between these two boxes.</p>
+
+
+<!-- -->
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-lin2017fpn" class="csl-entry" role="listitem">
+Lin, Tsung-Yi, Piotr Dollár, Ross Girshick, Kaiming He, Bharath Hariharan, and Serge Belongie. 2017. <span>“Feature Pyramid Networks for Object Detection.”</span> In <em>Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition</em>, 2117–25. <a href="https://doi.org/10.1109/CVPR.2017.106">https://doi.org/10.1109/CVPR.2017.106</a>.
+</div>
+<div id="ref-redmon2016yolo" class="csl-entry" role="listitem">
+Redmon, Joseph, Santosh Divvala, Ross Girshick, and Ali Farhadi. 2016. <span>“You Only Look Once: Unified, Real-Time Object Detection.”</span> In <em>Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition</em>, 779–88. <a href="https://doi.org/10.1109/CVPR.2016.91">https://doi.org/10.1109/CVPR.2016.91</a>.
+</div>
+<div id="ref-trackid3x3" class="csl-entry" role="listitem">
+Yamada, Kazuhiro, Li Yin, Qingrui Hu, Ning Ding, Shunsuke Iwashita, Jun Ichikawa, Kiwamu Kotani, Calvin Yeung, and Keisuke Fujii. 2025. <span>“<span>TrackID3x3</span>: A Dataset and Algorithm for Multi-Player Tracking with Identification and Pose Estimation in <span>3x3</span> Basketball Full-Court Videos.”</span> In <em>Proceedings of the 8th International <span>ACM</span> Workshop on Multimedia Content Analysis in Sports</em>, 163–73. ACM. <a href="https://doi.org/10.1145/3728423.3759400">https://doi.org/10.1145/3728423.3759400</a>.
+</div>
+</div>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./training.html" class="pagination-link  aria-label=" &lt;span="" and="" inference&lt;="" span&gt;"="">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Training and inference</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./evaluation.html" class="pagination-link" aria-label="<span class='chapter-number'>9</span>&nbsp; <span class='chapter-title'>Evaluation of detection models</span>">
+        <span class="nav-page-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Evaluation of detection models</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb4" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Object detection</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="fu">## Predicting classes and locations</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>For each detected object, we need a **class** and a **location**. In our basketball example, the class is <span class="in">`person`</span>, while the location is represented by a bounding box:</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>(x_{\min},\,y_{\min},\,x_{\max},\,y_{\max}).</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>These four numbers specify the box’s left, top, right and bottom boundaries in image coordinates.</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>We have already seen how a CNN can turn image features into class scores. To predict a bounding box, we also need a learned mapping from features to numerical coordinates. Predicting a category is a **classification** task; predicting these coordinates is a **regression** task.</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>For a simple model that predicts one object, we can use the same learned features for both tasks:</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>A **classification head** maps the features to class scores.</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>A **box-regression head** maps the features to four box coordinates.</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>Here a **head** means the part of the network that produces a particular output. The classification head plays the role of the final classification layers in our earlier CNN.</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>Training such a model requires class labels and bounding-box annotations. Its loss must account for both the class prediction and the predicted location. The forward-pass, loss, backpropagation and parameter-update procedure remains the same.</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>This describes one class-and-box prediction. We next need to consider how a detector produces multiple candidate predictions within the same image.</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="fu">## Feature maps and image locations</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>Our earlier CNN produced six $14\times14$ feature maps. Each map is an array of numbers arranged in rows and columns. Each number holds a filter response after ReLU and pooling. We can view the array as an image, with larger values appearing brighter.</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a><span class="al">![Example pooled feature map from a hand-specified $5\times5$ edge filter (stride 1, padding 2), followed by ReLU and $2\times2$ max pooling (stride 2). Blue frames mark the whole arrays; pink outlines link the local input region to its pooled output cell. Input image: MNIST.](&lt;attachments/object-detection/feature-map-location.svg&gt;)</span>{#fig-feature-map-location width=100% fig-alt="A 28-by-28 MNIST image and a 14-by-14 pooled feature map, both outlined in blue. Pink outlines connect input rows 10–15 and columns 14–19 to feature-map row 6, column 8, whose value is approximately 0.665. Indices start at zero."}</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>A pair of indices locates an entry in this array. In the figure, the entry at row 6, column 8 has value approximately 0.665. The pink outline on the left shows the input region used to calculate it: rows 10–15 and columns 14–19. The four overlapping $5\times5$ filter positions feeding this pooling cell together cover this $6\times6$ input region. Moving one cell to the right in the feature map shifts the associated input region two pixels to the right.</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>All six maps share this spatial grid. At row 6, column 8, we can read six responses, one from each map. These form a six-number feature vector that a prediction head can use.</span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>In our earlier classifier, we flattened all six $14\times14$ feature maps into one vector of 1176 values. We passed this vector to a classification head to predict the class of the whole image.</span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a>For detection, we can group the values differently. At row 6, column 8 of the feature maps, for example, we take one entry from each of the six maps. These six values describe different filter responses associated with the same input region of the original image: rows 10–15 and columns 14–19 of the original image, highlighted in the figure.</span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a>We can pass this six-value vector to classification and box-regression heads to produce a candidate detection. Repeating this operation at other rows and columns of the feature maps produces candidates based on different regions of the input image. Each candidate is therefore indexed by the feature-map position from which it was calculated.</span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a><span class="fu">## Predicting one candidate box</span></span>
+<span id="cb4-43"><a href="#cb4-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-44"><a href="#cb4-44" aria-hidden="true" tabindex="-1"></a>Consider the candidate at row 6, column 8 of the feature maps. Its six feature values come from applying the six filters within the pink region of the original image, followed by ReLU and pooling. We choose the centre of this input region as a **reference point** for the candidate's box. The orange box shows an example bounding-box prediction for the digit as a whole.</span>
+<span id="cb4-45"><a href="#cb4-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-46"><a href="#cb4-46" aria-hidden="true" tabindex="-1"></a>We use image coordinates measured in pixels, with $x$ giving the column position and $y$ the row position. Pixel centres have integer coordinates, starting at $(0,0)$ for the top-left pixel. Reference points and bounding-box edges can lie between pixel centres, so their coordinates can be fractional.</span>
+<span id="cb4-47"><a href="#cb4-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-48"><a href="#cb4-48" aria-hidden="true" tabindex="-1"></a>We find the centre of the pink input region by averaging its first and last column coordinates, 14 and 19, and its first and last row coordinates, 10 and 15. This gives, in pixels,</span>
+<span id="cb4-49"><a href="#cb4-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-50"><a href="#cb4-50" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb4-51"><a href="#cb4-51" aria-hidden="true" tabindex="-1"></a>x_0=\frac{14+19}{2}=16.5,</span>
+<span id="cb4-52"><a href="#cb4-52" aria-hidden="true" tabindex="-1"></a>\qquad</span>
+<span id="cb4-53"><a href="#cb4-53" aria-hidden="true" tabindex="-1"></a>y_0=\frac{10+15}{2}=12.5.</span>
+<span id="cb4-54"><a href="#cb4-54" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb4-55"><a href="#cb4-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-56"><a href="#cb4-56" aria-hidden="true" tabindex="-1"></a>For this worked example, we use illustrative head outputs. Suppose the classification head gives digit 7 as the highest-scoring class, with a score of 0.90. The box-regression head predicts four distances, in image pixels, from the reference point to the box edges:</span>
+<span id="cb4-57"><a href="#cb4-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-58"><a href="#cb4-58" aria-hidden="true" tabindex="-1"></a>| Left | Top | Right | Bottom |</span>
+<span id="cb4-59"><a href="#cb4-59" aria-hidden="true" tabindex="-1"></a>| ---: | ---: | ---: | ---: |</span>
+<span id="cb4-60"><a href="#cb4-60" aria-hidden="true" tabindex="-1"></a>| 11 | 6 | 6 | 14 |</span>
+<span id="cb4-61"><a href="#cb4-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-62"><a href="#cb4-62" aria-hidden="true" tabindex="-1"></a><span class="al">![An illustrative candidate using supplied head outputs. The pink region supplies the features, the green point is the reference point, and the orange box is the proposed object extent. The right panel shows the four distances to the bounding box edges in the same original-image coordinates.](&lt;attachments/object-detection/candidate-box.svg&gt;)</span>{#fig-candidate-box width=100% fig-alt="Illustrative digit-7 candidate with class score 0.90. A pink six-by-six input region surrounds a green reference point at image coordinates (16.5, 12.5). An orange predicted box extends beyond that region. The same image coordinates on the right show distances 11 left, 6 top, 6 right and 14 bottom from the reference point to the box edges."}</span>
+<span id="cb4-63"><a href="#cb4-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-64"><a href="#cb4-64" aria-hidden="true" tabindex="-1"></a>To obtain the box coordinates, we subtract the left and top distances from the reference coordinates and add the right and bottom distances. Image rows increase downwards, so the top edge has a smaller $y$ coordinate than the reference point.</span>
+<span id="cb4-65"><a href="#cb4-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-66"><a href="#cb4-66" aria-hidden="true" tabindex="-1"></a>| Box edge | Calculation | Image coordinate |</span>
+<span id="cb4-67"><a href="#cb4-67" aria-hidden="true" tabindex="-1"></a>| --- | --- | ---: |</span>
+<span id="cb4-68"><a href="#cb4-68" aria-hidden="true" tabindex="-1"></a>| Left | $x_{\min}=16.5-11$ | 5.5 |</span>
+<span id="cb4-69"><a href="#cb4-69" aria-hidden="true" tabindex="-1"></a>| Top | $y_{\min}=12.5-6$ | 6.5 |</span>
+<span id="cb4-70"><a href="#cb4-70" aria-hidden="true" tabindex="-1"></a>| Right | $x_{\max}=16.5+6$ | 22.5 |</span>
+<span id="cb4-71"><a href="#cb4-71" aria-hidden="true" tabindex="-1"></a>| Bottom | $y_{\max}=12.5+14$ | 26.5 |</span>
+<span id="cb4-72"><a href="#cb4-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-73"><a href="#cb4-73" aria-hidden="true" tabindex="-1"></a>The resulting candidate has class <span class="in">`7`</span>, score 0.90 and box coordinates</span>
+<span id="cb4-74"><a href="#cb4-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-75"><a href="#cb4-75" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb4-76"><a href="#cb4-76" aria-hidden="true" tabindex="-1"></a>(x_{\min},y_{\min},x_{\max},y_{\max})=(5.5,6.5,22.5,26.5).</span>
+<span id="cb4-77"><a href="#cb4-77" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb4-78"><a href="#cb4-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-79"><a href="#cb4-79" aria-hidden="true" tabindex="-1"></a>Note that the reference point comes from the feature-map position, while the predicted distances determine where the box edges lie in the original image.</span>
+<span id="cb4-80"><a href="#cb4-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-81"><a href="#cb4-81" aria-hidden="true" tabindex="-1"></a><span class="fu">## Multiple candidate predictions</span></span>
+<span id="cb4-82"><a href="#cb4-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-83"><a href="#cb4-83" aria-hidden="true" tabindex="-1"></a>At each feature-map position, we pass the six-value feature vector to the classification and box-regression heads, i.e. our learned models for predicting class scores and box-edge distances. We reuse each head’s parameters across the grid, meaning we use the same feature-vector-to-class-scores model and the same feature-vector-to-box-distances model at every feature-grid point. The head outputs vary only because the input feature vectors differ between points. With one candidate per position, the $14\times14$ grid therefore produces 196 candidate outputs.</span>
+<span id="cb4-84"><a href="#cb4-84" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-85"><a href="#cb4-85" aria-hidden="true" tabindex="-1"></a>For this simple detector, we include a **background** class alongside the ten digit classes. This allows the classification head to give a high score to background at positions with no object to detect.</span>
+<span id="cb4-86"><a href="#cb4-86" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-87"><a href="#cb4-87" aria-hidden="true" tabindex="-1"></a>The following example shows three selected candidate outputs. Prediction P1 is the candidate from our previous example. The other boxes and all scores are illustrative values. We show the scores for digit 7 and background; the other nine digit-class scores are omitted from the table.</span>
+<span id="cb4-88"><a href="#cb4-88" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-89"><a href="#cb4-89" aria-hidden="true" tabindex="-1"></a>| Candidate | Feature-map row | Feature-map column | Score for digit 7 | Background score |</span>
+<span id="cb4-90"><a href="#cb4-90" aria-hidden="true" tabindex="-1"></a>| --- | ---: | ---: | ---: | ---: |</span>
+<span id="cb4-91"><a href="#cb4-91" aria-hidden="true" tabindex="-1"></a>| P1 | 6 | 8 | 0.90 | 0.02 |</span>
+<span id="cb4-92"><a href="#cb4-92" aria-hidden="true" tabindex="-1"></a>| P2 | 7 | 8 | 0.80 | 0.10 |</span>
+<span id="cb4-93"><a href="#cb4-93" aria-hidden="true" tabindex="-1"></a>| P3 | 2 | 1 | 0.05 | 0.90 |</span>
+<span id="cb4-94"><a href="#cb4-94" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-95"><a href="#cb4-95" aria-hidden="true" tabindex="-1"></a><span class="al">![Three selected positions in the shared feature-map grid and their corresponding candidate boxes in the original image. Each marked grid position supplies six feature values. The green dots in the image mark the reference points for those positions. All three boxes on the right are candidate predictions.](&lt;attachments/object-detection/multiple-candidates.svg&gt;)</span>{#fig-multiple-candidates width=100% fig-alt="Three illustrative candidate predictions from a 14-by-14 feature-map grid, with one candidate per position. P1 and P2 originate at rows 6 and 7 of column 8 and have overlapping orange and purple boxes around the MNIST digit 7. P3 originates at row 2, column 1 and has a grey box over background. Green dots mark their reference points in the original image. All three image boxes are predictions."}</span>
+<span id="cb4-96"><a href="#cb4-96" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-97"><a href="#cb4-97" aria-hidden="true" tabindex="-1"></a>P1 and P2 both give high scores to digit 7, and their boxes overlap around the same digit. P3 gives a high score to background and a low score to digit 7. Each feature-grid position contributes one candidate box and its class scores. As P1 and P2 illustrate, different positions can produce candidates for the same object. We now need to choose which candidates from across the grid to return as object detections.</span>
+<span id="cb4-98"><a href="#cb4-98" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-99"><a href="#cb4-99" aria-hidden="true" tabindex="-1"></a>**Note:** Here we are selecting among predictions. When we compare overlapping candidates, we compare predicted boxes with other predicted boxes. Later, in <span class="co">[</span><span class="ot">Comparing sets of boxes</span><span class="co">](evaluation.qmd#comparing-sets-of-boxes)</span>, we will match the returned predicted boxes (which may still include some that are competing predictions in the same region) to annotation boxes to evaluate their agreement with the supplied annotations.</span>
+<span id="cb4-100"><a href="#cb4-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-101"><a href="#cb4-101" aria-hidden="true" tabindex="-1"></a><span class="fu">## Filtering candidates by class score</span></span>
+<span id="cb4-102"><a href="#cb4-102" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-103"><a href="#cb4-103" aria-hidden="true" tabindex="-1"></a>We first choose the highest-scoring class for each candidate prediction. For our simple digit detector, we discard a candidate if that class is **background**. Otherwise, we keep it for the next stage only if its class score is at least a chosen **score threshold**.</span>
+<span id="cb4-104"><a href="#cb4-104" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-105"><a href="#cb4-105" aria-hidden="true" tabindex="-1"></a>For the three candidates shown earlier, a score threshold of 0.50 gives:</span>
+<span id="cb4-106"><a href="#cb4-106" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-107"><a href="#cb4-107" aria-hidden="true" tabindex="-1"></a>| Candidate | Highest-scoring class | Score for that class | Decision |</span>
+<span id="cb4-108"><a href="#cb4-108" aria-hidden="true" tabindex="-1"></a>| --- | --- | ---: | --- |</span>
+<span id="cb4-109"><a href="#cb4-109" aria-hidden="true" tabindex="-1"></a>| P1 | Digit 7 | 0.90 | Keep |</span>
+<span id="cb4-110"><a href="#cb4-110" aria-hidden="true" tabindex="-1"></a>| P2 | Digit 7 | 0.80 | Keep |</span>
+<span id="cb4-111"><a href="#cb4-111" aria-hidden="true" tabindex="-1"></a>| P3 | Background | 0.90 | Discard: background |</span>
+<span id="cb4-112"><a href="#cb4-112" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-113"><a href="#cb4-113" aria-hidden="true" tabindex="-1"></a>Score filtering considers each candidate separately. P1 and P2 both pass this step, even though their boxes overlap around the same digit. We next need to consider the overlap between the remaining predicted boxes.</span>
+<span id="cb4-114"><a href="#cb4-114" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-115"><a href="#cb4-115" aria-hidden="true" tabindex="-1"></a><span class="fu">## Non-maximum suppression</span></span>
+<span id="cb4-116"><a href="#cb4-116" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-117"><a href="#cb4-117" aria-hidden="true" tabindex="-1"></a>P1 and P2 both passed score filtering, but their boxes overlap around the same digit. A common procedure for reducing duplicate detections is **non-maximum suppression (NMS)**. It keeps a high-scoring prediction and suppresses lower-scoring predictions of the same class that overlap strongly with it.</span>
+<span id="cb4-118"><a href="#cb4-118" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-119"><a href="#cb4-119" aria-hidden="true" tabindex="-1"></a>We measure box overlap using **intersection over union (IoU)**:</span>
+<span id="cb4-120"><a href="#cb4-120" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-121"><a href="#cb4-121" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb4-122"><a href="#cb4-122" aria-hidden="true" tabindex="-1"></a>\operatorname{IoU}</span>
+<span id="cb4-123"><a href="#cb4-123" aria-hidden="true" tabindex="-1"></a>=\frac{\text{area covered by both boxes}}{\text{area covered by at least one box}}.</span>
+<span id="cb4-124"><a href="#cb4-124" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb4-125"><a href="#cb4-125" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-126"><a href="#cb4-126" aria-hidden="true" tabindex="-1"></a>For boxes with positive area, IoU ranges from 0 for no overlap to 1 for identical boxes. The area calculation is explained in detail in <span class="co">[</span><span class="ot">Comparing two boxes</span><span class="co">](evaluation.qmd#comparing-two-boxes)</span>.</span>
+<span id="cb4-127"><a href="#cb4-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-128"><a href="#cb4-128" aria-hidden="true" tabindex="-1"></a>For P1 and P2, the IoU is approximately 0.85. Suppose we use an **overlap threshold** of 0.70. We keep P1, which has the higher class score of 0.90. We **suppress**, i.e. discard, P2, whose class score is 0.80, because its IoU with P1 is greater than 0.70.</span>
+<span id="cb4-129"><a href="#cb4-129" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-130"><a href="#cb4-130" aria-hidden="true" tabindex="-1"></a>The class-score threshold of 0.50 decided whether each candidate entered this step. The overlap threshold of 0.70 decides whether another prediction is suppressed after we keep a box.</span>
+<span id="cb4-131"><a href="#cb4-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-132"><a href="#cb4-132" aria-hidden="true" tabindex="-1"></a>More generally, starting with the candidates that passed score filtering:</span>
+<span id="cb4-133"><a href="#cb4-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-134"><a href="#cb4-134" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>Move the candidate with the highest class score into the list of detections to return.</span>
+<span id="cb4-135"><a href="#cb4-135" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>Suppress any remaining candidate of the same class whose IoU with that kept box is greater than the overlap threshold.</span>
+<span id="cb4-136"><a href="#cb4-136" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>Repeat with the remaining candidates until none remain.</span>
+<span id="cb4-137"><a href="#cb4-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-138"><a href="#cb4-138" aria-hidden="true" tabindex="-1"></a>Here, both boxes in each overlap comparison are predictions. Different real objects can also have strongly overlapping boxes, so NMS can suppress a valid detection. We will examine this limitation when we return to the basketball example.</span>
+<span id="cb4-139"><a href="#cb4-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-140"><a href="#cb4-140" aria-hidden="true" tabindex="-1"></a><span class="fu">## From our simple detector to YOLO11</span></span>
+<span id="cb4-141"><a href="#cb4-141" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-142"><a href="#cb4-142" aria-hidden="true" tabindex="-1"></a>The simple detector we’ve described conceptually uses image features to predict both boxes and class scores across a grid. **YOLO**, short for **You Only Look Once**, uses this general approach. It is a **single-stage detector**: it predicts box and class outputs together from the image feature maps, without a separate region-proposal stage. A two-stage detector first proposes regions, then classifies and refines those regions.</span>
+<span id="cb4-143"><a href="#cb4-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-144"><a href="#cb4-144" aria-hidden="true" tabindex="-1"></a>The original YOLO detector was introduced by Joseph Redmon, Santosh Divvala, Ross Girshick and Ali Farhadi <span class="co">[</span><span class="ot">@redmon2016yolo</span><span class="co">]</span>. Since then, **YOLO** has become a family name rather than a single sequence of versions: related detectors have been developed by different research groups and organisations. Here we use <span class="co">[</span><span class="ot">Ultralytics’ YOLO11</span><span class="co">](https://docs.ultralytics.com/models/yolo11/)</span>, released in 2024, and specifically the small YOLO11n model used in the lab.</span>
+<span id="cb4-145"><a href="#cb4-145" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-146"><a href="#cb4-146" aria-hidden="true" tabindex="-1"></a>The details differ among models, but the terms **backbone**, **neck** and **head** are commonly used for modern detectors. A backbone extracts image features, a neck combines information across spatial scales, and heads produce box and class outputs. The explanation below is based on Ultralytics’ <span class="co">[</span><span class="ot">YOLO architecture guide</span><span class="co">](https://docs.ultralytics.com/guides/yolo-architecture/)</span> and the <span class="co">[</span><span class="ot">YOLO11 configuration in Ultralytics 8.4.52</span><span class="co">](https://github.com/ultralytics/ultralytics/blob/v8.4.52/ultralytics/cfg/models/11/yolo11.yaml)</span>, the package version pinned in the lab. This material is just intended to illustrate the general ideas of a real-world object detection model; I don't expect you to memorise all the details.</span>
+<span id="cb4-147"><a href="#cb4-147" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-148"><a href="#cb4-148" aria-hidden="true" tabindex="-1"></a>!<span class="co">[</span><span class="ot">YOLO11’s main components. The frame-50 detections shown at the right are the saved predictions with confidence at least 0.50. Frame from TrackID3x3 [@trackid3x3], [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); overlays and diagram added.</span><span class="co">](&lt;attachments/object-detection/yolo11-overview.png&gt;)</span>{#fig-yolo11-overview width=100% fig-align="center" fig-alt="A basketball frame is resized and padded, then passed through a backbone and neck. The neck provides separate feature grids at three scales, from finer to coarser, each feeding box and class heads. Their outputs are decoded and filtered to produce boxes in original-image coordinates. The displayed detections are reused cached outputs."}</span>
+<span id="cb4-149"><a href="#cb4-149" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-150"><a href="#cb4-150" aria-hidden="true" tabindex="-1"></a>The feature extractor is called the **backbone**. In our small CNN, this was the convolution, ReLU and pooling block. YOLO11 uses a much deeper backbone.</span>
+<span id="cb4-151"><a href="#cb4-151" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-152"><a href="#cb4-152" aria-hidden="true" tabindex="-1"></a>Our earlier CNN used pooling to reduce each $28\times28$ feature map to $14\times14$. As information passes through YOLO11’s deeper backbone, further downsampling produces feature maps with progressively fewer rows and columns. Moving by one position on a finer grid corresponds to a smaller movement across the image. A position in a deeper, coarser grid draws on a larger region of the input image and provides broader context.</span>
+<span id="cb4-153"><a href="#cb4-153" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-154"><a href="#cb4-154" aria-hidden="true" tabindex="-1"></a>Rather than using only the final, coarsest output, the **neck** combines information from selected backbone outputs and produces separate fine, medium and coarse feature grids. This use of features at several spatial resolutions is commonly called a **feature pyramid** <span class="co">[</span><span class="ot">@lin2017fpn</span><span class="co">]</span>. YOLO11 supplies three such grids to its detection head; the number and exact resolutions used will depend on the specific detector. Finer grids retain more spatial detail, which is useful for small objects, while coarser grids provide broader context.</span>
+<span id="cb4-155"><a href="#cb4-155" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-156"><a href="#cb4-156" aria-hidden="true" tabindex="-1"></a>At each scale resulting from the neck, the **heads** produce box outputs and class scores. The box outputs are decoded into coordinates, and score filtering and NMS select the detections to return. The library accounts for the input resizing and padding when reporting box coordinates in the original image. These are the coordinates we use with our court mapping.</span>
+<span id="cb4-157"><a href="#cb4-157" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-158"><a href="#cb4-158" aria-hidden="true" tabindex="-1"></a><span class="fu">### Building the heads in PyTorch</span></span>
+<span id="cb4-159"><a href="#cb4-159" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-160"><a href="#cb4-160" aria-hidden="true" tabindex="-1"></a>We can make the two-head structure explicit by briefly considering our single-grid digit example and earlier CNN feature extractor, rather than the full YOLO11 model. Here the CNN feature extractor plays the role of the <span class="in">`backbone`</span>, and this simple example does not use a neck.</span>
+<span id="cb4-161"><a href="#cb4-161" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-162"><a href="#cb4-162" aria-hidden="true" tabindex="-1"></a>The backbone produces **six output channels**, each containing a $14\times14$ grid of feature values. For one image, the output of the backbone has shape <span class="in">`(1, 6, 14, 14)`</span>, ordered as <span class="in">`(batch, channels, height, width)`</span>. These numbers come from:</span>
+<span id="cb4-163"><a href="#cb4-163" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-164"><a href="#cb4-164" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**1:** one image in the batch.</span>
+<span id="cb4-165"><a href="#cb4-165" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**6:** the number of output channels we chose for the backbone convolution layer, <span class="in">`nn.Conv2d(1, 6, ...)`</span>. Each of its six learned filters produces one output channel.</span>
+<span id="cb4-166"><a href="#cb4-166" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**14, 14:** the height and width after pooling. The $5\times5$ convolution, with padding 2 and stride 1, preserves the input’s $28\times28$ dimensions. ReLU leaves the shape unchanged. The $2\times2$ pooling with stride 2 then halves each dimension to 14.</span>
+<span id="cb4-167"><a href="#cb4-167" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-168"><a href="#cb4-168" aria-hidden="true" tabindex="-1"></a>Each **head** below consists of a $1\times1$ convolution followed by an activation function. A convolution forms weighted sums over input channels and spatial positions. With a $1\times1$ kernel there is only one spatial position in the window, so each output is a weighted sum of the six channels at that location, with a bias added. However, even with a $1\times1$ kernel, the convolution structure ensures that the same weights and biases are used at every location. This operation mixes channels without mixing neighbouring grid locations.</span>
+<span id="cb4-169"><a href="#cb4-169" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-170"><a href="#cb4-170" aria-hidden="true" tabindex="-1"></a>Since there is no neck in this example, both heads take the backbone’s output directly as input. The heads change the number of channels while preserving the $14\times14$ spatial grid:</span>
+<span id="cb4-171"><a href="#cb4-171" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-172"><a href="#cb4-172" aria-hidden="true" tabindex="-1"></a>| Head | Mapping at each grid location | Output shape for one image |</span>
+<span id="cb4-173"><a href="#cb4-173" aria-hidden="true" tabindex="-1"></a>|---|---|---|</span>
+<span id="cb4-174"><a href="#cb4-174" aria-hidden="true" tabindex="-1"></a>| Box head | Six features → four edge distances | <span class="in">`(1, 4, 14, 14)`</span> |</span>
+<span id="cb4-175"><a href="#cb4-175" aria-hidden="true" tabindex="-1"></a>| Classification head | Six features → eleven class scores | <span class="in">`(1, 11, 14, 14)`</span> |</span>
+<span id="cb4-176"><a href="#cb4-176" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-177"><a href="#cb4-177" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb4-178"><a href="#cb4-178" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb4-179"><a href="#cb4-179" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch <span class="im">import</span> nn</span>
+<span id="cb4-180"><a href="#cb4-180" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-181"><a href="#cb4-181" aria-hidden="true" tabindex="-1"></a>backbone <span class="op">=</span> nn.Sequential(</span>
+<span id="cb4-182"><a href="#cb4-182" aria-hidden="true" tabindex="-1"></a>    nn.Conv2d(<span class="dv">1</span>, <span class="dv">6</span>, kernel_size<span class="op">=</span><span class="dv">5</span>, stride<span class="op">=</span><span class="dv">1</span>, padding<span class="op">=</span><span class="dv">2</span>),</span>
+<span id="cb4-183"><a href="#cb4-183" aria-hidden="true" tabindex="-1"></a>    nn.ReLU(),</span>
+<span id="cb4-184"><a href="#cb4-184" aria-hidden="true" tabindex="-1"></a>    nn.MaxPool2d(kernel_size<span class="op">=</span><span class="dv">2</span>, stride<span class="op">=</span><span class="dv">2</span>),</span>
+<span id="cb4-185"><a href="#cb4-185" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-186"><a href="#cb4-186" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-187"><a href="#cb4-187" aria-hidden="true" tabindex="-1"></a>box_head <span class="op">=</span> nn.Sequential(</span>
+<span id="cb4-188"><a href="#cb4-188" aria-hidden="true" tabindex="-1"></a>    nn.Conv2d(<span class="dv">6</span>, <span class="dv">4</span>, kernel_size<span class="op">=</span><span class="dv">1</span>),</span>
+<span id="cb4-189"><a href="#cb4-189" aria-hidden="true" tabindex="-1"></a>    nn.ReLU(),</span>
+<span id="cb4-190"><a href="#cb4-190" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-191"><a href="#cb4-191" aria-hidden="true" tabindex="-1"></a>class_head <span class="op">=</span> nn.Sequential(</span>
+<span id="cb4-192"><a href="#cb4-192" aria-hidden="true" tabindex="-1"></a>    nn.Conv2d(<span class="dv">6</span>, <span class="dv">11</span>, kernel_size<span class="op">=</span><span class="dv">1</span>),</span>
+<span id="cb4-193"><a href="#cb4-193" aria-hidden="true" tabindex="-1"></a>    nn.Softmax(dim<span class="op">=</span><span class="dv">1</span>),</span>
+<span id="cb4-194"><a href="#cb4-194" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-195"><a href="#cb4-195" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb4-196"><a href="#cb4-196" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-197"><a href="#cb4-197" aria-hidden="true" tabindex="-1"></a>The box head’s ReLU makes its four distances non-negative, in the order left, top, right, bottom. The class head’s softmax normalises the eleven scores separately at each grid location; channel 10 represents background.</span>
+<span id="cb4-198"><a href="#cb4-198" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-199"><a href="#cb4-199" aria-hidden="true" tabindex="-1"></a>::: {.toy-forward-example style="break-inside: avoid; page-break-inside: avoid;"}</span>
+<span id="cb4-200"><a href="#cb4-200" aria-hidden="true" tabindex="-1"></a>To pass one random $28\times28$ single-channel array through the backbone and both heads we would do:</span>
+<span id="cb4-201"><a href="#cb4-201" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-202"><a href="#cb4-202" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb4-203"><a href="#cb4-203" aria-hidden="true" tabindex="-1"></a>images <span class="op">=</span> torch.rand(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">28</span>, <span class="dv">28</span>)</span>
+<span id="cb4-204"><a href="#cb4-204" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-205"><a href="#cb4-205" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> torch.no_grad():</span>
+<span id="cb4-206"><a href="#cb4-206" aria-hidden="true" tabindex="-1"></a>    features <span class="op">=</span> backbone(images)</span>
+<span id="cb4-207"><a href="#cb4-207" aria-hidden="true" tabindex="-1"></a>    distances <span class="op">=</span> box_head(features)</span>
+<span id="cb4-208"><a href="#cb4-208" aria-hidden="true" tabindex="-1"></a>    class_scores <span class="op">=</span> class_head(features)</span>
+<span id="cb4-209"><a href="#cb4-209" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-210"><a href="#cb4-210" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Features:"</span>, features.shape)</span>
+<span id="cb4-211"><a href="#cb4-211" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Box distances:"</span>, distances.shape)</span>
+<span id="cb4-212"><a href="#cb4-212" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Class scores:"</span>, class_scores.shape)</span>
+<span id="cb4-213"><a href="#cb4-213" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb4-214"><a href="#cb4-214" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-215"><a href="#cb4-215" aria-hidden="true" tabindex="-1"></a><span class="in">```text</span></span>
+<span id="cb4-216"><a href="#cb4-216" aria-hidden="true" tabindex="-1"></a><span class="in">Features: torch.Size([1, 6, 14, 14])</span></span>
+<span id="cb4-217"><a href="#cb4-217" aria-hidden="true" tabindex="-1"></a><span class="in">Box distances: torch.Size([1, 4, 14, 14])</span></span>
+<span id="cb4-218"><a href="#cb4-218" aria-hidden="true" tabindex="-1"></a><span class="in">Class scores: torch.Size([1, 11, 14, 14])</span></span>
+<span id="cb4-219"><a href="#cb4-219" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb4-220"><a href="#cb4-220" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb4-221"><a href="#cb4-221" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-222"><a href="#cb4-222" aria-hidden="true" tabindex="-1"></a>There are $14\times14=196$ candidate locations. At row 6, column 8, <span class="in">`distances[0, :, 6, 8]`</span> contains the four distances, and <span class="in">`class_scores[0, :, 6, 8]`</span> contains the eleven class scores. The first index selects the image in the batch.</span>
+<span id="cb4-223"><a href="#cb4-223" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-224"><a href="#cb4-224" aria-hidden="true" tabindex="-1"></a>In the snippet above, the input is random and the parameters are untrained. Hence, we only print the shapes of the outputs. Training would require annotated images and losses for the class and box predictions. The box loss can be based on IoU between predicted and matched reference boxes.</span>
+<span id="cb4-225"><a href="#cb4-225" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-226"><a href="#cb4-226" aria-hidden="true" tabindex="-1"></a><span class="fu">### What changes in YOLO11?</span></span>
+<span id="cb4-227"><a href="#cb4-227" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-228"><a href="#cb4-228" aria-hidden="true" tabindex="-1"></a>Returning to YOLO11, our example illustrates the basic ideas, but the model used in the lab has a deeper backbone, a neck and three feature scales, as shown above. It also uses a more elaborate box-output representation that its decoder converts into coordinates.</span>
+<span id="cb4-229"><a href="#cb4-229" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-230"><a href="#cb4-230" aria-hidden="true" tabindex="-1"></a>Our digit example uses softmax over ten classes plus background. The pretrained YOLO11 detector instead produces scores for **80 object classes**, applying a sigmoid to each class output. The choice of independent sigmoids, rather than a softmax across the outputs, means that each score again lies between 0 and 1, but the scores need not sum to one. Background candidates can have low scores for every object class, rather than a high score for an explicit background class. Several classes can also score highly for the same candidate. In the usual inference workflow, the highest-scoring class is selected and its score is the returned confidence.</span>
+<span id="cb4-231"><a href="#cb4-231" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-232"><a href="#cb4-232" aria-hidden="true" tabindex="-1"></a>Note: when we load <span class="in">`yolo11n.pt`</span>, we load the **complete pretrained detector**, including its backbone, neck and heads. The basketball example uses these learned parameters.</span>
+<span id="cb4-233"><a href="#cb4-233" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-234"><a href="#cb4-234" aria-hidden="true" tabindex="-1"></a><span class="fu">## Returning to the basketball example</span></span>
+<span id="cb4-235"><a href="#cb4-235" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-236"><a href="#cb4-236" aria-hidden="true" tabindex="-1"></a>We now return to the saved YOLO11n <span class="in">`person`</span> detections for frame 50 of our basketball video and interpret the settings in our <span class="co">[</span><span class="ot">earlier detector call</span><span class="co">](dataset.qmd#generate-your-own-detections)</span>:</span>
+<span id="cb4-237"><a href="#cb4-237" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-238"><a href="#cb4-238" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`classes=[0]`</span> selected the model's <span class="in">`person`</span> category.</span>
+<span id="cb4-239"><a href="#cb4-239" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`conf=0.01`</span> set the initial confidence threshold.</span>
+<span id="cb4-240"><a href="#cb4-240" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span><span class="in">`iou=0.70`</span> set the NMS overlap threshold.</span>
+<span id="cb4-241"><a href="#cb4-241" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-242"><a href="#cb4-242" aria-hidden="true" tabindex="-1"></a>The CSV contains the library’s returned detections after this processing, rather than all raw candidate predictions, though with a permissive initial confidence threshold. This threshold gives 31 saved detections for frame 50. If we further filter by keeping those with confidence at least 0.50, we obtain the eight shown below.</span>
+<span id="cb4-243"><a href="#cb4-243" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-244"><a href="#cb4-244" aria-hidden="true" tabindex="-1"></a>!<span class="co">[</span><span class="ot">Saved YOLO11n person detections for frame 50, labelled by confidence (at least 0.50). Frame from [TrackID3x3](https://doi.org/10.1145/3728423.3759400), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); prediction overlays added for the course.</span><span class="co">](&lt;attachments/trackid3x3-s1t4/frame50_predictions_conf050.png&gt;)</span>{#fig-basketball-return-predictions width=100% fig-alt="Eight saved YOLO11n person boxes on basketball frame 50, each labelled with a confidence score of at least 0.50. The box labelled 0.83 is towards the upper left. The boxes labelled 0.85 and 0.59 at the right partly overlap but enclose different people."}</span>
+<span id="cb4-245"><a href="#cb4-245" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-246"><a href="#cb4-246" aria-hidden="true" tabindex="-1"></a>For example, the box labelled 0.83 has the following values, with confidence and coordinates rounded to two decimal places:</span>
+<span id="cb4-247"><a href="#cb4-247" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-248"><a href="#cb4-248" aria-hidden="true" tabindex="-1"></a>| Class | Confidence | $x_{\min}$ | $y_{\min}$ | $x_{\max}$ | $y_{\max}$ |</span>
+<span id="cb4-249"><a href="#cb4-249" aria-hidden="true" tabindex="-1"></a>| --- | ---: | ---: | ---: | ---: | ---: |</span>
+<span id="cb4-250"><a href="#cb4-250" aria-hidden="true" tabindex="-1"></a>| <span class="in">`person`</span> | 0.83 | 332.86 | 310.63 | 363.40 | 396.43 |</span>
+<span id="cb4-251"><a href="#cb4-251" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-252"><a href="#cb4-252" aria-hidden="true" tabindex="-1"></a>These coordinates are in pixels in the original $1280\times720$ image.</span>
+<span id="cb4-253"><a href="#cb4-253" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-254"><a href="#cb4-254" aria-hidden="true" tabindex="-1"></a>The boxes labelled 0.85 and 0.59 at the right partly overlap, although they enclose different people. However, their IoU is approximately 0.07, well below the NMS threshold of 0.70. This particular overlap therefore does not trigger suppression between these two boxes.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p><a href="attribution.txt">Third-party sources and licences</a></p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

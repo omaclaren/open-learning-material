@@ -1,0 +1,60 @@
+ENGSCI 304: Engineering Machine Learning II — third-party sources and licences
+
+These notes are provided for non-commercial teaching and learning. Third-party
+material retains its own copyright and licence terms; no single licence is
+asserted for all material in the book. Chapter captions and references supply
+additional credits.
+
+TRACKID3X3 BASKETBALL DATA AND DERIVATIVES
+
+Source: TrackID3x3, Indoor subset, basket_S1T4_pre, frame 50 and supplied court
+landmarks. Creators: Kazuhiro Yamada, Li Yin, Qingrui Hu, Ning Ding, Shunsuke
+Iwashita, Jun Ichikawa, Kiwamu Kotani, Calvin Yeung and Keisuke Fujii (2025).
+Dataset paper: https://doi.org/10.1145/3728423.3759400
+Public archive: https://drive.google.com/drive/folders/1aWqMwQKr5xKMjqms7-raYluSlxPsGvwX
+Dataset licence: Creative Commons Attribution 4.0 International (CC BY 4.0).
+https://creativecommons.org/licenses/by/4.0/
+
+Course modifications include still extraction, crops, annotation/prediction
+box overlays, labels, colour-channel views, geometric overlays and explanatory
+layouts. The court helper converts landmark coordinates from centimetres to
+metres and supplies a calculated image-to-court transformation. Detector
+outputs and the explanatory figure styling were created for the course, not
+provided as official results by the dataset authors. No endorsement is implied.
+This website does not distribute the video or the practical-notebook package.
+
+FOUNDATIONS OF COMPUTER VISION: PINHOLE IMAGE-FORMATION FIGURE
+
+Copyright 2024 Antonio Torralba, Phillip Isola and William T. Freeman.
+Foundations of Computer Vision, MIT Press, Figure 5.3.
+Source and caption: https://visionbook.mit.edu/imaging.html#fig-wallpicture
+Original image: https://visionbook.mit.edu/figures/imaging/no_picture_on_a_wall_aina.png
+Copyright notice: https://visionbook.mit.edu/copyright.html
+The book website states Creative Commons Attribution-NonCommercial-NoDerivatives
+4.0 International (CC BY-NC-ND 4.0), subject to its exception for components
+included with permission. No separate exception is identified in this figure's
+caption. https://creativecommons.org/licenses/by-nc-nd/4.0/
+
+The PNG is reproduced unmodified; its course caption is separate. No endorsement
+is implied. The dataset's CC BY licence does not apply to this figure. Other
+camera diagrams were constructed for these notes; the chapters identify the
+book examples that informed the relevant geometric explanations.
+
+OTHER FIGURE SOURCES
+
+The MNIST digit used in the small detector illustrations comes from the MNIST
+handwritten-digit database by Yann LeCun, Corinna Cortes and Christopher J. C.
+Burges: https://yann.lecun.com/exdb/mnist/
+The filtering diagrams and illustrative predictions were created for the course;
+they are not published MNIST benchmark results.
+
+The tensor-index diagram is reused from Oliver Maclaren's ENGSCI 205 teaching
+material, with surrounding whitespace trimmed. Other explanatory diagrams and
+layouts were prepared for ENGSCI 304 unless otherwise credited in the chapters.
+
+SOFTWARE
+
+The rendered site uses Quarto and its bundled web dependencies; their notices
+are retained in the distributed files. Referenced model/software packages have
+their own licences. Citing or using a package does not transfer the dataset's
+licence to that software.

@@ -1,0 +1,1668 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.549">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>ENGSCI 304: Engineering Machine Learning II - 4&nbsp; Camera models</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+/* CSS for citations */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+  margin-bottom: 0em;
+}
+.hanging-indent div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./image_tasks.html" rel="next">
+<link href="./dataset.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles/print.css">
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./visual.html">Visual data</a></li><li class="breadcrumb-item"><a href="./camera_models.html"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Camera models</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">ENGSCI 304: Engineering Machine Learning II</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">About these notes</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./recommended_reading.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Recommended reading</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Overview</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./visual.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Visual data</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./basketball_application.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Application: From amateur basketball video footage to player trajectories</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dataset.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Obtaining and visualising the dataset</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./camera_models.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Camera models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./image_tasks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Image analysis tasks</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./image_modelling.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Image modelling: From pixels to learned features</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./training.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Training and inference</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./object_detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Object detection</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Evaluation of detection models</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#a-simple-camera-model-and-perspective-projection" id="toc-a-simple-camera-model-and-perspective-projection" class="nav-link active" data-scroll-target="#a-simple-camera-model-and-perspective-projection"><span class="header-section-number">4.1</span> A simple camera model and perspective projection</a></li>
+  <li><a href="#geometry-of-the-pinhole-camera-model" id="toc-geometry-of-the-pinhole-camera-model" class="nav-link" data-scroll-target="#geometry-of-the-pinhole-camera-model"><span class="header-section-number">4.2</span> Geometry of the pinhole camera model</a>
+  <ul class="collapse">
+  <li><a href="#a-virtual-image-plane" id="toc-a-virtual-image-plane" class="nav-link" data-scroll-target="#a-virtual-image-plane"><span class="header-section-number">4.2.1</span> A virtual image plane</a></li>
+  <li><a href="#coordinates-relative-to-the-camera" id="toc-coordinates-relative-to-the-camera" class="nav-link" data-scroll-target="#coordinates-relative-to-the-camera"><span class="header-section-number">4.2.2</span> Coordinates relative to the camera</a></li>
+  <li><a href="#points-along-a-viewing-line" id="toc-points-along-a-viewing-line" class="nav-link" data-scroll-target="#points-along-a-viewing-line"><span class="header-section-number">4.2.3</span> Points along a viewing line</a></li>
+  <li><a href="#perspective-projection" id="toc-perspective-projection" class="nav-link" data-scroll-target="#perspective-projection"><span class="header-section-number">4.2.4</span> Perspective projection</a></li>
+  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example"><span class="header-section-number">4.2.5</span> Example</a></li>
+  </ul></li>
+  <li><a href="#homogeneous-coordinates" id="toc-homogeneous-coordinates" class="nav-link" data-scroll-target="#homogeneous-coordinates"><span class="header-section-number">4.3</span> Homogeneous coordinates</a></li>
+  <li><a href="#different-coordinate-systems" id="toc-different-coordinate-systems" class="nav-link" data-scroll-target="#different-coordinate-systems"><span class="header-section-number">4.4</span> Different coordinate systems</a>
+  <ul class="collapse">
+  <li><a href="#pixel-coordinates" id="toc-pixel-coordinates" class="nav-link" data-scroll-target="#pixel-coordinates"><span class="header-section-number">4.4.1</span> Pixel coordinates</a></li>
+  <li><a href="#from-image-plane-coordinates-to-pixels" id="toc-from-image-plane-coordinates-to-pixels" class="nav-link" data-scroll-target="#from-image-plane-coordinates-to-pixels"><span class="header-section-number">4.4.2</span> From image-plane coordinates to pixels</a></li>
+  <li><a href="#a-worked-camera-to-pixel-example" id="toc-a-worked-camera-to-pixel-example" class="nav-link" data-scroll-target="#a-worked-camera-to-pixel-example"><span class="header-section-number">4.4.3</span> A worked camera-to-pixel example</a></li>
+  </ul></li>
+  <li><a href="#homography" id="toc-homography" class="nav-link" data-scroll-target="#homography"><span class="header-section-number">4.5</span> Homography</a>
+  <ul class="collapse">
+  <li><a href="#connecting-the-image-plane-and-the-court-plane" id="toc-connecting-the-image-plane-and-the-court-plane" class="nav-link" data-scroll-target="#connecting-the-image-plane-and-the-court-plane"><span class="header-section-number">4.5.1</span> Connecting the image plane and the court plane</a></li>
+  <li><a href="#what-does-the-mapping-preserve" id="toc-what-does-the-mapping-preserve" class="nav-link" data-scroll-target="#what-does-the-mapping-preserve"><span class="header-section-number">4.5.2</span> What does the mapping preserve?</a></li>
+  <li><a href="#from-court-coordinates-to-camera-coordinates" id="toc-from-court-coordinates-to-camera-coordinates" class="nav-link" data-scroll-target="#from-court-coordinates-to-camera-coordinates"><span class="header-section-number">4.5.3</span> From court coordinates to camera coordinates</a></li>
+  <li><a href="#from-these-outputs-to-the-image" id="toc-from-these-outputs-to-the-image" class="nav-link" data-scroll-target="#from-these-outputs-to-the-image"><span class="header-section-number">4.5.4</span> From these outputs to the image</a></li>
+  <li><a href="#including-the-pixel-conversion" id="toc-including-the-pixel-conversion" class="nav-link" data-scroll-target="#including-the-pixel-conversion"><span class="header-section-number">4.5.5</span> Including the pixel conversion</a></li>
+  <li><a href="#from-pixels-back-to-the-court" id="toc-from-pixels-back-to-the-court" class="nav-link" data-scroll-target="#from-pixels-back-to-the-court"><span class="header-section-number">4.5.6</span> From pixels back to the court</a></li>
+  <li><a href="#how-many-landmarks-do-we-need" id="toc-how-many-landmarks-do-we-need" class="nav-link" data-scroll-target="#how-many-landmarks-do-we-need"><span class="header-section-number">4.5.7</span> How many landmarks do we need?</a></li>
+  <li><a href="#from-a-player-box-to-a-court-position" id="toc-from-a-player-box-to-a-court-position" class="nav-link" data-scroll-target="#from-a-player-box-to-a-court-position"><span class="header-section-number">4.5.8</span> From a player box to a court position</a></li>
+  <li><a href="#checking-the-court-positions" id="toc-checking-the-court-positions" class="nav-link" data-scroll-target="#checking-the-court-positions"><span class="header-section-number">4.5.9</span> Checking the court positions</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./visual.html">Visual data</a></li><li class="breadcrumb-item"><a href="./camera_models.html"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Camera models</span></a></li></ol></nav>
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Camera models</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Here we briefly consider camera models, which are a key part of the physics-based perspective on visual data. A camera model describes how we get from the <strong>physical world</strong> (3D in space) to the <strong>image</strong> (2D in pixel coordinates). This mapping is often referred to as a <strong>perspective projection</strong>. We will not go into extensive details of camera models, but we will introduce some key concepts that will be useful for understanding the data and representing our location and tracking data in <strong>court coordinates</strong> (positions on the basketball court) rather than simply <strong>image coordinates</strong> (pixel locations in the image).</p>
+<section id="a-simple-camera-model-and-perspective-projection" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="a-simple-camera-model-and-perspective-projection"><span class="header-section-number">4.1</span> A simple camera model and perspective projection</h2>
+<p>The simplest camera model is the <strong>pinhole camera model</strong>. We represent the camera as an opaque box with a small opening on one side and a light-sensitive surface—the sensor—on the opposite side.</p>
+<p>Light is emitted or reflected from objects in the scene and travels approximately in straight lines between interactions with other objects. At a given location, light can arrive from many different directions. An exposed sensor would combine contributions from these directions, rather than record a separate image location for each part of the scene.</p>
+<p>The camera body blocks most of these paths. Only light passing through the pinhole can reach the sensor. If we idealise the pinhole as a single point, each location on the sensor receives light along one line passing through that point. Different viewing directions therefore correspond to different sensor locations.</p>
+<div id="fig-pinhole-image-formation" class="quarto-figure quarto-figure-center quarto-float anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-pinhole-image-formation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="attachments/camera-models/torralba-pinhole-fig5-3.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-pinhole-image-formation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4.1: Image formation with a pinhole. (a) Without an aperture (hole), light from different scene points reaches the same wall location. (b) The pinhole restricts the admitted light paths, producing an inverted image. Reproduced from <span class="citation" data-cites="foundationsCVbook">Torralba, Isola, and Freeman (<a href="#ref-foundationsCVbook" role="doc-biblioref">2024, fig. 5.3</a>)</span>.
+</figcaption>
+</figure>
+</div>
+<p>The image is inverted because the light paths cross at the pinhole. Follow a ray from the upper part of the tree: it travels downwards towards the opening and continues downwards after passing through it, reaching the lower part of the image plane. Similarly, light from the lower part of the tree reaches the upper part of the image plane. The light does not change direction at the pinhole; each ray simply continues along the same straight line.</p>
+</section>
+<section id="geometry-of-the-pinhole-camera-model" class="level2" data-number="4.2">
+<h2 data-number="4.2" class="anchored" data-anchor-id="geometry-of-the-pinhole-camera-model"><span class="header-section-number">4.2</span> Geometry of the pinhole camera model</h2>
+<p>Choose a single point on the sensor and trace its light path backwards, through the pinhole and into the scene. This gives a <strong>viewing line</strong> along which the observed surface point must lie.</p>
+<p>Different scene points along this line would project to the same sensor location. The image location therefore identifies a viewing direction, but does not by itself tell us how far away the surface is. In this sense, projection from the three-dimensional scene to the two-dimensional image loses depth information.</p>
+<section id="a-virtual-image-plane" class="level3" data-number="4.2.1">
+<h3 data-number="4.2.1" class="anchored" data-anchor-id="a-virtual-image-plane"><span class="header-section-number">4.2.1</span> A virtual image plane</h3>
+<p>The sensor lies behind the pinhole, where the light forms an inverted image. For the geometry, however, it is convenient to represent the image on an imaginary plane in front of the pinhole. We call this the <strong>virtual image plane</strong>.</p>
+<p>To construct it, take the same viewing lines and mark where they intersect this front plane. A line from the upper part of the scene intersects the front plane above the pinhole, before continuing through the hole to the lower part of the sensor. The front-plane representation is therefore upright.</p>
+<div id="fig-virtual-image-plane" class="quarto-figure quarto-figure-center quarto-float anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-virtual-image-plane-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="attachments/camera-models/virtual-image-plane-side-view.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-virtual-image-plane-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4.2: Physical and virtual image planes, shown from the side. The upright scene arrow and its two image arrows are connected by the same viewing lines; the diagonal shows one selected light path. The planes are shown equally far from the pinhole. Simplified schematic based on <span class="citation" data-cites="foundationsCVbook">Torralba, Isola, and Freeman (<a href="#ref-foundationsCVbook" role="doc-biblioref">2024, fig. 5.8</a>)</span>.
+</figcaption>
+</figure>
+</div>
+<p>We have not moved the sensor or changed the light paths admitted by the pinhole. We have simply chosen different points along those same lines to represent the image. At each virtual image point, we associate the value recorded at the corresponding sensor point; we do not include the other light that would reach an actual screen placed there.</p>
+</section>
+<section id="coordinates-relative-to-the-camera" class="level3" data-number="4.2.2">
+<h3 data-number="4.2.2" class="anchored" data-anchor-id="coordinates-relative-to-the-camera"><span class="header-section-number">4.2.2</span> Coordinates relative to the camera</h3>
+<p>To describe the geometry mathematically, place the origin at the pinhole. Let the <span class="math inline">\(Z_c\)</span>-axis point forwards, perpendicular to the image planes, and let the <span class="math inline">\(X_c\)</span>- and <span class="math inline">\(Y_c\)</span>-axes run in two perpendicular directions parallel to those planes. A scene point then has coordinates <span class="math inline">\((X_c,Y_c,Z_c)\)</span>. The subscript <span class="math inline">\(c\)</span> indicates that these coordinates are measured relative to the camera.</p>
+<p>Let <span class="math inline">\(f&gt;0\)</span> be the distance from the pinhole to either image plane, called the <strong>focal length</strong> in this pinhole model. The virtual image plane is at <span class="math inline">\(Z_c=f\)</span>, while the physical sensor is at <span class="math inline">\(Z_c=-f\)</span>. A point on the virtual image plane therefore has three-dimensional coordinates <span class="math inline">\((x,y,f)\)</span>. Since its last coordinate is fixed, we can describe its position within that plane using just the two coordinates <span class="math inline">\((x,y)\)</span>.</p>
+</section>
+<section id="points-along-a-viewing-line" class="level3" data-number="4.2.3">
+<h3 data-number="4.2.3" class="anchored" data-anchor-id="points-along-a-viewing-line"><span class="header-section-number">4.2.3</span> Points along a viewing line</h3>
+<p>The position vector from the pinhole <span class="math inline">\((0,0,0)\)</span> to a scene point is <span class="math inline">\((X_c,Y_c,Z_c)\)</span>. Taking different multiples of this vector gives points along the line through the pinhole and the scene point. The coordinates of any point on this line can therefore be written as <span class="math display">\[
+(tX_c,tY_c,tZ_c).
+\]</span></p>
+<div id="fig-points-on-viewing-line" class="quarto-figure quarto-figure-center quarto-float anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-points-on-viewing-line-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="attachments/camera-models/points-on-viewing-line.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-points-on-viewing-line-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4.3: A point between the pinhole and the scene point.
+</figcaption>
+</figure>
+</div>
+<p>At <span class="math inline">\(t=0\)</span>, we are at the pinhole; at <span class="math inline">\(t=1\)</span>, we are at the scene point. Values between 0 and 1 give points between them. Negative values continue along the same line behind the pinhole.</p>
+</section>
+<section id="perspective-projection" class="level3" data-number="4.2.4">
+<h3 data-number="4.2.4" class="anchored" data-anchor-id="perspective-projection"><span class="header-section-number">4.2.4</span> Perspective projection</h3>
+<div id="fig-perspective-projection-3d" class="quarto-figure quarto-figure-center quarto-float anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-perspective-projection-3d-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="attachments/camera-models/perspective-projection-upright-view.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-perspective-projection-3d-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4.4: Projection onto the virtual image plane. The perpendicular camera axis meets the plane at the principal point. Only segments hidden by the drawn plane are dashed.
+</figcaption>
+</figure>
+</div>
+<p>The virtual image plane is at <span class="math inline">\(Z_c=f\)</span>. To find where the viewing line meets this plane, we set the third coordinate of <span class="math inline">\((tX_c,tY_c,tZ_c)\)</span> equal to <span class="math inline">\(f\)</span>: <span class="math display">\[
+tZ_c=f
+\quad\Longrightarrow\quad
+t=\frac{f}{Z_c}.
+\]</span> Substituting this value of <span class="math inline">\(t\)</span> gives the intersection <span class="math display">\[
+\left(f\frac{X_c}{Z_c},\;f\frac{Y_c}{Z_c},\;f\right).
+\]</span> The first two coordinates give the position within the image plane. Thus the <strong>perspective projection</strong> of the scene point has image coordinates <span class="math display">\[
+\boxed{x=f\frac{X_c}{Z_c},\qquad y=f\frac{Y_c}{Z_c}.}
+\]</span></p>
+<p>For the physical sensor, we instead set the third coordinate equal to <span class="math inline">\(-f\)</span>: <span class="math display">\[
+tZ_c=-f
+\quad\Longrightarrow\quad
+t=-\frac{f}{Z_c}.
+\]</span> The intersection is then <span class="math display">\[
+\left(-f\frac{X_c}{Z_c},\;-f\frac{Y_c}{Z_c},\;-f\right).
+\]</span> The first two coordinates change sign, giving the inverted image.</p>
+</section>
+<section id="example" class="level3" data-number="4.2.5">
+<h3 data-number="4.2.5" class="anchored" data-anchor-id="example"><span class="header-section-number">4.2.5</span> Example</h3>
+<div id="fig-perspective-projection-views" class="quarto-figure quarto-figure-center quarto-float anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-perspective-projection-views-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="attachments/camera-models/perspective-projection-side-and-front.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-perspective-projection-views-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4.5: Side view of the camera geometry (left) and front view of the image plane (right). The side view makes the perpendicular intersection explicit; the front view shows the coordinates within the image plane.
+</figcaption>
+</figure>
+</div>
+<p>Take <span class="math inline">\(f=2\)</span> and a scene point with camera coordinates <span class="math inline">\((2,1,4)\)</span>, using the same units for all distances. The viewing line meets the virtual image plane when <span class="math display">\[
+t=\frac{f}{Z_c}=\frac{2}{4}=\frac12.
+\]</span> The intersection is therefore <span class="math display">\[
+\frac12(2,1,4)=\left(1,\frac12,2\right).
+\]</span> Its third coordinate is <span class="math inline">\(f=2\)</span>, as required, and its image coordinates are <span class="math display">\[
+(x,y)=\left(1,\frac12\right).
+\]</span></p>
+<p>Now consider the scene point <span class="math inline">\((4,2,8)\)</span>, twice as far along the same viewing line. This time, <span class="math display">\[
+t=\frac{2}{8}=\frac14,
+\]</span> giving <span class="math display">\[
+\frac14(4,2,8)=\left(1,\frac12,2\right).
+\]</span> The two scene points lie at different distances from the camera but have the same image coordinates. Knowing <span class="math inline">\(f\)</span> has allowed us to locate the image point, but has not identified which scene point along the viewing line produced it.</p>
+</section>
+</section>
+<section id="homogeneous-coordinates" class="level2" data-number="4.3">
+<h2 data-number="4.3" class="anchored" data-anchor-id="homogeneous-coordinates"><span class="header-section-number">4.3</span> Homogeneous coordinates</h2>
+<p>We first express the image-plane distances in units of <span class="math inline">\(f\)</span>, by dividing both coordinates by <span class="math inline">\(f\)</span>: <span class="math display">\[
+x_n=\frac{x}{f}=\frac{X_c}{Z_c},
+\qquad
+y_n=\frac{y}{f}=\frac{Y_c}{Z_c}.
+\]</span> We call these <strong>normalised image coordinates</strong>. Normalising here means dividing by the common scale <span class="math inline">\(f\)</span>.</p>
+<p>The two ratios share a denominator, <span class="math inline">\(Z_c\)</span>. Rather than carrying out the divisions immediately, we can keep the two numerators and their common denominator together as three numbers: <span class="math display">\[
+(X_c,Y_c,Z_c).
+\]</span> For example, the triple <span class="math inline">\((2,1,4)\)</span> represents the normalised image point <span class="math display">\[
+\left(\frac{2}{4},\frac{1}{4}\right).
+\]</span> The triple <span class="math inline">\((4,2,8)\)</span> represents the same point, since <span class="math display">\[
+\left(\frac{4}{8},\frac{2}{8}\right)
+=
+\left(\frac{2}{4},\frac{1}{4}\right).
+\]</span> Multiplying all three entries by the same nonzero number leaves both ratios unchanged.</p>
+<p>We call these triples <strong>homogeneous coordinates</strong> for the image point. In this representation, we use only the ratios between the entries. The triples <span class="math inline">\((2,1,4)\)</span> and <span class="math inline">\((4,2,8)\)</span> describe different physical positions when read as camera coordinates, but the same image point when read as homogeneous coordinates.</p>
+<p>We can choose a representation with third entry equal to 1 by dividing all three entries by <span class="math inline">\(Z_c\)</span>: <span class="math display">\[
+\frac{1}{Z_c}(X_c,Y_c,Z_c)
+=
+\left(\frac{X_c}{Z_c},\frac{Y_c}{Z_c},1\right)
+=
+(x_n,y_n,1).
+\]</span> The first two entries are then the normalised image coordinates themselves.</p>
+<p>Homogeneous coordinates are a standard tool in <strong>projective geometry</strong>. We will use them to describe perspective mappings between the court and image planes. The subject has roots in perspective drawing, including Desargues’s seventeenth-century work, and developed into a distinct field in the nineteenth century <span class="citation" data-cites="mactutorDesargues mactutorPoncelet">(<a href="#ref-mactutorDesargues" role="doc-biblioref"><span>“Girard Desargues”</span> 2020</a>; <a href="#ref-mactutorPoncelet" role="doc-biblioref">O’Connor and Robertson 2008</a>)</span>.</p>
+</section>
+<section id="different-coordinate-systems" class="level2" data-number="4.4">
+<h2 data-number="4.4" class="anchored" data-anchor-id="different-coordinate-systems"><span class="header-section-number">4.4</span> Different coordinate systems</h2>
+<div id="fig-normalised-to-pixel-coordinates" class="quarto-figure quarto-figure-center quarto-float anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-normalised-to-pixel-coordinates-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="attachments/camera-models/normalised-to-pixel-coordinate-views.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-normalised-to-pixel-coordinates-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4.6: The magenta mark is the projected image location of the scene point. The grey mark identifies the principal point in each coordinate system. The values are illustrative, not a calibration of the basketball camera.
+</figcaption>
+</figure>
+</div>
+<section id="pixel-coordinates" class="level3" data-number="4.4.1">
+<h3 data-number="4.4.1" class="anchored" data-anchor-id="pixel-coordinates"><span class="header-section-number">4.4.1</span> Pixel coordinates</h3>
+<p>So far, <span class="math inline">\((x,y)\)</span> describes distances within the image plane, while <span class="math inline">\((x_n,y_n)\)</span> describes those distances divided by <span class="math inline">\(f\)</span>. In a digital image, we usually specify a location by its pixel column and row. We denote these <strong>pixel coordinates</strong> by <span class="math inline">\((u,v)\)</span>, as illustrated in <a href="#fig-normalised-to-pixel-coordinates" class="quarto-xref">Figure&nbsp;<span>4.6</span></a>.</p>
+<p>We take <span class="math inline">\((u,v)=(0,0)\)</span> at the top-left pixel, with <span class="math inline">\(u\)</span> increasing to the right and <span class="math inline">\(v\)</span> increasing downwards. For an image stored as an array, the pixel at column <span class="math inline">\(u\)</span> and row <span class="math inline">\(v\)</span> is accessed as <code>image[v, u]</code>.</p>
+<div id="fig-principal-point-pixel-grid" class="quarto-figure quarto-figure-center quarto-float anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-principal-point-pixel-grid-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="attachments/camera-models/principal-point-and-pixel-grid-upright.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-principal-point-pixel-grid-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4.7: A separate toy example, showing the pixel grid with the camera (left) and face-on (right). Pixel coordinates start at the centre of the top-left pixel. The camera axis meets the plane at the principal point, here <span class="math inline">\((c_x,c_y)=(2,1)\)</span>. The highlighted pixel is at column 4, row 2, accessed as <code>image[2, 4]</code>.
+</figcaption>
+</figure>
+</div>
+<p>The origin of our image-plane coordinates is where the <span class="math inline">\(Z_c\)</span>-axis meets the plane: the point <span class="math inline">\((0,0,f)\)</span>, which has <span class="math inline">\((x,y)=(0,0)\)</span>. The corresponding image location is called the <strong>principal point</strong>. We denote its pixel coordinates by <span class="math inline">\((c_x,c_y)\)</span>.</p>
+<p>Thus the same image location has coordinates <span class="math inline">\((0,0)\)</span> when measured from the image-plane origin, but <span class="math inline">\((c_x,c_y)\)</span> when measured from the top-left pixel.</p>
+</section>
+<section id="from-image-plane-coordinates-to-pixels" class="level3" data-number="4.4.2">
+<h3 data-number="4.4.2" class="anchored" data-anchor-id="from-image-plane-coordinates-to-pixels"><span class="header-section-number">4.4.2</span> From image-plane coordinates to pixels</h3>
+<p>We choose the positive <span class="math inline">\(x\)</span>- and <span class="math inline">\(y\)</span>-directions to match the pixel directions: rightwards and downwards.</p>
+<p>Let <span class="math inline">\(s_x\)</span> and <span class="math inline">\(s_y\)</span> be the image-plane distances corresponding to one pixel in each direction. A displacement <span class="math inline">\(x\)</span> therefore corresponds to <span class="math inline">\(x/s_x\)</span> pixels horizontally, and a displacement <span class="math inline">\(y\)</span> corresponds to <span class="math inline">\(y/s_y\)</span> pixels vertically.</p>
+<p>These displacements are measured from the principal point. Adding its pixel coordinates gives <span class="math display">\[
+\boxed{
+u=\frac{x}{s_x}+c_x,
+\qquad
+v=\frac{y}{s_y}+c_y.
+}
+\]</span></p>
+<p>The division converts the distances into pixel units; adding <span class="math inline">\((c_x,c_y)\)</span> expresses the location relative to the top-left pixel.</p>
+</section>
+<section id="a-worked-camera-to-pixel-example" class="level3" data-number="4.4.3">
+<h3 data-number="4.4.3" class="anchored" data-anchor-id="a-worked-camera-to-pixel-example"><span class="header-section-number">4.4.3</span> A worked camera-to-pixel example</h3>
+<p>Return to the scene point with camera coordinates <span class="math inline">\((2,1,4)\)</span> and the virtual image plane at <span class="math inline">\(Z_c=f=2\)</span>. Its viewing line meets the image plane at <span class="math inline">\((1,0.5,2)\)</span>, so its coordinates within that plane are <span class="math inline">\((x,y)=(1,0.5)\)</span>.</p>
+<p>Dividing these image-plane coordinates by <span class="math inline">\(f\)</span> gives <span class="math display">\[
+(x_n,y_n)=\left(\frac{1}{2},\frac{0.5}{2}\right)=(0.5,0.25).
+\]</span></p>
+<p>Recall that the principal point is where the camera’s <span class="math inline">\(Z_c\)</span>-axis meets the image plane.</p>
+<p>For this example, take 200 pixels per normalised unit in each direction and place the principal point at pixel coordinates <span class="math inline">\((260,170)\)</span>. The pixel location is then <span class="math display">\[
+u=200(0.5)+260=360,
+\qquad
+v=200(0.25)+170=220.
+\]</span></p>
+<p>The stages of the calculation are:</p>
+<table class="table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Stage</th>
+<th>Coordinates</th>
+<th>What they describe</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Scene point in camera coordinates</td>
+<td><span class="math inline">\((2,1,4)\)</span></td>
+<td>The scene point’s position relative to the pinhole.</td>
+</tr>
+<tr class="even">
+<td>Intersection with the virtual image plane</td>
+<td><span class="math inline">\((1,0.5,2)\)</span></td>
+<td>The projected point on the plane <span class="math inline">\(Z_c=2\)</span>; its coordinates within the plane are <span class="math inline">\((1,0.5)\)</span>.</td>
+</tr>
+<tr class="odd">
+<td>Normalised image coordinates</td>
+<td><span class="math inline">\((0.5,0.25)\)</span></td>
+<td>The image-plane coordinates divided by <span class="math inline">\(f\)</span>.</td>
+</tr>
+<tr class="even">
+<td>Pixel coordinates</td>
+<td><span class="math inline">\((360,220)\)</span></td>
+<td>The projected image location measured in pixels from the top-left origin.</td>
+</tr>
+</tbody>
+</table>
+<p>The grey mark in <a href="#fig-normalised-to-pixel-coordinates" class="quarto-xref">Figure&nbsp;<span>4.6</span></a> is the principal point. It has normalised coordinates <span class="math inline">\((0,0)\)</span> and pixel coordinates <span class="math inline">\((260,170)\)</span>. The top-left pixel origin instead has normalised coordinates <span class="math display">\[
+\left(\frac{0-260}{200},\frac{0-170}{200}\right)=(-1.3,-0.85).
+\]</span></p>
+<p>The rectangles in <a href="#fig-normalised-to-pixel-coordinates" class="quarto-xref">Figure&nbsp;<span>4.6</span></a> show the chosen image window. Their corner labels give its bounds in each coordinate system.</p>
+<div id="fig-normalised-to-pixel-calculation" class="quarto-figure quarto-figure-center quarto-float anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-normalised-to-pixel-calculation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="attachments/camera-models/normalised-to-pixel-matrix-calculation.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-normalised-to-pixel-calculation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4.8: Matrix form of the worked pixel-coordinate conversion.
+</figcaption>
+</figure>
+</div>
+<p>The calculation in <a href="#fig-normalised-to-pixel-calculation" class="quarto-xref">Figure&nbsp;<span>4.8</span></a> writes the normalised image point as the homogeneous triple <span class="math inline">\((0.5,0.25,1)\)</span>. The matrix scales the first two coordinates and adds the principal-point offset. Its output is <span class="math inline">\((360,220,1)\)</span>, giving pixel coordinates <span class="math inline">\((360,220)\)</span>.</p>
+</section>
+</section>
+<section id="homography" class="level2" data-number="4.5">
+<h2 data-number="4.5" class="anchored" data-anchor-id="homography"><span class="header-section-number">4.5</span> Homography</h2>
+<section id="connecting-the-image-plane-and-the-court-plane" class="level3" data-number="4.5.1">
+<h3 data-number="4.5.1" class="anchored" data-anchor-id="connecting-the-image-plane-and-the-court-plane"><span class="header-section-number">4.5.1</span> Connecting the image plane and the court plane</h3>
+<p>The basketball court floor can be modelled as a plane. Together with the image plane, this gives us two planes connected by viewing lines through the camera’s pinhole.</p>
+<p>Choose a point on the court and draw its viewing line towards the pinhole. Where this line intersects the image plane gives the corresponding image point. We can also follow the line back from the image towards the court. Its intersection with the court plane gives the corresponding court point.</p>
+<div id="fig-image-court-plane-homography" class="quarto-figure quarto-figure-center quarto-float anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-image-court-plane-homography-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="attachments/camera-models/image-court-plane-homography.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-image-court-plane-homography-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4.9: Corresponding points on the image and court planes lie on a viewing line through the pinhole. The green quadrilateral within the image plane is the court’s projected outline. Schematic based on <span class="citation" data-cites="foundationsCVbook">Torralba, Isola, and Freeman (<a href="#ref-foundationsCVbook" role="doc-biblioref">2024, fig. 41.6</a>)</span>.
+</figcaption>
+</figure>
+</div>
+<p>Which image point corresponds to which court point depends on the relative arrangement of the camera and the two planes. Once this relationship is established, we can map an image location directly to a location on the court.</p>
+<p>The resulting mapping between the two planes is called a <strong>planar homography</strong>. For our basketball application, we want this mapping to take image coordinates in pixels to court coordinates in metres. To determine the mapping for our camera, we will use court landmarks whose positions are known both in the image and on the court.</p>
+</section>
+<section id="what-does-the-mapping-preserve" class="level3" data-number="4.5.2">
+<h3 data-number="4.5.2" class="anchored" data-anchor-id="what-does-the-mapping-preserve"><span class="header-section-number">4.5.2</span> What does the mapping preserve?</h3>
+<p>The court has ordinary lengths and angles, but these need not be preserved in its image. Equal court distances can occupy different numbers of pixels, and parallel court lines can appear to converge.</p>
+<div id="fig-court-grid-vanishing-point" class="quarto-figure quarto-figure-center quarto-float anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-court-grid-vanishing-point-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="attachments/camera-models/court-grid-vanishing-point.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-court-grid-vanishing-point-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4.10: A regular grid on the court plane (left) and its perspective image (right). The highlighted parallel court lines remain straight in the image and converge towards a vanishing point.
+</figcaption>
+</figure>
+</div>
+<p>Different classes of transformations preserve different properties:</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Transformation</th>
+<th>Some preserved properties</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Euclidean (rigid motions)</td>
+<td>Lengths and angles</td>
+</tr>
+<tr class="even">
+<td>Affine</td>
+<td>Straight lines and parallelism</td>
+</tr>
+<tr class="odd">
+<td>Projective (homographies)</td>
+<td>Straight lines and point–line incidence</td>
+</tr>
+</tbody>
+</table>
+<p>Here <strong>incidence</strong> means which points lie on which lines. Euclidean transformations are special cases of affine transformations, which are themselves special cases of projective transformations.</p>
+<p>Our conversion from image-plane coordinates to pixels is affine: it rescales the coordinates and shifts their origin. The court-to-image homography can also change parallelism. Homogeneous coordinates let us describe both mappings using matrices.</p>
+<p>A family of parallel court lines shares a direction. Projective geometry represents that direction as a <strong>point at infinity</strong> on the court plane. The homography can map it to a finite image point—the <strong>vanishing point</strong> towards which the image lines converge.</p>
+</section>
+<section id="from-court-coordinates-to-camera-coordinates" class="level3" data-number="4.5.3">
+<h3 data-number="4.5.3" class="anchored" data-anchor-id="from-court-coordinates-to-camera-coordinates"><span class="header-section-number">4.5.3</span> From court coordinates to camera coordinates</h3>
+<p>We describe a position on the court by two coordinates <span class="math inline">\((X,Y)\)</span>, measured in metres from a chosen court corner, with the axes along the court edges.</p>
+<p>To reach a court point from the camera’s pinhole, we can first go to the court origin, then move along the two court directions. The vector to the court origin is fixed. Each court direction is also fixed; the distances travelled along them are <span class="math inline">\(X\)</span> and <span class="math inline">\(Y\)</span>.</p>
+<p>Adding these three displacements gives the position vector of the court point relative to the camera, as shown in <a href="#fig-court-coordinate-vectors" class="quarto-xref">Figure&nbsp;<span>4.11</span></a>.</p>
+<div id="fig-court-coordinate-vectors" class="quarto-figure quarto-figure-center quarto-float anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-court-coordinate-vectors-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="attachments/camera-models/court-coordinate-vector-construction.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-court-coordinate-vectors-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4.11: The camera-to-point vector is the sum of the vector to the court origin and the two court-axis displacements.
+</figcaption>
+</figure>
+</div>
+<p>Write the three camera-coordinate components of a one-unit displacement along the court’s <span class="math inline">\(X\)</span> direction as <span class="math inline">\((a_1,a_2,a_3)\)</span>, and along its <span class="math inline">\(Y\)</span> direction as <span class="math inline">\((b_1,b_2,b_3)\)</span>. Write the vector from the pinhole to the court origin as <span class="math inline">\((d_1,d_2,d_3)\)</span>.</p>
+<p>As in ENGSCI 205, a matrix multiplied by a vector gives a linear combination of its columns. We therefore place these three fixed vectors in the columns of a matrix, as shown in <a href="#fig-court-vectors-to-matrix" class="quarto-xref">Figure&nbsp;<span>4.12</span></a>. The offset column is multiplied by 1.</p>
+<div id="fig-court-vectors-to-matrix" class="quarto-figure quarto-figure-center quarto-float anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-court-vectors-to-matrix-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="attachments/camera-models/court-vectors-to-matrix.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-court-vectors-to-matrix-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4.12: The fixed vectors become columns multiplying <span class="math inline">\(X\)</span>, <span class="math inline">\(Y\)</span> and 1, respectively.
+</figcaption>
+</figure>
+</div>
+<p>Calling this matrix <span class="math inline">\(A\)</span>, we have <span class="math display">\[
+\begin{bmatrix}X_c\\Y_c\\Z_c\end{bmatrix}
+=
+A\begin{bmatrix}X\\Y\\1\end{bmatrix}.
+\]</span></p>
+</section>
+<section id="from-these-outputs-to-the-image" class="level3" data-number="4.5.4">
+<h3 data-number="4.5.4" class="anchored" data-anchor-id="from-these-outputs-to-the-image"><span class="header-section-number">4.5.4</span> From these outputs to the image</h3>
+<p>We can now use our earlier perspective-projection result. The normalised image coordinates are <span class="math display">\[
+(x_n,y_n)=\left(\frac{X_c}{Z_c},\frac{Y_c}{Z_c}\right).
+\]</span></p>
+<p>Thus the three outputs of <span class="math inline">\(A\)</span> also serve as homogeneous coordinates for the normalised image point. Multiplication by <span class="math inline">\(A\)</span>, followed by division by its third output, gives the <strong>court-to-normalised-image homography</strong>.</p>
+</section>
+<section id="including-the-pixel-conversion" class="level3" data-number="4.5.5">
+<h3 data-number="4.5.5" class="anchored" data-anchor-id="including-the-pixel-conversion"><span class="header-section-number">4.5.5</span> Including the pixel conversion</h3>
+<p>To obtain pixel coordinates, we apply the scale and offset introduced earlier. For the horizontal coordinate, <span class="math display">\[
+u=\frac{f}{s_x}\frac{X_c}{Z_c}+c_x
+=\frac{(f/s_x)X_c+c_xZ_c}{Z_c}.
+\]</span></p>
+<p>The numerator is a weighted sum of <span class="math inline">\(X_c\)</span> and <span class="math inline">\(Z_c\)</span>. The vertical coordinate has the corresponding form <span class="math display">\[
+v=\frac{(f/s_y)Y_c+c_yZ_c}{Z_c}.
+\]</span></p>
+<p>Each camera coordinate is already a linear combination of <span class="math inline">\(X,Y,1\)</span>. These two numerators and their common denominator are therefore also linear combinations of <span class="math inline">\(X,Y,1\)</span>. We collect their coefficients into a <span class="math inline">\(3\times3\)</span> matrix <span class="math inline">\(G\)</span>: <span class="math display">\[
+G\begin{bmatrix}X\\Y\\1\end{bmatrix}
+=
+\begin{bmatrix}
+(f/s_x)X_c+c_xZ_c\\
+(f/s_y)Y_c+c_yZ_c\\
+Z_c
+\end{bmatrix}.
+\]</span></p>
+<p>Dividing the first two outputs by the third gives <span class="math inline">\((u,v)\)</span>. This is the <strong>court-to-pixel homography</strong>. The pixel conversion changes the coordinate units and origin within the image; it does not introduce another physical image plane.</p>
+</section>
+<section id="from-pixels-back-to-the-court" class="level3" data-number="4.5.6">
+<h3 data-number="4.5.6" class="anchored" data-anchor-id="from-pixels-back-to-the-court"><span class="header-section-number">4.5.6</span> From pixels back to the court</h3>
+<p>Our basketball task starts with an image location and asks where it lies on the court. For our camera above the court, the planar mapping can be reversed. We use the inverse matrix <span class="math display">\[
+H=G^{-1}.
+\]</span></p>
+<p>Given pixel coordinates <span class="math inline">\((u,v)\)</span>, multiply <span class="math display">\[
+\begin{bmatrix}a\\b\\c\end{bmatrix}
+=
+H\begin{bmatrix}u\\v\\1\end{bmatrix}.
+\]</span></p>
+<p>The three outputs are homogeneous coordinates for the court point. Dividing the first two by the third gives <span class="math display">\[
+X=\frac{a}{c},\qquad Y=\frac{b}{c},\qquad c\ne0.
+\]</span></p>
+<p>For example, the output <span class="math inline">\((6,8,2)\)</span> represents court coordinates <span class="math inline">\((3,4)\)</span> metres.</p>
+<p>We will determine <span class="math inline">\(H\)</span> directly from landmarks whose positions are known both in the image and on the court. Once <span class="math inline">\(H\)</span> is known, this calculation takes pixel coordinates as its input and returns court coordinates. We do not need to recover each camera parameter separately to use it.</p>
+</section>
+<section id="how-many-landmarks-do-we-need" class="level3" data-number="4.5.7">
+<h3 data-number="4.5.7" class="anchored" data-anchor-id="how-many-landmarks-do-we-need"><span class="header-section-number">4.5.7</span> How many landmarks do we need?</h3>
+<p>A general planar homography has nine matrix entries. Multiplying all nine by a common nonzero factor scales all three outputs together, leaving their ratios unchanged. The mapping therefore has <strong>eight independent parameters</strong>.</p>
+<p>Each matched landmark supplies two equations: one for its court <span class="math inline">\(X\)</span>-coordinate and one for its <span class="math inline">\(Y\)</span>-coordinate. <strong>Four point correspondences</strong> therefore supply the eight equations needed to determine the homography, up to its irrelevant overall scale.</p>
+<p>The four points must be distinct, with <strong>no three on a straight line</strong>, in either the image or the court. Otherwise the constraints do not determine the mapping uniquely.</p>
+<p>Choose landmarks spread across the court. With more than four correspondences, we can fit a homography that accommodates annotation error; additional landmarks withheld from fitting provide an independent check.</p>
+</section>
+<section id="from-a-player-box-to-a-court-position" class="level3" data-number="4.5.8">
+<h3 data-number="4.5.8" class="anchored" data-anchor-id="from-a-player-box-to-a-court-position"><span class="header-section-number">4.5.8</span> From a player box to a court position</h3>
+<p>To estimate a player’s position on the court, we need an image point representing their contact with the floor. We use the bottom-centre of the bounding box as an approximation.</p>
+<div id="fig-frame50-box-to-court" class="quarto-figure quarto-figure-center quarto-float anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-frame50-box-to-court-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="attachments/camera-models/frame50-player6-box-to-court.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-frame50-box-to-court-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4.13: The supplied box for player 6 in frame 50, with its centre and bottom-centre marked, and the resulting court coordinates. Frame and annotations from TrackID3x3 <span class="citation" data-cites="trackid3x3">(<a href="#ref-trackid3x3" role="doc-biblioref">Yamada et al. 2025</a>)</span>, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>; crop and overlays added.
+</figcaption>
+</figure>
+</div>
+<p>For player 6 in frame 50, the box is <code>[487.03, 318.30, 528.19, 412.86]</code> in the format <code>[u_min, v_min, u_max, v_max]</code>. Its bottom-centre is therefore <span class="math inline">\((u,v)=(507.61,412.86)\)</span>.</p>
+<p>Here we use a pre-supplied matrix <span class="math inline">\(H\)</span>, computed for this camera from the four court-landmark correspondences in TrackID3x3. The matrix and the <code>transform_points</code> helper are included in the accompanying <a href="attachments/camera-models/court_mapping.py" download="court_mapping.py">court_mapping.py</a>. Place this file in your working folder, or upload it to Colab’s Files pane.</p>
+<div class="court-mapping-example" style="break-inside: avoid; page-break-inside: avoid;">
+<p>The helper accepts image points as rows of an array and returns the corresponding court points, performing the matrix multiplication and final division.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> court_mapping <span class="im">import</span> H, transform_points</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>box <span class="op">=</span> [<span class="fl">487.03</span>, <span class="fl">318.30</span>, <span class="fl">528.19</span>, <span class="fl">412.86</span>]</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>u <span class="op">=</span> (box[<span class="dv">0</span>] <span class="op">+</span> box[<span class="dv">2</span>]) <span class="op">/</span> <span class="dv">2</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>v <span class="op">=</span> box[<span class="dv">3</span>]</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>court_point <span class="op">=</span> transform_points([[u, v]], H)[<span class="dv">0</span>]</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"(</span><span class="sc">{</span>court_point[<span class="dv">0</span>]<span class="sc">:.2f}</span><span class="ss">, </span><span class="sc">{</span>court_point[<span class="dv">1</span>]<span class="sc">:.2f}</span><span class="ss">) m"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<pre class="text"><code>(5.05, 5.06) m</code></pre>
+</div>
+<p>Mapping the box centre <span class="math inline">\((507.61,365.58)\)</span> gives court coordinates <span class="math inline">\((1.85,1.80)\)</span> m. Changing the image point moves the mapped position by about <span class="math inline">\(4.57\)</span> m.</p>
+<p>As you might imagine, player ‘pose’, foot placement and box placement affect how well the bottom-centre represents ground contact.</p>
+</section>
+<section id="checking-the-court-positions" class="level3" data-number="4.5.9">
+<h3 data-number="4.5.9" class="anchored" data-anchor-id="checking-the-court-positions"><span class="header-section-number">4.5.9</span> Checking the court positions</h3>
+<p>Return to the eight saved <code>person</code> detections in frame 50, using a confidence threshold of 0.50. We can map every box’s bottom-centre using the same matrix <span class="math inline">\(H\)</span>.</p>
+<div id="fig-frame50-court-checks" class="quarto-figure quarto-figure-center quarto-float anchored" data-fig-align="center">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-frame50-court-checks-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="attachments/camera-models/frame50-detections-to-court-checks.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-frame50-court-checks-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;4.14: The saved detections and their mapped bottom-centres. D1–D8 label the detections within this frame. The green outlines show the supplied court boundary. Frame from TrackID3x3 <span class="citation" data-cites="trackid3x3">(<a href="#ref-trackid3x3" role="doc-biblioref">Yamada et al. 2025</a>)</span>, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>; overlays added.
+</figcaption>
+</figure>
+</div>
+<p>A simple court-based filter keeps detections whose mapped points satisfy <span class="math display">\[
+0\leq X\leq 9.50,\qquad 0\leq Y\leq 15.05,
+\]</span> with distances in metres. This retains six detections, D2–D7, in this frame; D1 and D8 lie outside the rectangle. The detector’s <code>person</code> class includes people at the sidelines, while our task concerns the active on-court players.</p>
+<p>D3 maps to <span class="math inline">\((9.33,10.38)\)</span> m, only about <span class="math inline">\(0.17\)</span> m inside the edge <span class="math inline">\(X=9.50\)</span>. Decisions near a boundary can be sensitive to box placement and calibration. D1 and D8 both reach the bottom of the image, where their bottom-centres give uncertain estimates of ground contact.</p>
+<p>When a position looks questionable, inspect the box and its bottom-centre in the image. Additional landmarks with known court positions would help check the calibration separately from the detector. The supplied <span class="math inline">\(H\)</span> also depends on the camera staying in place and on using the same image coordinate system. We will evaluate the retained detections against the player annotations.</p>
+
+
+<!-- -->
+
+<div id="refs" class="references csl-bib-body hanging-indent" data-entry-spacing="0" role="list">
+<div id="ref-mactutorDesargues" class="csl-entry" role="listitem">
+<span>“Girard Desargues.”</span> 2020. MacTutor History of Mathematics Archive; University of St Andrews. September 2020. <a href="https://mathshistory.st-andrews.ac.uk/Biographies/Desargues/">https://mathshistory.st-andrews.ac.uk/Biographies/Desargues/</a>.
+</div>
+<div id="ref-mactutorPoncelet" class="csl-entry" role="listitem">
+O’Connor, J. J., and E. F. Robertson. 2008. <span>“Jean-Victor Poncelet.”</span> MacTutor History of Mathematics Archive; University of St Andrews. December 2008. <a href="https://mathshistory.st-andrews.ac.uk/Biographies/Poncelet/">https://mathshistory.st-andrews.ac.uk/Biographies/Poncelet/</a>.
+</div>
+<div id="ref-foundationsCVbook" class="csl-entry" role="listitem">
+Torralba, A., P. Isola, and W. T. Freeman. 2024. <em>Foundations of Computer Vision</em>. MIT Press. <a href="https://mitpress.mit.edu/9780262048972/foundations-of-computer-vision/">https://mitpress.mit.edu/9780262048972/foundations-of-computer-vision/</a>.
+</div>
+<div id="ref-trackid3x3" class="csl-entry" role="listitem">
+Yamada, Kazuhiro, Li Yin, Qingrui Hu, Ning Ding, Shunsuke Iwashita, Jun Ichikawa, Kiwamu Kotani, Calvin Yeung, and Keisuke Fujii. 2025. <span>“<span>TrackID3x3</span>: A Dataset and Algorithm for Multi-Player Tracking with Identification and Pose Estimation in <span>3x3</span> Basketball Full-Court Videos.”</span> In <em>Proceedings of the 8th International <span>ACM</span> Workshop on Multimedia Content Analysis in Sports</em>, 163–73. ACM. <a href="https://doi.org/10.1145/3728423.3759400">https://doi.org/10.1145/3728423.3759400</a>.
+</div>
+</div>
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./dataset.html" class="pagination-link  aria-label=" &lt;span="" and="" visualising="" the="" dataset&lt;="" span&gt;"="">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Obtaining and visualising the dataset</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./image_tasks.html" class="pagination-link" aria-label="<span class='chapter-number'>5</span>&nbsp; <span class='chapter-title'>Image analysis tasks</span>">
+        <span class="nav-page-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Image analysis tasks</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb3" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Camera models</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>Here we briefly consider camera models, which are a key part of the physics-based perspective on visual data. A camera model describes how we get from the **physical world** (3D in space) to the **image** (2D in pixel coordinates). This mapping is often referred to as a **perspective projection**. We will not go into extensive details of camera models, but we will introduce some key concepts that will be useful for understanding the data and representing our location and tracking data in **court coordinates** (positions on the basketball court) rather than simply **image coordinates** (pixel locations in the image).</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="fu">## A simple camera model and perspective projection</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>The simplest camera model is the **pinhole camera model**. We represent the camera as an opaque box with a small opening on one side and a light-sensitive surface—the sensor—on the opposite side.</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>Light is emitted or reflected from objects in the scene and travels approximately in straight lines between interactions with other objects. At a given location, light can arrive from many different directions. An exposed sensor would combine contributions from these directions, rather than record a separate image location for each part of the scene.</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>The camera body blocks most of these paths. Only light passing through the pinhole can reach the sensor. If we idealise the pinhole as a single point, each location on the sensor receives light along one line passing through that point. Different viewing directions therefore correspond to different sensor locations.</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>!<span class="co">[</span><span class="ot">Image formation with a pinhole. (a) Without an aperture (hole), light from different scene points reaches the same wall location. (b) The pinhole restricts the admitted light paths, producing an inverted image. Reproduced from @foundationsCVbook [Figure 5.3].</span><span class="co">](&lt;attachments/camera-models/torralba-pinhole-fig5-3.png&gt;)</span>{#fig-pinhole-image-formation width=100% fig-align="center"}</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>The image is inverted because the light paths cross at the pinhole. Follow a ray from the upper part of the tree: it travels downwards towards the opening and continues downwards after passing through it, reaching the lower part of the image plane. Similarly, light from the lower part of the tree reaches the upper part of the image plane. The light does not change direction at the pinhole; each ray simply continues along the same straight line.</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a><span class="fu">## Geometry of the pinhole camera model</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>Choose a single point on the sensor and trace its light path backwards, through the pinhole and into the scene. This gives a **viewing line** along which the observed surface point must lie.</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>Different scene points along this line would project to the same sensor location. The image location therefore identifies a viewing direction, but does not by itself tell us how far away the surface is. In this sense, projection from the three-dimensional scene to the two-dimensional image loses depth information.</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="fu">### A virtual image plane</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>The sensor lies behind the pinhole, where the light forms an inverted image. For the geometry, however, it is convenient to represent the image on an imaginary plane in front of the pinhole. We call this the **virtual image plane**.</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>To construct it, take the same viewing lines and mark where they intersect this front plane. A line from the upper part of the scene intersects the front plane above the pinhole, before continuing through the hole to the lower part of the sensor. The front-plane representation is therefore upright.</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>!<span class="co">[</span><span class="ot">Physical and virtual image planes, shown from the side. The upright scene arrow and its two image arrows are connected by the same viewing lines; the diagonal shows one selected light path. The planes are shown equally far from the pinhole. Simplified schematic based on @foundationsCVbook [Figure 5.8].</span><span class="co">](&lt;attachments/camera-models/virtual-image-plane-side-view.png&gt;)</span>{#fig-virtual-image-plane width=100% fig-align="center"}</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>We have not moved the sensor or changed the light paths admitted by the pinhole. We have simply chosen different points along those same lines to represent the image. At each virtual image point, we associate the value recorded at the corresponding sensor point; we do not include the other light that would reach an actual screen placed there.</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a><span class="fu">### Coordinates relative to the camera</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>To describe the geometry mathematically, place the origin at the pinhole. Let the $Z_c$-axis point forwards, perpendicular to the image planes, and let the $X_c$- and $Y_c$-axes run in two perpendicular directions parallel to those planes. A scene point then has coordinates $(X_c,Y_c,Z_c)$. The subscript $c$ indicates that these coordinates are measured relative to the camera.</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>Let $f&gt;0$ be the distance from the pinhole to either image plane, called the **focal length** in this pinhole model. The virtual image plane is at $Z_c=f$, while the physical sensor is at $Z_c=-f$. A point on the virtual image plane therefore has three-dimensional coordinates $(x,y,f)$. Since its last coordinate is fixed, we can describe its position within that plane using just the two coordinates $(x,y)$.</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a><span class="fu">### Points along a viewing line</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>The position vector from the pinhole $(0,0,0)$ to a scene point is $(X_c,Y_c,Z_c)$. Taking different multiples of this vector gives points along the line through the pinhole and the scene point. The coordinates of any point on this line can therefore be written as</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>(tX_c,tY_c,tZ_c).</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a><span class="al">![A point between the pinhole and the scene point.](&lt;attachments/camera-models/points-on-viewing-line.png&gt;)</span>{#fig-points-on-viewing-line width=100% fig-align="center"}</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>At $t=0$, we are at the pinhole; at $t=1$, we are at the scene point. Values between 0 and 1 give points between them. Negative values continue along the same line behind the pinhole.</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a><span class="fu">### Perspective projection</span></span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a><span class="al">![Projection onto the virtual image plane. The perpendicular camera axis meets the plane at the principal point. Only segments hidden by the drawn plane are dashed.](&lt;attachments/camera-models/perspective-projection-upright-view.png&gt;)</span>{#fig-perspective-projection-3d width=100% fig-align="center"}</span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>The virtual image plane is at $Z_c=f$. To find where the viewing line meets this plane, we set the third coordinate of $(tX_c,tY_c,tZ_c)$ equal to $f$:</span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>tZ_c=f</span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a>\quad\Longrightarrow\quad</span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>t=\frac{f}{Z_c}.</span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>Substituting this value of $t$ gives the intersection</span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>\left(f\frac{X_c}{Z_c},\;f\frac{Y_c}{Z_c},\;f\right).</span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>The first two coordinates give the position within the image plane. Thus the **perspective projection** of the scene point has image coordinates</span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a>\boxed{x=f\frac{X_c}{Z_c},\qquad y=f\frac{Y_c}{Z_c}.}</span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a>For the physical sensor, we instead set the third coordinate equal to $-f$:</span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>tZ_c=-f</span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a>\quad\Longrightarrow\quad</span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a>t=-\frac{f}{Z_c}.</span>
+<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a>The intersection is then</span>
+<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a>\left(-f\frac{X_c}{Z_c},\;-f\frac{Y_c}{Z_c},\;-f\right).</span>
+<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a>The first two coordinates change sign, giving the inverted image.</span>
+<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a><span class="fu">### Example</span></span>
+<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a><span class="al">![Side view of the camera geometry (left) and front view of the image plane (right). The side view makes the perpendicular intersection explicit; the front view shows the coordinates within the image plane.](&lt;attachments/camera-models/perspective-projection-side-and-front.png&gt;)</span>{#fig-perspective-projection-views width=100% fig-align="center"}</span>
+<span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a>Take $f=2$ and a scene point with camera coordinates $(2,1,4)$, using the same units for all distances. The viewing line meets the virtual image plane when</span>
+<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a>t=\frac{f}{Z_c}=\frac{2}{4}=\frac12.</span>
+<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a>The intersection is therefore</span>
+<span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a>\frac12(2,1,4)=\left(1,\frac12,2\right).</span>
+<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a>Its third coordinate is $f=2$, as required, and its image coordinates are</span>
+<span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a>(x,y)=\left(1,\frac12\right).</span>
+<span id="cb3-95"><a href="#cb3-95" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-96"><a href="#cb3-96" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-97"><a href="#cb3-97" aria-hidden="true" tabindex="-1"></a>Now consider the scene point $(4,2,8)$, twice as far along the same viewing line. This time,</span>
+<span id="cb3-98"><a href="#cb3-98" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-99"><a href="#cb3-99" aria-hidden="true" tabindex="-1"></a>t=\frac{2}{8}=\frac14,</span>
+<span id="cb3-100"><a href="#cb3-100" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-101"><a href="#cb3-101" aria-hidden="true" tabindex="-1"></a>giving</span>
+<span id="cb3-102"><a href="#cb3-102" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-103"><a href="#cb3-103" aria-hidden="true" tabindex="-1"></a>\frac14(4,2,8)=\left(1,\frac12,2\right).</span>
+<span id="cb3-104"><a href="#cb3-104" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-105"><a href="#cb3-105" aria-hidden="true" tabindex="-1"></a>The two scene points lie at different distances from the camera but have the same image coordinates. Knowing $f$ has allowed us to locate the image point, but has not identified which scene point along the viewing line produced it.</span>
+<span id="cb3-106"><a href="#cb3-106" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-107"><a href="#cb3-107" aria-hidden="true" tabindex="-1"></a><span class="fu">## Homogeneous coordinates</span></span>
+<span id="cb3-108"><a href="#cb3-108" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-109"><a href="#cb3-109" aria-hidden="true" tabindex="-1"></a>We first express the image-plane distances in units of $f$, by dividing both coordinates by $f$:</span>
+<span id="cb3-110"><a href="#cb3-110" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-111"><a href="#cb3-111" aria-hidden="true" tabindex="-1"></a>x_n=\frac{x}{f}=\frac{X_c}{Z_c},</span>
+<span id="cb3-112"><a href="#cb3-112" aria-hidden="true" tabindex="-1"></a>\qquad</span>
+<span id="cb3-113"><a href="#cb3-113" aria-hidden="true" tabindex="-1"></a>y_n=\frac{y}{f}=\frac{Y_c}{Z_c}.</span>
+<span id="cb3-114"><a href="#cb3-114" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-115"><a href="#cb3-115" aria-hidden="true" tabindex="-1"></a>We call these **normalised image coordinates**. Normalising here means dividing by the common scale $f$.</span>
+<span id="cb3-116"><a href="#cb3-116" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-117"><a href="#cb3-117" aria-hidden="true" tabindex="-1"></a>The two ratios share a denominator, $Z_c$. Rather than carrying out the divisions immediately, we can keep the two numerators and their common denominator together as three numbers:</span>
+<span id="cb3-118"><a href="#cb3-118" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-119"><a href="#cb3-119" aria-hidden="true" tabindex="-1"></a>(X_c,Y_c,Z_c).</span>
+<span id="cb3-120"><a href="#cb3-120" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-121"><a href="#cb3-121" aria-hidden="true" tabindex="-1"></a>For example, the triple $(2,1,4)$ represents the normalised image point</span>
+<span id="cb3-122"><a href="#cb3-122" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-123"><a href="#cb3-123" aria-hidden="true" tabindex="-1"></a>\left(\frac{2}{4},\frac{1}{4}\right).</span>
+<span id="cb3-124"><a href="#cb3-124" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-125"><a href="#cb3-125" aria-hidden="true" tabindex="-1"></a>The triple $(4,2,8)$ represents the same point, since</span>
+<span id="cb3-126"><a href="#cb3-126" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-127"><a href="#cb3-127" aria-hidden="true" tabindex="-1"></a>\left(\frac{4}{8},\frac{2}{8}\right)</span>
+<span id="cb3-128"><a href="#cb3-128" aria-hidden="true" tabindex="-1"></a>=</span>
+<span id="cb3-129"><a href="#cb3-129" aria-hidden="true" tabindex="-1"></a>\left(\frac{2}{4},\frac{1}{4}\right).</span>
+<span id="cb3-130"><a href="#cb3-130" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-131"><a href="#cb3-131" aria-hidden="true" tabindex="-1"></a>Multiplying all three entries by the same nonzero number leaves both ratios unchanged.</span>
+<span id="cb3-132"><a href="#cb3-132" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-133"><a href="#cb3-133" aria-hidden="true" tabindex="-1"></a>We call these triples **homogeneous coordinates** for the image point. In this representation, we use only the ratios between the entries. The triples $(2,1,4)$ and $(4,2,8)$ describe different physical positions when read as camera coordinates, but the same image point when read as homogeneous coordinates.</span>
+<span id="cb3-134"><a href="#cb3-134" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-135"><a href="#cb3-135" aria-hidden="true" tabindex="-1"></a>We can choose a representation with third entry equal to 1 by dividing all three entries by $Z_c$:</span>
+<span id="cb3-136"><a href="#cb3-136" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-137"><a href="#cb3-137" aria-hidden="true" tabindex="-1"></a>\frac{1}{Z_c}(X_c,Y_c,Z_c)</span>
+<span id="cb3-138"><a href="#cb3-138" aria-hidden="true" tabindex="-1"></a>=</span>
+<span id="cb3-139"><a href="#cb3-139" aria-hidden="true" tabindex="-1"></a>\left(\frac{X_c}{Z_c},\frac{Y_c}{Z_c},1\right)</span>
+<span id="cb3-140"><a href="#cb3-140" aria-hidden="true" tabindex="-1"></a>=</span>
+<span id="cb3-141"><a href="#cb3-141" aria-hidden="true" tabindex="-1"></a>(x_n,y_n,1).</span>
+<span id="cb3-142"><a href="#cb3-142" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-143"><a href="#cb3-143" aria-hidden="true" tabindex="-1"></a>The first two entries are then the normalised image coordinates themselves.</span>
+<span id="cb3-144"><a href="#cb3-144" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-145"><a href="#cb3-145" aria-hidden="true" tabindex="-1"></a>Homogeneous coordinates are a standard tool in **projective geometry**. We will use them to describe perspective mappings between the court and image planes. The subject has roots in perspective drawing, including Desargues’s seventeenth-century work, and developed into a distinct field in the nineteenth century <span class="co">[</span><span class="ot">@mactutorDesargues; @mactutorPoncelet</span><span class="co">]</span>.</span>
+<span id="cb3-146"><a href="#cb3-146" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-147"><a href="#cb3-147" aria-hidden="true" tabindex="-1"></a><span class="fu">## Different coordinate systems</span></span>
+<span id="cb3-148"><a href="#cb3-148" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-149"><a href="#cb3-149" aria-hidden="true" tabindex="-1"></a><span class="al">![The magenta mark is the projected image location of the scene point. The grey mark identifies the principal point in each coordinate system. The values are illustrative, not a calibration of the basketball camera.](&lt;attachments/camera-models/normalised-to-pixel-coordinate-views.png&gt;)</span>{#fig-normalised-to-pixel-coordinates width=100% fig-align="center"}</span>
+<span id="cb3-150"><a href="#cb3-150" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-151"><a href="#cb3-151" aria-hidden="true" tabindex="-1"></a><span class="fu">### Pixel coordinates</span></span>
+<span id="cb3-152"><a href="#cb3-152" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-153"><a href="#cb3-153" aria-hidden="true" tabindex="-1"></a>So far, $(x,y)$ describes distances within the image plane, while $(x_n,y_n)$ describes those distances divided by $f$. In a digital image, we usually specify a location by its pixel column and row. We denote these **pixel coordinates** by $(u,v)$, as illustrated in @fig-normalised-to-pixel-coordinates.</span>
+<span id="cb3-154"><a href="#cb3-154" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-155"><a href="#cb3-155" aria-hidden="true" tabindex="-1"></a>We take $(u,v)=(0,0)$ at the top-left pixel, with $u$ increasing to the right and $v$ increasing downwards. For an image stored as an array, the pixel at column $u$ and row $v$ is accessed as <span class="in">`image[v, u]`</span>.</span>
+<span id="cb3-156"><a href="#cb3-156" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-157"><a href="#cb3-157" aria-hidden="true" tabindex="-1"></a>!<span class="co">[</span><span class="ot">A separate toy example, showing the pixel grid with the camera (left) and face-on (right). Pixel coordinates start at the centre of the top-left pixel. The camera axis meets the plane at the principal point, here $(c_x,c_y)=(2,1)$. The highlighted pixel is at column 4, row 2, accessed as `image[2, 4]`.</span><span class="co">](&lt;attachments/camera-models/principal-point-and-pixel-grid-upright.png&gt;)</span>{#fig-principal-point-pixel-grid width=100% fig-align="center"}</span>
+<span id="cb3-158"><a href="#cb3-158" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-159"><a href="#cb3-159" aria-hidden="true" tabindex="-1"></a>The origin of our image-plane coordinates is where the $Z_c$-axis meets the plane: the point $(0,0,f)$, which has $(x,y)=(0,0)$. The corresponding image location is called the **principal point**. We denote its pixel coordinates by $(c_x,c_y)$.</span>
+<span id="cb3-160"><a href="#cb3-160" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-161"><a href="#cb3-161" aria-hidden="true" tabindex="-1"></a>Thus the same image location has coordinates $(0,0)$ when measured from the image-plane origin, but $(c_x,c_y)$ when measured from the top-left pixel.</span>
+<span id="cb3-162"><a href="#cb3-162" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-163"><a href="#cb3-163" aria-hidden="true" tabindex="-1"></a><span class="fu">### From image-plane coordinates to pixels</span></span>
+<span id="cb3-164"><a href="#cb3-164" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-165"><a href="#cb3-165" aria-hidden="true" tabindex="-1"></a>We choose the positive $x$- and $y$-directions to match the pixel directions: rightwards and downwards.</span>
+<span id="cb3-166"><a href="#cb3-166" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-167"><a href="#cb3-167" aria-hidden="true" tabindex="-1"></a>Let $s_x$ and $s_y$ be the image-plane distances corresponding to one pixel in each direction. A displacement $x$ therefore corresponds to $x/s_x$ pixels horizontally, and a displacement $y$ corresponds to $y/s_y$ pixels vertically.</span>
+<span id="cb3-168"><a href="#cb3-168" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-169"><a href="#cb3-169" aria-hidden="true" tabindex="-1"></a>These displacements are measured from the principal point. Adding its pixel coordinates gives</span>
+<span id="cb3-170"><a href="#cb3-170" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-171"><a href="#cb3-171" aria-hidden="true" tabindex="-1"></a>\boxed{</span>
+<span id="cb3-172"><a href="#cb3-172" aria-hidden="true" tabindex="-1"></a>u=\frac{x}{s_x}+c_x,</span>
+<span id="cb3-173"><a href="#cb3-173" aria-hidden="true" tabindex="-1"></a>\qquad</span>
+<span id="cb3-174"><a href="#cb3-174" aria-hidden="true" tabindex="-1"></a>v=\frac{y}{s_y}+c_y.</span>
+<span id="cb3-175"><a href="#cb3-175" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-176"><a href="#cb3-176" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-177"><a href="#cb3-177" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-178"><a href="#cb3-178" aria-hidden="true" tabindex="-1"></a>The division converts the distances into pixel units; adding $(c_x,c_y)$ expresses the location relative to the top-left pixel.</span>
+<span id="cb3-179"><a href="#cb3-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-180"><a href="#cb3-180" aria-hidden="true" tabindex="-1"></a><span class="fu">### A worked camera-to-pixel example</span></span>
+<span id="cb3-181"><a href="#cb3-181" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-182"><a href="#cb3-182" aria-hidden="true" tabindex="-1"></a>Return to the scene point with camera coordinates $(2,1,4)$ and the virtual image plane at $Z_c=f=2$. Its viewing line meets the image plane at $(1,0.5,2)$, so its coordinates within that plane are $(x,y)=(1,0.5)$.</span>
+<span id="cb3-183"><a href="#cb3-183" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-184"><a href="#cb3-184" aria-hidden="true" tabindex="-1"></a>Dividing these image-plane coordinates by $f$ gives</span>
+<span id="cb3-185"><a href="#cb3-185" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-186"><a href="#cb3-186" aria-hidden="true" tabindex="-1"></a>(x_n,y_n)=\left(\frac{1}{2},\frac{0.5}{2}\right)=(0.5,0.25).</span>
+<span id="cb3-187"><a href="#cb3-187" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-188"><a href="#cb3-188" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-189"><a href="#cb3-189" aria-hidden="true" tabindex="-1"></a>Recall that the principal point is where the camera's $Z_c$-axis meets the image plane.</span>
+<span id="cb3-190"><a href="#cb3-190" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-191"><a href="#cb3-191" aria-hidden="true" tabindex="-1"></a>For this example, take 200 pixels per normalised unit in each direction and place the principal point at pixel coordinates $(260,170)$. The pixel location is then</span>
+<span id="cb3-192"><a href="#cb3-192" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-193"><a href="#cb3-193" aria-hidden="true" tabindex="-1"></a>u=200(0.5)+260=360,</span>
+<span id="cb3-194"><a href="#cb3-194" aria-hidden="true" tabindex="-1"></a>\qquad</span>
+<span id="cb3-195"><a href="#cb3-195" aria-hidden="true" tabindex="-1"></a>v=200(0.25)+170=220.</span>
+<span id="cb3-196"><a href="#cb3-196" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-197"><a href="#cb3-197" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-198"><a href="#cb3-198" aria-hidden="true" tabindex="-1"></a>The stages of the calculation are:</span>
+<span id="cb3-199"><a href="#cb3-199" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-200"><a href="#cb3-200" aria-hidden="true" tabindex="-1"></a>| Stage | Coordinates | What they describe |</span>
+<span id="cb3-201"><a href="#cb3-201" aria-hidden="true" tabindex="-1"></a>|---|---|---|</span>
+<span id="cb3-202"><a href="#cb3-202" aria-hidden="true" tabindex="-1"></a>| Scene point in camera coordinates | $(2,1,4)$ | The scene point's position relative to the pinhole. |</span>
+<span id="cb3-203"><a href="#cb3-203" aria-hidden="true" tabindex="-1"></a>| Intersection with the virtual image plane | $(1,0.5,2)$ | The projected point on the plane $Z_c=2$; its coordinates within the plane are $(1,0.5)$. |</span>
+<span id="cb3-204"><a href="#cb3-204" aria-hidden="true" tabindex="-1"></a>| Normalised image coordinates | $(0.5,0.25)$ | The image-plane coordinates divided by $f$. |</span>
+<span id="cb3-205"><a href="#cb3-205" aria-hidden="true" tabindex="-1"></a>| Pixel coordinates | $(360,220)$ | The projected image location measured in pixels from the top-left origin. |</span>
+<span id="cb3-206"><a href="#cb3-206" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-207"><a href="#cb3-207" aria-hidden="true" tabindex="-1"></a>The grey mark in @fig-normalised-to-pixel-coordinates is the principal point. It has normalised coordinates $(0,0)$ and pixel coordinates $(260,170)$. The top-left pixel origin instead has normalised coordinates</span>
+<span id="cb3-208"><a href="#cb3-208" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-209"><a href="#cb3-209" aria-hidden="true" tabindex="-1"></a>\left(\frac{0-260}{200},\frac{0-170}{200}\right)=(-1.3,-0.85).</span>
+<span id="cb3-210"><a href="#cb3-210" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-211"><a href="#cb3-211" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-212"><a href="#cb3-212" aria-hidden="true" tabindex="-1"></a>The rectangles in @fig-normalised-to-pixel-coordinates show the chosen image window. Their corner labels give its bounds in each coordinate system.</span>
+<span id="cb3-213"><a href="#cb3-213" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-214"><a href="#cb3-214" aria-hidden="true" tabindex="-1"></a><span class="al">![Matrix form of the worked pixel-coordinate conversion.](&lt;attachments/camera-models/normalised-to-pixel-matrix-calculation.png&gt;)</span>{#fig-normalised-to-pixel-calculation width=100% fig-align="center"}</span>
+<span id="cb3-215"><a href="#cb3-215" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-216"><a href="#cb3-216" aria-hidden="true" tabindex="-1"></a>The calculation in @fig-normalised-to-pixel-calculation writes the normalised image point as the homogeneous triple $(0.5,0.25,1)$. The matrix scales the first two coordinates and adds the principal-point offset. Its output is $(360,220,1)$, giving pixel coordinates $(360,220)$.</span>
+<span id="cb3-217"><a href="#cb3-217" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-218"><a href="#cb3-218" aria-hidden="true" tabindex="-1"></a><span class="fu">## Homography</span></span>
+<span id="cb3-219"><a href="#cb3-219" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-220"><a href="#cb3-220" aria-hidden="true" tabindex="-1"></a><span class="fu">### Connecting the image plane and the court plane</span></span>
+<span id="cb3-221"><a href="#cb3-221" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-222"><a href="#cb3-222" aria-hidden="true" tabindex="-1"></a>The basketball court floor can be modelled as a plane. Together with the image plane, this gives us two planes connected by viewing lines through the camera’s pinhole.</span>
+<span id="cb3-223"><a href="#cb3-223" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-224"><a href="#cb3-224" aria-hidden="true" tabindex="-1"></a>Choose a point on the court and draw its viewing line towards the pinhole. Where this line intersects the image plane gives the corresponding image point. We can also follow the line back from the image towards the court. Its intersection with the court plane gives the corresponding court point.</span>
+<span id="cb3-225"><a href="#cb3-225" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-226"><a href="#cb3-226" aria-hidden="true" tabindex="-1"></a>!<span class="co">[</span><span class="ot">Corresponding points on the image and court planes lie on a viewing line through the pinhole. The green quadrilateral within the image plane is the court’s projected outline. Schematic based on @foundationsCVbook [Figure 41.6].</span><span class="co">](&lt;attachments/camera-models/image-court-plane-homography.png&gt;)</span>{#fig-image-court-plane-homography width=100% fig-align="center"}</span>
+<span id="cb3-227"><a href="#cb3-227" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-228"><a href="#cb3-228" aria-hidden="true" tabindex="-1"></a>Which image point corresponds to which court point depends on the relative arrangement of the camera and the two planes. Once this relationship is established, we can map an image location directly to a location on the court.</span>
+<span id="cb3-229"><a href="#cb3-229" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-230"><a href="#cb3-230" aria-hidden="true" tabindex="-1"></a>The resulting mapping between the two planes is called a **planar homography**. For our basketball application, we want this mapping to take image coordinates in pixels to court coordinates in metres. To determine the mapping for our camera, we will use court landmarks whose positions are known both in the image and on the court.</span>
+<span id="cb3-231"><a href="#cb3-231" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-232"><a href="#cb3-232" aria-hidden="true" tabindex="-1"></a><span class="fu">### What does the mapping preserve?</span></span>
+<span id="cb3-233"><a href="#cb3-233" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-234"><a href="#cb3-234" aria-hidden="true" tabindex="-1"></a>The court has ordinary lengths and angles, but these need not be preserved in its image. Equal court distances can occupy different numbers of pixels, and parallel court lines can appear to converge.</span>
+<span id="cb3-235"><a href="#cb3-235" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-236"><a href="#cb3-236" aria-hidden="true" tabindex="-1"></a><span class="al">![A regular grid on the court plane (left) and its perspective image (right). The highlighted parallel court lines remain straight in the image and converge towards a vanishing point.](&lt;attachments/camera-models/court-grid-vanishing-point.png&gt;)</span>{#fig-court-grid-vanishing-point width=100% fig-align="center"}</span>
+<span id="cb3-237"><a href="#cb3-237" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-238"><a href="#cb3-238" aria-hidden="true" tabindex="-1"></a>Different classes of transformations preserve different properties:</span>
+<span id="cb3-239"><a href="#cb3-239" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-240"><a href="#cb3-240" aria-hidden="true" tabindex="-1"></a>| Transformation | Some preserved properties |</span>
+<span id="cb3-241"><a href="#cb3-241" aria-hidden="true" tabindex="-1"></a>|---|---|</span>
+<span id="cb3-242"><a href="#cb3-242" aria-hidden="true" tabindex="-1"></a>| Euclidean (rigid motions) | Lengths and angles |</span>
+<span id="cb3-243"><a href="#cb3-243" aria-hidden="true" tabindex="-1"></a>| Affine | Straight lines and parallelism |</span>
+<span id="cb3-244"><a href="#cb3-244" aria-hidden="true" tabindex="-1"></a>| Projective (homographies) | Straight lines and point–line incidence |</span>
+<span id="cb3-245"><a href="#cb3-245" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-246"><a href="#cb3-246" aria-hidden="true" tabindex="-1"></a>Here **incidence** means which points lie on which lines. Euclidean transformations are special cases of affine transformations, which are themselves special cases of projective transformations.</span>
+<span id="cb3-247"><a href="#cb3-247" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-248"><a href="#cb3-248" aria-hidden="true" tabindex="-1"></a>Our conversion from image-plane coordinates to pixels is affine: it rescales the coordinates and shifts their origin. The court-to-image homography can also change parallelism. Homogeneous coordinates let us describe both mappings using matrices.</span>
+<span id="cb3-249"><a href="#cb3-249" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-250"><a href="#cb3-250" aria-hidden="true" tabindex="-1"></a>A family of parallel court lines shares a direction. Projective geometry represents that direction as a **point at infinity** on the court plane. The homography can map it to a finite image point—the **vanishing point** towards which the image lines converge.</span>
+<span id="cb3-251"><a href="#cb3-251" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-252"><a href="#cb3-252" aria-hidden="true" tabindex="-1"></a><span class="fu">### From court coordinates to camera coordinates</span></span>
+<span id="cb3-253"><a href="#cb3-253" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-254"><a href="#cb3-254" aria-hidden="true" tabindex="-1"></a>We describe a position on the court by two coordinates $(X,Y)$, measured in metres from a chosen court corner, with the axes along the court edges.</span>
+<span id="cb3-255"><a href="#cb3-255" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-256"><a href="#cb3-256" aria-hidden="true" tabindex="-1"></a>To reach a court point from the camera's pinhole, we can first go to the court origin, then move along the two court directions. The vector to the court origin is fixed. Each court direction is also fixed; the distances travelled along them are $X$ and $Y$.</span>
+<span id="cb3-257"><a href="#cb3-257" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-258"><a href="#cb3-258" aria-hidden="true" tabindex="-1"></a>Adding these three displacements gives the position vector of the court point relative to the camera, as shown in @fig-court-coordinate-vectors.</span>
+<span id="cb3-259"><a href="#cb3-259" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-260"><a href="#cb3-260" aria-hidden="true" tabindex="-1"></a><span class="al">![The camera-to-point vector is the sum of the vector to the court origin and the two court-axis displacements.](&lt;attachments/camera-models/court-coordinate-vector-construction.png&gt;)</span>{#fig-court-coordinate-vectors width=100% fig-align="center"}</span>
+<span id="cb3-261"><a href="#cb3-261" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-262"><a href="#cb3-262" aria-hidden="true" tabindex="-1"></a>Write the three camera-coordinate components of a one-unit displacement along the court's $X$ direction as $(a_1,a_2,a_3)$, and along its $Y$ direction as $(b_1,b_2,b_3)$. Write the vector from the pinhole to the court origin as $(d_1,d_2,d_3)$.</span>
+<span id="cb3-263"><a href="#cb3-263" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-264"><a href="#cb3-264" aria-hidden="true" tabindex="-1"></a>As in ENGSCI 205, a matrix multiplied by a vector gives a linear combination of its columns. We therefore place these three fixed vectors in the columns of a matrix, as shown in @fig-court-vectors-to-matrix. The offset column is multiplied by 1.</span>
+<span id="cb3-265"><a href="#cb3-265" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-266"><a href="#cb3-266" aria-hidden="true" tabindex="-1"></a><span class="al">![The fixed vectors become columns multiplying $X$, $Y$ and 1, respectively.](&lt;attachments/camera-models/court-vectors-to-matrix.png&gt;)</span>{#fig-court-vectors-to-matrix width=100% fig-align="center"}</span>
+<span id="cb3-267"><a href="#cb3-267" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-268"><a href="#cb3-268" aria-hidden="true" tabindex="-1"></a>Calling this matrix $A$, we have</span>
+<span id="cb3-269"><a href="#cb3-269" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-270"><a href="#cb3-270" aria-hidden="true" tabindex="-1"></a>\begin{bmatrix}X_c<span class="sc">\\</span>Y_c<span class="sc">\\</span>Z_c\end{bmatrix}</span>
+<span id="cb3-271"><a href="#cb3-271" aria-hidden="true" tabindex="-1"></a>=</span>
+<span id="cb3-272"><a href="#cb3-272" aria-hidden="true" tabindex="-1"></a>A\begin{bmatrix}X<span class="sc">\\</span>Y<span class="sc">\\</span>1\end{bmatrix}.</span>
+<span id="cb3-273"><a href="#cb3-273" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-274"><a href="#cb3-274" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-275"><a href="#cb3-275" aria-hidden="true" tabindex="-1"></a><span class="fu">### From these outputs to the image</span></span>
+<span id="cb3-276"><a href="#cb3-276" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-277"><a href="#cb3-277" aria-hidden="true" tabindex="-1"></a>We can now use our earlier perspective-projection result. The normalised image coordinates are</span>
+<span id="cb3-278"><a href="#cb3-278" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-279"><a href="#cb3-279" aria-hidden="true" tabindex="-1"></a>(x_n,y_n)=\left(\frac{X_c}{Z_c},\frac{Y_c}{Z_c}\right).</span>
+<span id="cb3-280"><a href="#cb3-280" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-281"><a href="#cb3-281" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-282"><a href="#cb3-282" aria-hidden="true" tabindex="-1"></a>Thus the three outputs of $A$ also serve as homogeneous coordinates for the normalised image point. Multiplication by $A$, followed by division by its third output, gives the **court-to-normalised-image homography**.</span>
+<span id="cb3-283"><a href="#cb3-283" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-284"><a href="#cb3-284" aria-hidden="true" tabindex="-1"></a><span class="fu">### Including the pixel conversion</span></span>
+<span id="cb3-285"><a href="#cb3-285" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-286"><a href="#cb3-286" aria-hidden="true" tabindex="-1"></a>To obtain pixel coordinates, we apply the scale and offset introduced earlier. For the horizontal coordinate,</span>
+<span id="cb3-287"><a href="#cb3-287" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-288"><a href="#cb3-288" aria-hidden="true" tabindex="-1"></a>u=\frac{f}{s_x}\frac{X_c}{Z_c}+c_x</span>
+<span id="cb3-289"><a href="#cb3-289" aria-hidden="true" tabindex="-1"></a>=\frac{(f/s_x)X_c+c_xZ_c}{Z_c}.</span>
+<span id="cb3-290"><a href="#cb3-290" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-291"><a href="#cb3-291" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-292"><a href="#cb3-292" aria-hidden="true" tabindex="-1"></a>The numerator is a weighted sum of $X_c$ and $Z_c$. The vertical coordinate has the corresponding form</span>
+<span id="cb3-293"><a href="#cb3-293" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-294"><a href="#cb3-294" aria-hidden="true" tabindex="-1"></a>v=\frac{(f/s_y)Y_c+c_yZ_c}{Z_c}.</span>
+<span id="cb3-295"><a href="#cb3-295" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-296"><a href="#cb3-296" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-297"><a href="#cb3-297" aria-hidden="true" tabindex="-1"></a>Each camera coordinate is already a linear combination of $X,Y,1$. These two numerators and their common denominator are therefore also linear combinations of $X,Y,1$. We collect their coefficients into a $3\times3$ matrix $G$:</span>
+<span id="cb3-298"><a href="#cb3-298" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-299"><a href="#cb3-299" aria-hidden="true" tabindex="-1"></a>G\begin{bmatrix}X<span class="sc">\\</span>Y<span class="sc">\\</span>1\end{bmatrix}</span>
+<span id="cb3-300"><a href="#cb3-300" aria-hidden="true" tabindex="-1"></a>=</span>
+<span id="cb3-301"><a href="#cb3-301" aria-hidden="true" tabindex="-1"></a>\begin{bmatrix}</span>
+<span id="cb3-302"><a href="#cb3-302" aria-hidden="true" tabindex="-1"></a>(f/s_x)X_c+c_xZ_c<span class="sc">\\</span></span>
+<span id="cb3-303"><a href="#cb3-303" aria-hidden="true" tabindex="-1"></a>(f/s_y)Y_c+c_yZ_c<span class="sc">\\</span></span>
+<span id="cb3-304"><a href="#cb3-304" aria-hidden="true" tabindex="-1"></a>Z_c</span>
+<span id="cb3-305"><a href="#cb3-305" aria-hidden="true" tabindex="-1"></a>\end{bmatrix}.</span>
+<span id="cb3-306"><a href="#cb3-306" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-307"><a href="#cb3-307" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-308"><a href="#cb3-308" aria-hidden="true" tabindex="-1"></a>Dividing the first two outputs by the third gives $(u,v)$. This is the **court-to-pixel homography**. The pixel conversion changes the coordinate units and origin within the image; it does not introduce another physical image plane.</span>
+<span id="cb3-309"><a href="#cb3-309" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-310"><a href="#cb3-310" aria-hidden="true" tabindex="-1"></a><span class="fu">### From pixels back to the court</span></span>
+<span id="cb3-311"><a href="#cb3-311" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-312"><a href="#cb3-312" aria-hidden="true" tabindex="-1"></a>Our basketball task starts with an image location and asks where it lies on the court. For our camera above the court, the planar mapping can be reversed. We use the inverse matrix</span>
+<span id="cb3-313"><a href="#cb3-313" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-314"><a href="#cb3-314" aria-hidden="true" tabindex="-1"></a>H=G^{-1}.</span>
+<span id="cb3-315"><a href="#cb3-315" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-316"><a href="#cb3-316" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-317"><a href="#cb3-317" aria-hidden="true" tabindex="-1"></a>Given pixel coordinates $(u,v)$, multiply</span>
+<span id="cb3-318"><a href="#cb3-318" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-319"><a href="#cb3-319" aria-hidden="true" tabindex="-1"></a>\begin{bmatrix}a<span class="sc">\\</span>b<span class="sc">\\</span>c\end{bmatrix}</span>
+<span id="cb3-320"><a href="#cb3-320" aria-hidden="true" tabindex="-1"></a>=</span>
+<span id="cb3-321"><a href="#cb3-321" aria-hidden="true" tabindex="-1"></a>H\begin{bmatrix}u<span class="sc">\\</span>v<span class="sc">\\</span>1\end{bmatrix}.</span>
+<span id="cb3-322"><a href="#cb3-322" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-323"><a href="#cb3-323" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-324"><a href="#cb3-324" aria-hidden="true" tabindex="-1"></a>The three outputs are homogeneous coordinates for the court point. Dividing the first two by the third gives</span>
+<span id="cb3-325"><a href="#cb3-325" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-326"><a href="#cb3-326" aria-hidden="true" tabindex="-1"></a>X=\frac{a}{c},\qquad Y=\frac{b}{c},\qquad c\ne0.</span>
+<span id="cb3-327"><a href="#cb3-327" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-328"><a href="#cb3-328" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-329"><a href="#cb3-329" aria-hidden="true" tabindex="-1"></a>For example, the output $(6,8,2)$ represents court coordinates $(3,4)$ metres.</span>
+<span id="cb3-330"><a href="#cb3-330" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-331"><a href="#cb3-331" aria-hidden="true" tabindex="-1"></a>We will determine $H$ directly from landmarks whose positions are known both in the image and on the court. Once $H$ is known, this calculation takes pixel coordinates as its input and returns court coordinates. We do not need to recover each camera parameter separately to use it.</span>
+<span id="cb3-332"><a href="#cb3-332" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-333"><a href="#cb3-333" aria-hidden="true" tabindex="-1"></a><span class="fu">### How many landmarks do we need?</span></span>
+<span id="cb3-334"><a href="#cb3-334" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-335"><a href="#cb3-335" aria-hidden="true" tabindex="-1"></a>A general planar homography has nine matrix entries. Multiplying all nine by a common nonzero factor scales all three outputs together, leaving their ratios unchanged. The mapping therefore has **eight independent parameters**.</span>
+<span id="cb3-336"><a href="#cb3-336" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-337"><a href="#cb3-337" aria-hidden="true" tabindex="-1"></a>Each matched landmark supplies two equations: one for its court $X$-coordinate and one for its $Y$-coordinate. **Four point correspondences** therefore supply the eight equations needed to determine the homography, up to its irrelevant overall scale.</span>
+<span id="cb3-338"><a href="#cb3-338" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-339"><a href="#cb3-339" aria-hidden="true" tabindex="-1"></a>The four points must be distinct, with **no three on a straight line**, in either the image or the court. Otherwise the constraints do not determine the mapping uniquely.</span>
+<span id="cb3-340"><a href="#cb3-340" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-341"><a href="#cb3-341" aria-hidden="true" tabindex="-1"></a>Choose landmarks spread across the court. With more than four correspondences, we can fit a homography that accommodates annotation error; additional landmarks withheld from fitting provide an independent check.</span>
+<span id="cb3-342"><a href="#cb3-342" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-343"><a href="#cb3-343" aria-hidden="true" tabindex="-1"></a><span class="fu">### From a player box to a court position</span></span>
+<span id="cb3-344"><a href="#cb3-344" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-345"><a href="#cb3-345" aria-hidden="true" tabindex="-1"></a>To estimate a player's position on the court, we need an image point representing their contact with the floor. We use the bottom-centre of the bounding box as an approximation.</span>
+<span id="cb3-346"><a href="#cb3-346" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-347"><a href="#cb3-347" aria-hidden="true" tabindex="-1"></a>!<span class="co">[</span><span class="ot">The supplied box for player 6 in frame 50, with its centre and bottom-centre marked, and the resulting court coordinates. Frame and annotations from TrackID3x3 [@trackid3x3], [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); crop and overlays added.</span><span class="co">](&lt;attachments/camera-models/frame50-player6-box-to-court.png&gt;)</span>{#fig-frame50-box-to-court width=100% fig-align="center"}</span>
+<span id="cb3-348"><a href="#cb3-348" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-349"><a href="#cb3-349" aria-hidden="true" tabindex="-1"></a>For player 6 in frame 50, the box is <span class="in">`[487.03, 318.30, 528.19, 412.86]`</span> in the format <span class="in">`[u_min, v_min, u_max, v_max]`</span>. Its bottom-centre is therefore $(u,v)=(507.61,412.86)$.</span>
+<span id="cb3-350"><a href="#cb3-350" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-351"><a href="#cb3-351" aria-hidden="true" tabindex="-1"></a>Here we use a pre-supplied matrix $H$, computed for this camera from the four court-landmark correspondences in TrackID3x3. The matrix and the <span class="in">`transform_points`</span> helper are included in the accompanying <span class="co">[</span><span class="ot">court_mapping.py</span><span class="co">](&lt;attachments/camera-models/court_mapping.py&gt;)</span>{download="court_mapping.py"}. Place this file in your working folder, or upload it to Colab's Files pane.</span>
+<span id="cb3-352"><a href="#cb3-352" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-353"><a href="#cb3-353" aria-hidden="true" tabindex="-1"></a>::: {.court-mapping-example style="break-inside: avoid; page-break-inside: avoid;"}</span>
+<span id="cb3-354"><a href="#cb3-354" aria-hidden="true" tabindex="-1"></a>The helper accepts image points as rows of an array and returns the corresponding court points, performing the matrix multiplication and final division.</span>
+<span id="cb3-355"><a href="#cb3-355" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-356"><a href="#cb3-356" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb3-357"><a href="#cb3-357" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> court_mapping <span class="im">import</span> H, transform_points</span>
+<span id="cb3-358"><a href="#cb3-358" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-359"><a href="#cb3-359" aria-hidden="true" tabindex="-1"></a>box <span class="op">=</span> [<span class="fl">487.03</span>, <span class="fl">318.30</span>, <span class="fl">528.19</span>, <span class="fl">412.86</span>]</span>
+<span id="cb3-360"><a href="#cb3-360" aria-hidden="true" tabindex="-1"></a>u <span class="op">=</span> (box[<span class="dv">0</span>] <span class="op">+</span> box[<span class="dv">2</span>]) <span class="op">/</span> <span class="dv">2</span></span>
+<span id="cb3-361"><a href="#cb3-361" aria-hidden="true" tabindex="-1"></a>v <span class="op">=</span> box[<span class="dv">3</span>]</span>
+<span id="cb3-362"><a href="#cb3-362" aria-hidden="true" tabindex="-1"></a>court_point <span class="op">=</span> transform_points([[u, v]], H)[<span class="dv">0</span>]</span>
+<span id="cb3-363"><a href="#cb3-363" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"(</span><span class="sc">{</span>court_point[<span class="dv">0</span>]<span class="sc">:.2f}</span><span class="ss">, </span><span class="sc">{</span>court_point[<span class="dv">1</span>]<span class="sc">:.2f}</span><span class="ss">) m"</span>)</span>
+<span id="cb3-364"><a href="#cb3-364" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb3-365"><a href="#cb3-365" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-366"><a href="#cb3-366" aria-hidden="true" tabindex="-1"></a><span class="in">```text</span></span>
+<span id="cb3-367"><a href="#cb3-367" aria-hidden="true" tabindex="-1"></a><span class="in">(5.05, 5.06) m</span></span>
+<span id="cb3-368"><a href="#cb3-368" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb3-369"><a href="#cb3-369" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb3-370"><a href="#cb3-370" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-371"><a href="#cb3-371" aria-hidden="true" tabindex="-1"></a>Mapping the box centre $(507.61,365.58)$ gives court coordinates $(1.85,1.80)$ m. Changing the image point moves the mapped position by about $4.57$ m.</span>
+<span id="cb3-372"><a href="#cb3-372" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-373"><a href="#cb3-373" aria-hidden="true" tabindex="-1"></a>As you might imagine, player 'pose', foot placement and box placement affect how well the bottom-centre represents ground contact.</span>
+<span id="cb3-374"><a href="#cb3-374" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-375"><a href="#cb3-375" aria-hidden="true" tabindex="-1"></a><span class="fu">### Checking the court positions</span></span>
+<span id="cb3-376"><a href="#cb3-376" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-377"><a href="#cb3-377" aria-hidden="true" tabindex="-1"></a>Return to the eight saved <span class="in">`person`</span> detections in frame 50, using a confidence threshold of 0.50. We can map every box's bottom-centre using the same matrix $H$.</span>
+<span id="cb3-378"><a href="#cb3-378" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-379"><a href="#cb3-379" aria-hidden="true" tabindex="-1"></a>!<span class="co">[</span><span class="ot">The saved detections and their mapped bottom-centres. D1–D8 label the detections within this frame. The green outlines show the supplied court boundary. Frame from TrackID3x3 [@trackid3x3], [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); overlays added.</span><span class="co">](&lt;attachments/camera-models/frame50-detections-to-court-checks.png&gt;)</span>{#fig-frame50-court-checks width=100% fig-align="center"}</span>
+<span id="cb3-380"><a href="#cb3-380" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-381"><a href="#cb3-381" aria-hidden="true" tabindex="-1"></a>A simple court-based filter keeps detections whose mapped points satisfy</span>
+<span id="cb3-382"><a href="#cb3-382" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-383"><a href="#cb3-383" aria-hidden="true" tabindex="-1"></a>0\leq X\leq 9.50,\qquad 0\leq Y\leq 15.05,</span>
+<span id="cb3-384"><a href="#cb3-384" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb3-385"><a href="#cb3-385" aria-hidden="true" tabindex="-1"></a>with distances in metres. This retains six detections, D2–D7, in this frame; D1 and D8 lie outside the rectangle. The detector's <span class="in">`person`</span> class includes people at the sidelines, while our task concerns the active on-court players.</span>
+<span id="cb3-386"><a href="#cb3-386" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-387"><a href="#cb3-387" aria-hidden="true" tabindex="-1"></a>D3 maps to $(9.33,10.38)$ m, only about $0.17$ m inside the edge $X=9.50$. Decisions near a boundary can be sensitive to box placement and calibration. D1 and D8 both reach the bottom of the image, where their bottom-centres give uncertain estimates of ground contact.</span>
+<span id="cb3-388"><a href="#cb3-388" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-389"><a href="#cb3-389" aria-hidden="true" tabindex="-1"></a>When a position looks questionable, inspect the box and its bottom-centre in the image. Additional landmarks with known court positions would help check the calibration separately from the detector. The supplied $H$ also depends on the camera staying in place and on using the same image coordinate system. We will evaluate the retained detections against the player annotations.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p><a href="attribution.txt">Third-party sources and licences</a></p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
