@@ -270,6 +270,8 @@ window.Quarto = {
   <li><a href="#applying-the-minimum-iou-in-python" id="toc-applying-the-minimum-iou-in-python" class="nav-link" data-scroll-target="#applying-the-minimum-iou-in-python"><span class="header-section-number">9.3.4</span> Applying the minimum IoU in Python</a></li>
   <li><a href="#counting-true-positives-false-positives-and-false-negatives" id="toc-counting-true-positives-false-positives-and-false-negatives" class="nav-link" data-scroll-target="#counting-true-positives-false-positives-and-false-negatives"><span class="header-section-number">9.3.5</span> Counting true positives, false positives and false negatives</a></li>
   <li><a href="#precision-and-recall" id="toc-precision-and-recall" class="nav-link" data-scroll-target="#precision-and-recall"><span class="header-section-number">9.3.6</span> Precision and recall</a></li>
+  <li><a href="#comparing-matching-rules" id="toc-comparing-matching-rules" class="nav-link" data-scroll-target="#comparing-matching-rules"><span class="header-section-number">9.3.7</span> Comparing matching rules</a></li>
+  <li><a href="#filtering-predictions-before-evaluation" id="toc-filtering-predictions-before-evaluation" class="nav-link" data-scroll-target="#filtering-predictions-before-evaluation"><span class="header-section-number">9.3.8</span> Filtering predictions before evaluation</a></li>
   </ul></li>
   <li><a href="#choosing-and-interpreting-evaluation-measures" id="toc-choosing-and-interpreting-evaluation-measures" class="nav-link" data-scroll-target="#choosing-and-interpreting-evaluation-measures"><span class="header-section-number">9.4</span> Choosing and interpreting evaluation measures</a>
   <ul class="collapse">
@@ -450,6 +452,12 @@ Figure&nbsp;9.1: The same two illustrative boxes in both panels. Shading marks t
 <p>In general, a predicted box can overlap several annotation boxes. We then need to choose the matches together, so that each annotation box and each predicted box appears in at most one match.</p>
 <section id="choosing-matches-together" class="level3" data-number="9.3.1">
 <h3 data-number="9.3.1" class="anchored" data-anchor-id="choosing-matches-together"><span class="header-section-number">9.3.1</span> Choosing matches together</h3>
+<p>Here, we first choose a one-to-one assignment that maximises total IoU, then reject pairs below a minimum IoU. This is one possible matching rule, rather than the standard approach used in detection benchmarks such as COCO.</p>
+<p>We could instead:</p>
+<ul>
+<li>exclude low-IoU pairs <strong>before</strong> assignment;</li>
+<li>use <strong>confidence-ordered greedy matching</strong>, as COCO does.</li>
+</ul>
 <p>Suppose we move the second annotation box and adjust the predicted boxes so that each prediction overlaps both annotations:</p>
 <div class="sourceCode" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>annotation_boxes <span class="op">=</span> [</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">6</span>, <span class="dv">4</span>],</span>
@@ -574,6 +582,7 @@ Figure&nbsp;9.1: The same two illustrative boxes in both panels. Shading marks t
 <p>For our current example, this gives:</p>
 <pre class="text"><code>[{'annotation_index': 0, 'prediction_index': 1, 'iou': 0.6}]</code></pre>
 <p>The list <code>matches</code> contains one dictionary per accepted pair. This result records annotation box 1 matched to predicted box 2. Annotation box 2 and predicted box 1 remain unmatched.</p>
+<p>Here, we do not reconsider the assignment after rejecting a pair. Maximising total IoU first does not necessarily give the largest possible number of matches above the threshold.</p>
 </section>
 <section id="counting-true-positives-false-positives-and-false-negatives" class="level3" data-number="9.3.5">
 <h3 data-number="9.3.5" class="anchored" data-anchor-id="counting-true-positives-false-positives-and-false-negatives"><span class="header-section-number">9.3.5</span> Counting true positives, false positives and false negatives</h3>
@@ -624,6 +633,163 @@ FN: 1</code></pre>
 Recall: 0.5</code></pre>
 <p>Precision is 0.5 because one of the two <code>person</code> predictions has an accepted match. Recall is 0.5 because one of the two annotated players is counted as detected.</p>
 <p>As with false positives and false negatives, precision and recall often trade off when we vary the detector’s confidence threshold. For example, keeping only higher-scoring predictions may reduce false positives and increase precision, but can also discard predictions that would have matched player annotations, increasing false negatives and therefore lowering recall. This effect is not guaranteed and depends on context and how predictions correspond to targets. Here, for example, a high-scoring <code>person</code> prediction may still correspond to an observer rather than an active player.</p>
+</section>
+<section id="comparing-matching-rules" class="level3" data-number="9.3.7">
+<h3 data-number="9.3.7" class="anchored" data-anchor-id="comparing-matching-rules"><span class="header-section-number">9.3.7</span> Comparing matching rules</h3>
+<p>We can compare matching rules using the same two annotations and two predictions. Suppose prediction 1 has confidence 0.95 and prediction 2 has confidence 0.85. Keep both predictions; their confidence scores determine the order for greedy matching. We will compare the rules at minimum IoUs of 0.50 and 0.70.</p>
+<p>The IoUs are:</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th style="text-align: right;">Prediction 1</th>
+<th style="text-align: right;">Prediction 2</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Annotation 1</td>
+<td style="text-align: right;">0.80</td>
+<td style="text-align: right;">0.60</td>
+</tr>
+<tr class="even">
+<td>Annotation 2</td>
+<td style="text-align: right;">0.50</td>
+<td style="text-align: right;">0.14</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Assignment followed by rejection</strong></p>
+<p>The maximum-total-IoU assignment pairs annotation 1 with prediction 2 (IoU 0.60), and annotation 2 with prediction 1 (IoU 0.50). Their total IoU is 1.10, compared with approximately 0.94 for the other pairing.</p>
+<ul>
+<li>With a minimum IoU of <strong>0.50</strong>, both pairs are accepted: <strong>TP = 2, FP = 0, FN = 0</strong>.</li>
+<li>With a minimum IoU of <strong>0.70</strong>, both pairs are rejected: <strong>TP = 0, FP = 2, FN = 2</strong>.</li>
+</ul>
+<p>In the second case, annotation 1 and prediction 1 have IoU 0.80, but this pair was not selected by the original assignment. Applying the IoU threshold afterwards leaves both boxes unmatched, without reconsidering this pair. In this example, it would be sensible to reconsider the unmatched boxes or apply the threshold before assignment: either would recover this valid match and avoid one false positive and one false negative.</p>
+<p><strong>Threshold before assignment</strong></p>
+<p>Pairs below the minimum IoU are not allowed as matches. We then maximise total IoU over the remaining one-to-one matches, allowing boxes to remain unmatched.</p>
+<ul>
+<li>At <strong>0.50</strong>, the eligible IoUs are 0.80, 0.60 and 0.50. Choosing the 0.60 and 0.50 pairs gives the largest total: <strong>TP = 2, FP = 0, FN = 0</strong>.</li>
+<li>At <strong>0.70</strong>, only annotation 1 paired with prediction 1 is eligible, with IoU 0.80: <strong>TP = 1, FP = 1, FN = 1</strong>.</li>
+</ul>
+<p>Here, the threshold determines which pairs can enter the assignment, rather than only which assigned pairs are retained.</p>
+<p><strong>Confidence-ordered greedy matching</strong></p>
+<p>Predictions are considered from highest to lowest confidence. Each prediction is matched to the remaining annotation with the highest IoU, provided that IoU meets the threshold. Once matched, that annotation is unavailable to later predictions.</p>
+<p>At a minimum IoU of <strong>0.50</strong>, prediction 1 goes first because its confidence is 0.95, compared with 0.85 for prediction 2. It takes annotation 1, with IoU 0.80. Prediction 2 then has no eligible annotation left: its IoU with annotation 2 is only 0.14. This gives <strong>TP = 1, FP = 1, FN = 1</strong>.</p>
+<p>Greedy matching can therefore miss an opportunity to accept two reasonable matches because it commits to one stronger match first. In this example, that produces an additional false negative and false positive. The greedy rule prioritises higher-confidence predictions rather than choosing the matches jointly.</p>
+<p>At a minimum IoU of <strong>0.70</strong>, the 0.80 pair is still accepted and prediction 2 still has no eligible annotation. The counts are again <strong>TP = 1, FP = 1, FN = 1</strong>.</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Minimum IoU</th>
+<th>Rule</th>
+<th style="text-align: right;">TP</th>
+<th style="text-align: right;">FP</th>
+<th style="text-align: right;">FN</th>
+<th style="text-align: right;">Precision</th>
+<th style="text-align: right;">Recall</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0.50</td>
+<td>Assignment, then rejection</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+</tr>
+<tr class="even">
+<td>0.50</td>
+<td>Threshold before assignment</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+</tr>
+<tr class="odd">
+<td>0.50</td>
+<td>Confidence-ordered greedy</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.50</td>
+<td style="text-align: right;">0.50</td>
+</tr>
+<tr class="even">
+<td>0.70</td>
+<td>Assignment, then rejection</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td>0.70</td>
+<td>Threshold before assignment</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.50</td>
+<td style="text-align: right;">0.50</td>
+</tr>
+<tr class="even">
+<td>0.70</td>
+<td>Confidence-ordered greedy</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.50</td>
+<td style="text-align: right;">0.50</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="filtering-predictions-before-evaluation" class="level3" data-number="9.3.8">
+<h3 data-number="9.3.8" class="anchored" data-anchor-id="filtering-predictions-before-evaluation"><span class="header-section-number">9.3.8</span> Filtering predictions before evaluation</h3>
+<p>In the comparison above, we kept the prediction boxes fixed. We can also filter predictions before matching them to the annotations. Besides using a confidence cutoff, we can use the estimated court positions to reject detections outside the court.</p>
+<p>To see what a filter changes, we keep the annotations, matching rule and minimum IoU fixed. We then recompute the matches using the retained predictions and compare the resulting counts, precision and recall.</p>
+<p>Let’s return to the eight saved <code>person</code> detections in frame 50, selected with confidence at least 0.50. We use assignment followed by rejection, with a minimum IoU of 0.50, and compare against the same six player annotations.</p>
+<p>The court filter introduced in <a href="./camera_models.html#checking-the-court-positions">Checking the court positions</a> retains detections D2–D7 and removes D1 and D8. Recomputing the matches gives:</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th></th>
+<th style="text-align: right;">Predictions</th>
+<th style="text-align: right;">TP</th>
+<th style="text-align: right;">FP</th>
+<th style="text-align: right;">FN</th>
+<th style="text-align: right;">Precision</th>
+<th style="text-align: right;">Recall</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Before court filter</td>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.75</td>
+<td style="text-align: right;">1.00</td>
+</tr>
+<tr class="even">
+<td>After court filter</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1.00</td>
+<td style="text-align: right;">1.00</td>
+</tr>
+</tbody>
+</table>
+<p>In this frame, the filter removes two false positives without losing any accepted player matches.</p>
+<p>Precision and recall of 1 do not mean that the predicted boxes line up exactly with the annotations. For example, one accepted pair still has IoU about 0.58.</p>
+<p>The filter can also make errors. A poor estimate of floor contact or an inaccurate camera mapping can put a player outside the court region, causing a false negative. Conversely, being inside the region does not guarantee that a person is an active player.</p>
 </section>
 </section>
 <section id="choosing-and-interpreting-evaluation-measures" class="level2" data-number="9.4">
@@ -1340,269 +1506,347 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb25-192"><a href="#cb25-192" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb25-193"><a href="#cb25-193" aria-hidden="true" tabindex="-1"></a><span class="fu">### Choosing matches together</span></span>
 <span id="cb25-194"><a href="#cb25-194" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-195"><a href="#cb25-195" aria-hidden="true" tabindex="-1"></a>Suppose we move the second annotation box and adjust the predicted boxes so that each prediction overlaps both annotations:</span>
+<span id="cb25-195"><a href="#cb25-195" aria-hidden="true" tabindex="-1"></a>Here, we first choose a one-to-one assignment that maximises total IoU, then reject pairs below a minimum IoU. This is one possible matching rule, rather than the standard approach used in detection benchmarks such as COCO.</span>
 <span id="cb25-196"><a href="#cb25-196" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-197"><a href="#cb25-197" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
-<span id="cb25-198"><a href="#cb25-198" aria-hidden="true" tabindex="-1"></a>annotation_boxes <span class="op">=</span> [</span>
-<span id="cb25-199"><a href="#cb25-199" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">6</span>, <span class="dv">4</span>],</span>
-<span id="cb25-200"><a href="#cb25-200" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">4</span>, <span class="dv">1</span>, <span class="dv">8</span>, <span class="dv">4</span>],</span>
-<span id="cb25-201"><a href="#cb25-201" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb25-202"><a href="#cb25-202" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-203"><a href="#cb25-203" aria-hidden="true" tabindex="-1"></a>prediction_boxes <span class="op">=</span> [</span>
-<span id="cb25-204"><a href="#cb25-204" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">7</span>, <span class="dv">4</span>],</span>
-<span id="cb25-205"><a href="#cb25-205" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">5</span>, <span class="dv">4</span>],</span>
-<span id="cb25-206"><a href="#cb25-206" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb25-207"><a href="#cb25-207" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb25-208"><a href="#cb25-208" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-209"><a href="#cb25-209" aria-hidden="true" tabindex="-1"></a>The IoU matrix is now, rounded to two decimal places:</span>
-<span id="cb25-210"><a href="#cb25-210" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-211"><a href="#cb25-211" aria-hidden="true" tabindex="-1"></a>| | Predicted box 1 | Predicted box 2 |</span>
-<span id="cb25-212"><a href="#cb25-212" aria-hidden="true" tabindex="-1"></a>|---|---:|---:|</span>
-<span id="cb25-213"><a href="#cb25-213" aria-hidden="true" tabindex="-1"></a>| Annotation box 1 | 0.80 | 0.60 |</span>
-<span id="cb25-214"><a href="#cb25-214" aria-hidden="true" tabindex="-1"></a>| Annotation box 2 | 0.50 | 0.14 |</span>
+<span id="cb25-197"><a href="#cb25-197" aria-hidden="true" tabindex="-1"></a>We could instead:</span>
+<span id="cb25-198"><a href="#cb25-198" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-199"><a href="#cb25-199" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>exclude low-IoU pairs **before** assignment;</span>
+<span id="cb25-200"><a href="#cb25-200" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>use **confidence-ordered greedy matching**, as COCO does.</span>
+<span id="cb25-201"><a href="#cb25-201" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-202"><a href="#cb25-202" aria-hidden="true" tabindex="-1"></a>Suppose we move the second annotation box and adjust the predicted boxes so that each prediction overlaps both annotations:</span>
+<span id="cb25-203"><a href="#cb25-203" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-204"><a href="#cb25-204" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb25-205"><a href="#cb25-205" aria-hidden="true" tabindex="-1"></a>annotation_boxes <span class="op">=</span> [</span>
+<span id="cb25-206"><a href="#cb25-206" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">6</span>, <span class="dv">4</span>],</span>
+<span id="cb25-207"><a href="#cb25-207" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">4</span>, <span class="dv">1</span>, <span class="dv">8</span>, <span class="dv">4</span>],</span>
+<span id="cb25-208"><a href="#cb25-208" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb25-209"><a href="#cb25-209" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-210"><a href="#cb25-210" aria-hidden="true" tabindex="-1"></a>prediction_boxes <span class="op">=</span> [</span>
+<span id="cb25-211"><a href="#cb25-211" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">2</span>, <span class="dv">1</span>, <span class="dv">7</span>, <span class="dv">4</span>],</span>
+<span id="cb25-212"><a href="#cb25-212" aria-hidden="true" tabindex="-1"></a>    [<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">5</span>, <span class="dv">4</span>],</span>
+<span id="cb25-213"><a href="#cb25-213" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb25-214"><a href="#cb25-214" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb25-215"><a href="#cb25-215" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-216"><a href="#cb25-216" aria-hidden="true" tabindex="-1"></a>Both annotations have their highest IoU with predicted box 1. To choose one-to-one matches, we can compare the **total IoU** for each possible way of pairing both annotations with different predictions:</span>
+<span id="cb25-216"><a href="#cb25-216" aria-hidden="true" tabindex="-1"></a>The IoU matrix is now, rounded to two decimal places:</span>
 <span id="cb25-217"><a href="#cb25-217" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-218"><a href="#cb25-218" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Annotation 1 with prediction 1, and annotation 2 with prediction 2: total IoU approximately **0.94**.</span>
-<span id="cb25-219"><a href="#cb25-219" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Annotation 1 with prediction 2, and annotation 2 with prediction 1: total IoU **1.10**.</span>
-<span id="cb25-220"><a href="#cb25-220" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-221"><a href="#cb25-221" aria-hidden="true" tabindex="-1"></a>The second pairing gives the larger total. We therefore match annotation 1 to prediction 2, and annotation 2 to prediction 1.</span>
+<span id="cb25-218"><a href="#cb25-218" aria-hidden="true" tabindex="-1"></a>| | Predicted box 1 | Predicted box 2 |</span>
+<span id="cb25-219"><a href="#cb25-219" aria-hidden="true" tabindex="-1"></a>|---|---:|---:|</span>
+<span id="cb25-220"><a href="#cb25-220" aria-hidden="true" tabindex="-1"></a>| Annotation box 1 | 0.80 | 0.60 |</span>
+<span id="cb25-221"><a href="#cb25-221" aria-hidden="true" tabindex="-1"></a>| Annotation box 2 | 0.50 | 0.14 |</span>
 <span id="cb25-222"><a href="#cb25-222" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-223"><a href="#cb25-223" aria-hidden="true" tabindex="-1"></a>This is a small **assignment problem** that can be expressed as a linear programming problem (as in ENGSCI 391). For larger tables, we can use an assignment algorithm to find the one-to-one matches with the largest total IoU.</span>
+<span id="cb25-223"><a href="#cb25-223" aria-hidden="true" tabindex="-1"></a>Both annotations have their highest IoU with predicted box 1. To choose one-to-one matches, we can compare the **total IoU** for each possible way of pairing both annotations with different predictions:</span>
 <span id="cb25-224"><a href="#cb25-224" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-225"><a href="#cb25-225" aria-hidden="true" tabindex="-1"></a><span class="fu">### Calculating the IoU matrix in Python</span></span>
-<span id="cb25-226"><a href="#cb25-226" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-227"><a href="#cb25-227" aria-hidden="true" tabindex="-1"></a>We can build the whole IoU matrix by calling <span class="in">`box_iou`</span> for each annotation–prediction pair and storing the results in a NumPy array:</span>
-<span id="cb25-228"><a href="#cb25-228" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-229"><a href="#cb25-229" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
-<span id="cb25-230"><a href="#cb25-230" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb25-225"><a href="#cb25-225" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Annotation 1 with prediction 1, and annotation 2 with prediction 2: total IoU approximately **0.94**.</span>
+<span id="cb25-226"><a href="#cb25-226" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Annotation 1 with prediction 2, and annotation 2 with prediction 1: total IoU **1.10**.</span>
+<span id="cb25-227"><a href="#cb25-227" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-228"><a href="#cb25-228" aria-hidden="true" tabindex="-1"></a>The second pairing gives the larger total. We therefore match annotation 1 to prediction 2, and annotation 2 to prediction 1.</span>
+<span id="cb25-229"><a href="#cb25-229" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-230"><a href="#cb25-230" aria-hidden="true" tabindex="-1"></a>This is a small **assignment problem** that can be expressed as a linear programming problem (as in ENGSCI 391). For larger tables, we can use an assignment algorithm to find the one-to-one matches with the largest total IoU.</span>
 <span id="cb25-231"><a href="#cb25-231" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-232"><a href="#cb25-232" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-233"><a href="#cb25-233" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> pairwise_iou(annotation_boxes, prediction_boxes):</span>
-<span id="cb25-234"><a href="#cb25-234" aria-hidden="true" tabindex="-1"></a>    ious <span class="op">=</span> np.zeros(</span>
-<span id="cb25-235"><a href="#cb25-235" aria-hidden="true" tabindex="-1"></a>        (<span class="bu">len</span>(annotation_boxes), <span class="bu">len</span>(prediction_boxes)),</span>
-<span id="cb25-236"><a href="#cb25-236" aria-hidden="true" tabindex="-1"></a>        dtype<span class="op">=</span><span class="bu">float</span>,</span>
-<span id="cb25-237"><a href="#cb25-237" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb25-232"><a href="#cb25-232" aria-hidden="true" tabindex="-1"></a><span class="fu">### Calculating the IoU matrix in Python</span></span>
+<span id="cb25-233"><a href="#cb25-233" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-234"><a href="#cb25-234" aria-hidden="true" tabindex="-1"></a>We can build the whole IoU matrix by calling <span class="in">`box_iou`</span> for each annotation–prediction pair and storing the results in a NumPy array:</span>
+<span id="cb25-235"><a href="#cb25-235" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-236"><a href="#cb25-236" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb25-237"><a href="#cb25-237" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
 <span id="cb25-238"><a href="#cb25-238" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-239"><a href="#cb25-239" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> row, annotation_box <span class="kw">in</span> <span class="bu">enumerate</span>(annotation_boxes):</span>
-<span id="cb25-240"><a href="#cb25-240" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> column, prediction_box <span class="kw">in</span> <span class="bu">enumerate</span>(prediction_boxes):</span>
-<span id="cb25-241"><a href="#cb25-241" aria-hidden="true" tabindex="-1"></a>            ious[row, column] <span class="op">=</span> box_iou(</span>
-<span id="cb25-242"><a href="#cb25-242" aria-hidden="true" tabindex="-1"></a>                annotation_box, prediction_box</span>
-<span id="cb25-243"><a href="#cb25-243" aria-hidden="true" tabindex="-1"></a>            )</span>
-<span id="cb25-244"><a href="#cb25-244" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-245"><a href="#cb25-245" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ious</span>
-<span id="cb25-246"><a href="#cb25-246" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb25-247"><a href="#cb25-247" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-248"><a href="#cb25-248" aria-hidden="true" tabindex="-1"></a><span class="in">`np.zeros`</span> creates a floating-point array with one row per annotation and one column per prediction, initially filled with zeros. <span class="in">`enumerate`</span> gives us both the position and the box at each step, with positions starting at zero.</span>
-<span id="cb25-249"><a href="#cb25-249" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-250"><a href="#cb25-250" aria-hidden="true" tabindex="-1"></a>Using our current example:</span>
+<span id="cb25-239"><a href="#cb25-239" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-240"><a href="#cb25-240" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> pairwise_iou(annotation_boxes, prediction_boxes):</span>
+<span id="cb25-241"><a href="#cb25-241" aria-hidden="true" tabindex="-1"></a>    ious <span class="op">=</span> np.zeros(</span>
+<span id="cb25-242"><a href="#cb25-242" aria-hidden="true" tabindex="-1"></a>        (<span class="bu">len</span>(annotation_boxes), <span class="bu">len</span>(prediction_boxes)),</span>
+<span id="cb25-243"><a href="#cb25-243" aria-hidden="true" tabindex="-1"></a>        dtype<span class="op">=</span><span class="bu">float</span>,</span>
+<span id="cb25-244"><a href="#cb25-244" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb25-245"><a href="#cb25-245" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-246"><a href="#cb25-246" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> row, annotation_box <span class="kw">in</span> <span class="bu">enumerate</span>(annotation_boxes):</span>
+<span id="cb25-247"><a href="#cb25-247" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> column, prediction_box <span class="kw">in</span> <span class="bu">enumerate</span>(prediction_boxes):</span>
+<span id="cb25-248"><a href="#cb25-248" aria-hidden="true" tabindex="-1"></a>            ious[row, column] <span class="op">=</span> box_iou(</span>
+<span id="cb25-249"><a href="#cb25-249" aria-hidden="true" tabindex="-1"></a>                annotation_box, prediction_box</span>
+<span id="cb25-250"><a href="#cb25-250" aria-hidden="true" tabindex="-1"></a>            )</span>
 <span id="cb25-251"><a href="#cb25-251" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-252"><a href="#cb25-252" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
-<span id="cb25-253"><a href="#cb25-253" aria-hidden="true" tabindex="-1"></a>ious <span class="op">=</span> pairwise_iou(annotation_boxes, prediction_boxes)</span>
-<span id="cb25-254"><a href="#cb25-254" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(np.<span class="bu">round</span>(ious, <span class="dv">2</span>))</span>
-<span id="cb25-255"><a href="#cb25-255" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-252"><a href="#cb25-252" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> ious</span>
+<span id="cb25-253"><a href="#cb25-253" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-254"><a href="#cb25-254" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-255"><a href="#cb25-255" aria-hidden="true" tabindex="-1"></a><span class="in">`np.zeros`</span> creates a floating-point array with one row per annotation and one column per prediction, initially filled with zeros. <span class="in">`enumerate`</span> gives us both the position and the box at each step, with positions starting at zero.</span>
 <span id="cb25-256"><a href="#cb25-256" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-257"><a href="#cb25-257" aria-hidden="true" tabindex="-1"></a>This gives:</span>
+<span id="cb25-257"><a href="#cb25-257" aria-hidden="true" tabindex="-1"></a>Using our current example:</span>
 <span id="cb25-258"><a href="#cb25-258" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-259"><a href="#cb25-259" aria-hidden="true" tabindex="-1"></a><span class="in">```text</span></span>
-<span id="cb25-260"><a href="#cb25-260" aria-hidden="true" tabindex="-1"></a><span class="in">[[0.8  0.6 ]</span></span>
-<span id="cb25-261"><a href="#cb25-261" aria-hidden="true" tabindex="-1"></a><span class="in"> [0.5  0.14]]</span></span>
+<span id="cb25-259"><a href="#cb25-259" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb25-260"><a href="#cb25-260" aria-hidden="true" tabindex="-1"></a>ious <span class="op">=</span> pairwise_iou(annotation_boxes, prediction_boxes)</span>
+<span id="cb25-261"><a href="#cb25-261" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(np.<span class="bu">round</span>(ious, <span class="dv">2</span>))</span>
 <span id="cb25-262"><a href="#cb25-262" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb25-263"><a href="#cb25-263" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-264"><a href="#cb25-264" aria-hidden="true" tabindex="-1"></a>as in our table before. We use rounding for display only.</span>
+<span id="cb25-264"><a href="#cb25-264" aria-hidden="true" tabindex="-1"></a>This gives:</span>
 <span id="cb25-265"><a href="#cb25-265" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-266"><a href="#cb25-266" aria-hidden="true" tabindex="-1"></a>The same function works with different numbers of boxes of each type. For example, six annotations and eight predictions produce a matrix with shape <span class="in">`(6, 8)`</span>.</span>
-<span id="cb25-267"><a href="#cb25-267" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-268"><a href="#cb25-268" aria-hidden="true" tabindex="-1"></a><span class="fu">### Selecting candidate matches in Python</span></span>
-<span id="cb25-269"><a href="#cb25-269" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-270"><a href="#cb25-270" aria-hidden="true" tabindex="-1"></a>Each annotation box is either unmatched or matched to exactly one predicted box. Each predicted box is either unmatched or matched to exactly one annotation box.</span>
-<span id="cb25-271"><a href="#cb25-271" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-272"><a href="#cb25-272" aria-hidden="true" tabindex="-1"></a>For our two-by-two example, let $x_{ij}$ be the decision variable for pairing annotation box $i$ with predicted box $j$. We can formulate this assignment problem as a linear programme, as in ENGSCI 255/ENGSCI 391:</span>
-<span id="cb25-273"><a href="#cb25-273" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-274"><a href="#cb25-274" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb25-275"><a href="#cb25-275" aria-hidden="true" tabindex="-1"></a>\begin{aligned}</span>
-<span id="cb25-276"><a href="#cb25-276" aria-hidden="true" tabindex="-1"></a>\text{maximise}\quad</span>
-<span id="cb25-277"><a href="#cb25-277" aria-hidden="true" tabindex="-1"></a>&amp;0.80x_{11}+0.60x_{12}+0.50x_{21}+0.14x_{22}<span class="sc">\\</span></span>
-<span id="cb25-278"><a href="#cb25-278" aria-hidden="true" tabindex="-1"></a>\text{subject to}\quad</span>
-<span id="cb25-279"><a href="#cb25-279" aria-hidden="true" tabindex="-1"></a>&amp;x_{11}+x_{12}\leq 1 &amp;&amp;\text{(annotation 1)},<span class="sc">\\</span></span>
-<span id="cb25-280"><a href="#cb25-280" aria-hidden="true" tabindex="-1"></a>&amp;x_{21}+x_{22}\leq 1 &amp;&amp;\text{(annotation 2)},<span class="sc">\\</span></span>
-<span id="cb25-281"><a href="#cb25-281" aria-hidden="true" tabindex="-1"></a>&amp;x_{11}+x_{21}\leq 1 &amp;&amp;\text{(prediction 1)},<span class="sc">\\</span></span>
-<span id="cb25-282"><a href="#cb25-282" aria-hidden="true" tabindex="-1"></a>&amp;x_{12}+x_{22}\leq 1 &amp;&amp;\text{(prediction 2)},<span class="sc">\\</span></span>
-<span id="cb25-283"><a href="#cb25-283" aria-hidden="true" tabindex="-1"></a>&amp;x_{ij}\geq 0 &amp;&amp;\text{for }i,j\in<span class="sc">\{</span>1,2<span class="sc">\}</span>.</span>
-<span id="cb25-284"><a href="#cb25-284" aria-hidden="true" tabindex="-1"></a>\end{aligned}</span>
-<span id="cb25-285"><a href="#cb25-285" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb25-286"><a href="#cb25-286" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-287"><a href="#cb25-287" aria-hidden="true" tabindex="-1"></a>This LP has an optimal solution in which each $x_{ij}$ is 0 or 1. A value of 1 selects that pair.</span>
-<span id="cb25-288"><a href="#cb25-288" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-289"><a href="#cb25-289" aria-hidden="true" tabindex="-1"></a>SciPy provides a specialised solver for this assignment problem, <span class="in">`linear_sum_assignment`</span>. It minimises total cost, so we supply <span class="in">`-ious`</span> to obtain the pairing with the largest total IoU:</span>
-<span id="cb25-290"><a href="#cb25-290" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-291"><a href="#cb25-291" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
-<span id="cb25-292"><a href="#cb25-292" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.optimize <span class="im">import</span> linear_sum_assignment</span>
+<span id="cb25-266"><a href="#cb25-266" aria-hidden="true" tabindex="-1"></a><span class="in">```text</span></span>
+<span id="cb25-267"><a href="#cb25-267" aria-hidden="true" tabindex="-1"></a><span class="in">[[0.8  0.6 ]</span></span>
+<span id="cb25-268"><a href="#cb25-268" aria-hidden="true" tabindex="-1"></a><span class="in"> [0.5  0.14]]</span></span>
+<span id="cb25-269"><a href="#cb25-269" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-270"><a href="#cb25-270" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-271"><a href="#cb25-271" aria-hidden="true" tabindex="-1"></a>as in our table before. We use rounding for display only.</span>
+<span id="cb25-272"><a href="#cb25-272" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-273"><a href="#cb25-273" aria-hidden="true" tabindex="-1"></a>The same function works with different numbers of boxes of each type. For example, six annotations and eight predictions produce a matrix with shape <span class="in">`(6, 8)`</span>.</span>
+<span id="cb25-274"><a href="#cb25-274" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-275"><a href="#cb25-275" aria-hidden="true" tabindex="-1"></a><span class="fu">### Selecting candidate matches in Python</span></span>
+<span id="cb25-276"><a href="#cb25-276" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-277"><a href="#cb25-277" aria-hidden="true" tabindex="-1"></a>Each annotation box is either unmatched or matched to exactly one predicted box. Each predicted box is either unmatched or matched to exactly one annotation box.</span>
+<span id="cb25-278"><a href="#cb25-278" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-279"><a href="#cb25-279" aria-hidden="true" tabindex="-1"></a>For our two-by-two example, let $x_{ij}$ be the decision variable for pairing annotation box $i$ with predicted box $j$. We can formulate this assignment problem as a linear programme, as in ENGSCI 255/ENGSCI 391:</span>
+<span id="cb25-280"><a href="#cb25-280" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-281"><a href="#cb25-281" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb25-282"><a href="#cb25-282" aria-hidden="true" tabindex="-1"></a>\begin{aligned}</span>
+<span id="cb25-283"><a href="#cb25-283" aria-hidden="true" tabindex="-1"></a>\text{maximise}\quad</span>
+<span id="cb25-284"><a href="#cb25-284" aria-hidden="true" tabindex="-1"></a>&amp;0.80x_{11}+0.60x_{12}+0.50x_{21}+0.14x_{22}<span class="sc">\\</span></span>
+<span id="cb25-285"><a href="#cb25-285" aria-hidden="true" tabindex="-1"></a>\text{subject to}\quad</span>
+<span id="cb25-286"><a href="#cb25-286" aria-hidden="true" tabindex="-1"></a>&amp;x_{11}+x_{12}\leq 1 &amp;&amp;\text{(annotation 1)},<span class="sc">\\</span></span>
+<span id="cb25-287"><a href="#cb25-287" aria-hidden="true" tabindex="-1"></a>&amp;x_{21}+x_{22}\leq 1 &amp;&amp;\text{(annotation 2)},<span class="sc">\\</span></span>
+<span id="cb25-288"><a href="#cb25-288" aria-hidden="true" tabindex="-1"></a>&amp;x_{11}+x_{21}\leq 1 &amp;&amp;\text{(prediction 1)},<span class="sc">\\</span></span>
+<span id="cb25-289"><a href="#cb25-289" aria-hidden="true" tabindex="-1"></a>&amp;x_{12}+x_{22}\leq 1 &amp;&amp;\text{(prediction 2)},<span class="sc">\\</span></span>
+<span id="cb25-290"><a href="#cb25-290" aria-hidden="true" tabindex="-1"></a>&amp;x_{ij}\geq 0 &amp;&amp;\text{for }i,j\in<span class="sc">\{</span>1,2<span class="sc">\}</span>.</span>
+<span id="cb25-291"><a href="#cb25-291" aria-hidden="true" tabindex="-1"></a>\end{aligned}</span>
+<span id="cb25-292"><a href="#cb25-292" aria-hidden="true" tabindex="-1"></a>$$</span>
 <span id="cb25-293"><a href="#cb25-293" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-294"><a href="#cb25-294" aria-hidden="true" tabindex="-1"></a>annotation_indices, prediction_indices <span class="op">=</span> linear_sum_assignment(<span class="op">-</span>ious)</span>
+<span id="cb25-294"><a href="#cb25-294" aria-hidden="true" tabindex="-1"></a>This LP has an optimal solution in which each $x_{ij}$ is 0 or 1. A value of 1 selects that pair.</span>
 <span id="cb25-295"><a href="#cb25-295" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-296"><a href="#cb25-296" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(annotation_indices)</span>
-<span id="cb25-297"><a href="#cb25-297" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(prediction_indices)</span>
-<span id="cb25-298"><a href="#cb25-298" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb25-299"><a href="#cb25-299" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-300"><a href="#cb25-300" aria-hidden="true" tabindex="-1"></a>For our current example, this gives:</span>
-<span id="cb25-301"><a href="#cb25-301" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-302"><a href="#cb25-302" aria-hidden="true" tabindex="-1"></a><span class="in">```text</span></span>
-<span id="cb25-303"><a href="#cb25-303" aria-hidden="true" tabindex="-1"></a><span class="in">[0 1]</span></span>
-<span id="cb25-304"><a href="#cb25-304" aria-hidden="true" tabindex="-1"></a><span class="in">[1 0]</span></span>
+<span id="cb25-296"><a href="#cb25-296" aria-hidden="true" tabindex="-1"></a>SciPy provides a specialised solver for this assignment problem, <span class="in">`linear_sum_assignment`</span>. It minimises total cost, so we supply <span class="in">`-ious`</span> to obtain the pairing with the largest total IoU:</span>
+<span id="cb25-297"><a href="#cb25-297" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-298"><a href="#cb25-298" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb25-299"><a href="#cb25-299" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> scipy.optimize <span class="im">import</span> linear_sum_assignment</span>
+<span id="cb25-300"><a href="#cb25-300" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-301"><a href="#cb25-301" aria-hidden="true" tabindex="-1"></a>annotation_indices, prediction_indices <span class="op">=</span> linear_sum_assignment(<span class="op">-</span>ious)</span>
+<span id="cb25-302"><a href="#cb25-302" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-303"><a href="#cb25-303" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(annotation_indices)</span>
+<span id="cb25-304"><a href="#cb25-304" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(prediction_indices)</span>
 <span id="cb25-305"><a href="#cb25-305" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb25-306"><a href="#cb25-306" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-307"><a href="#cb25-307" aria-hidden="true" tabindex="-1"></a>This indicates a selected solution, with Python's zero-based indexing, of linking annotation box 1 with predicted box 2, and annotation box 2 with predicted box 1, as before.</span>
+<span id="cb25-307"><a href="#cb25-307" aria-hidden="true" tabindex="-1"></a>For our current example, this gives:</span>
 <span id="cb25-308"><a href="#cb25-308" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-309"><a href="#cb25-309" aria-hidden="true" tabindex="-1"></a>SciPy handles rectangular assignments directly, pairing each box in the smaller set with a distinct box in the larger set. With six annotations and eight predictions, this gives six candidate pairs and leaves two predictions unpaired.</span>
-<span id="cb25-310"><a href="#cb25-310" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-311"><a href="#cb25-311" aria-hidden="true" tabindex="-1"></a>We generally require a minimum IoU to count a candidate pair as a match. The selected pair of annotation box 2 and predicted box 1 has an IoU of 0.50. If we require an IoU of at least 0.60, we reject this pair, leaving these two boxes unmatched.</span>
-<span id="cb25-312"><a href="#cb25-312" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-313"><a href="#cb25-313" aria-hidden="true" tabindex="-1"></a><span class="fu">### Applying the minimum IoU in Python</span></span>
-<span id="cb25-314"><a href="#cb25-314" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-315"><a href="#cb25-315" aria-hidden="true" tabindex="-1"></a>We now check each selected annotation–prediction pair against the minimum IoU. We use <span class="in">`zip`</span> to loop over selected pairs of elements from the two arrays:</span>
-<span id="cb25-316"><a href="#cb25-316" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-317"><a href="#cb25-317" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
-<span id="cb25-318"><a href="#cb25-318" aria-hidden="true" tabindex="-1"></a>minimum_iou <span class="op">=</span> <span class="fl">0.60</span></span>
-<span id="cb25-319"><a href="#cb25-319" aria-hidden="true" tabindex="-1"></a>matches <span class="op">=</span> []</span>
-<span id="cb25-320"><a href="#cb25-320" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-321"><a href="#cb25-321" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> annotation_index, prediction_index <span class="kw">in</span> <span class="bu">zip</span>(</span>
-<span id="cb25-322"><a href="#cb25-322" aria-hidden="true" tabindex="-1"></a>    annotation_indices, prediction_indices</span>
-<span id="cb25-323"><a href="#cb25-323" aria-hidden="true" tabindex="-1"></a>):</span>
-<span id="cb25-324"><a href="#cb25-324" aria-hidden="true" tabindex="-1"></a>    iou <span class="op">=</span> <span class="bu">float</span>(ious[annotation_index, prediction_index])</span>
-<span id="cb25-325"><a href="#cb25-325" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-326"><a href="#cb25-326" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> iou <span class="op">&gt;=</span> minimum_iou:</span>
-<span id="cb25-327"><a href="#cb25-327" aria-hidden="true" tabindex="-1"></a>        matches.append(</span>
-<span id="cb25-328"><a href="#cb25-328" aria-hidden="true" tabindex="-1"></a>            {</span>
-<span id="cb25-329"><a href="#cb25-329" aria-hidden="true" tabindex="-1"></a>                <span class="st">"annotation_index"</span>: <span class="bu">int</span>(annotation_index),</span>
-<span id="cb25-330"><a href="#cb25-330" aria-hidden="true" tabindex="-1"></a>                <span class="st">"prediction_index"</span>: <span class="bu">int</span>(prediction_index),</span>
-<span id="cb25-331"><a href="#cb25-331" aria-hidden="true" tabindex="-1"></a>                <span class="st">"iou"</span>: iou,</span>
-<span id="cb25-332"><a href="#cb25-332" aria-hidden="true" tabindex="-1"></a>            }</span>
-<span id="cb25-333"><a href="#cb25-333" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb25-334"><a href="#cb25-334" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-335"><a href="#cb25-335" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(matches)</span>
-<span id="cb25-336"><a href="#cb25-336" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb25-337"><a href="#cb25-337" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-338"><a href="#cb25-338" aria-hidden="true" tabindex="-1"></a>For our current example, this gives:</span>
-<span id="cb25-339"><a href="#cb25-339" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-340"><a href="#cb25-340" aria-hidden="true" tabindex="-1"></a><span class="in">```text</span></span>
-<span id="cb25-341"><a href="#cb25-341" aria-hidden="true" tabindex="-1"></a><span class="in">[{'annotation_index': 0, 'prediction_index': 1, 'iou': 0.6}]</span></span>
-<span id="cb25-342"><a href="#cb25-342" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb25-343"><a href="#cb25-343" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-344"><a href="#cb25-344" aria-hidden="true" tabindex="-1"></a>The list <span class="in">`matches`</span> contains one dictionary per accepted pair. This result records annotation box 1 matched to predicted box 2. Annotation box 2 and predicted box 1 remain unmatched.</span>
-<span id="cb25-345"><a href="#cb25-345" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-346"><a href="#cb25-346" aria-hidden="true" tabindex="-1"></a><span class="fu">### Counting true positives, false positives and false negatives</span></span>
-<span id="cb25-347"><a href="#cb25-347" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-348"><a href="#cb25-348" aria-hidden="true" tabindex="-1"></a>We use the supplied <span class="co">[</span><span class="ot">player annotations</span><span class="co">](dataset.qmd#view-the-annotations)</span> as our ‘ground truth’ reference for the six-player task. For this evaluation, we count an annotated player as detected when our one-to-one assignment selects a pair between that player's annotation box and a <span class="in">`person`</span> prediction, and the pair's IoU is at least the chosen minimum.</span>
-<span id="cb25-349"><a href="#cb25-349" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-350"><a href="#cb25-350" aria-hidden="true" tabindex="-1"></a>Using these criteria, we define:</span>
-<span id="cb25-351"><a href="#cb25-351" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-352"><a href="#cb25-352" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**True positives (TP):** the number of accepted pairings of a <span class="in">`person`</span> prediction box with a player annotation box.</span>
-<span id="cb25-353"><a href="#cb25-353" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**False positives (FP):** the number of <span class="in">`person`</span> prediction boxes with no accepted match to a player annotation box.</span>
-<span id="cb25-354"><a href="#cb25-354" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**False negatives (FN):** the number of player annotation boxes with no accepted match to a <span class="in">`person`</span> prediction box.</span>
-<span id="cb25-355"><a href="#cb25-355" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-356"><a href="#cb25-356" aria-hidden="true" tabindex="-1"></a>False positives are false alarms for our player-detection task, while false negatives are misses. This is analogous to the distinction between Type I and Type II errors in hypothesis testing. Here, the errors are defined by the player annotations and our matching criterion. As in hypothesis testing, there is often a trade-off or tension between reducing these errors, i.e., reducing one tends to increase the other.</span>
-<span id="cb25-357"><a href="#cb25-357" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-358"><a href="#cb25-358" aria-hidden="true" tabindex="-1"></a>Each accepted match accounts for one predicted box and one annotation box, so we can calculate the counts as follows:</span>
-<span id="cb25-359"><a href="#cb25-359" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-360"><a href="#cb25-360" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
-<span id="cb25-361"><a href="#cb25-361" aria-hidden="true" tabindex="-1"></a>true_positives <span class="op">=</span> <span class="bu">len</span>(matches)</span>
-<span id="cb25-362"><a href="#cb25-362" aria-hidden="true" tabindex="-1"></a>false_positives <span class="op">=</span> <span class="bu">len</span>(prediction_boxes) <span class="op">-</span> true_positives</span>
-<span id="cb25-363"><a href="#cb25-363" aria-hidden="true" tabindex="-1"></a>false_negatives <span class="op">=</span> <span class="bu">len</span>(annotation_boxes) <span class="op">-</span> true_positives</span>
+<span id="cb25-309"><a href="#cb25-309" aria-hidden="true" tabindex="-1"></a><span class="in">```text</span></span>
+<span id="cb25-310"><a href="#cb25-310" aria-hidden="true" tabindex="-1"></a><span class="in">[0 1]</span></span>
+<span id="cb25-311"><a href="#cb25-311" aria-hidden="true" tabindex="-1"></a><span class="in">[1 0]</span></span>
+<span id="cb25-312"><a href="#cb25-312" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-313"><a href="#cb25-313" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-314"><a href="#cb25-314" aria-hidden="true" tabindex="-1"></a>This indicates a selected solution, with Python's zero-based indexing, of linking annotation box 1 with predicted box 2, and annotation box 2 with predicted box 1, as before.</span>
+<span id="cb25-315"><a href="#cb25-315" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-316"><a href="#cb25-316" aria-hidden="true" tabindex="-1"></a>SciPy handles rectangular assignments directly, pairing each box in the smaller set with a distinct box in the larger set. With six annotations and eight predictions, this gives six candidate pairs and leaves two predictions unpaired.</span>
+<span id="cb25-317"><a href="#cb25-317" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-318"><a href="#cb25-318" aria-hidden="true" tabindex="-1"></a>We generally require a minimum IoU to count a candidate pair as a match. The selected pair of annotation box 2 and predicted box 1 has an IoU of 0.50. If we require an IoU of at least 0.60, we reject this pair, leaving these two boxes unmatched.</span>
+<span id="cb25-319"><a href="#cb25-319" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-320"><a href="#cb25-320" aria-hidden="true" tabindex="-1"></a><span class="fu">### Applying the minimum IoU in Python</span></span>
+<span id="cb25-321"><a href="#cb25-321" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-322"><a href="#cb25-322" aria-hidden="true" tabindex="-1"></a>We now check each selected annotation–prediction pair against the minimum IoU. We use <span class="in">`zip`</span> to loop over selected pairs of elements from the two arrays:</span>
+<span id="cb25-323"><a href="#cb25-323" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-324"><a href="#cb25-324" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb25-325"><a href="#cb25-325" aria-hidden="true" tabindex="-1"></a>minimum_iou <span class="op">=</span> <span class="fl">0.60</span></span>
+<span id="cb25-326"><a href="#cb25-326" aria-hidden="true" tabindex="-1"></a>matches <span class="op">=</span> []</span>
+<span id="cb25-327"><a href="#cb25-327" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-328"><a href="#cb25-328" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> annotation_index, prediction_index <span class="kw">in</span> <span class="bu">zip</span>(</span>
+<span id="cb25-329"><a href="#cb25-329" aria-hidden="true" tabindex="-1"></a>    annotation_indices, prediction_indices</span>
+<span id="cb25-330"><a href="#cb25-330" aria-hidden="true" tabindex="-1"></a>):</span>
+<span id="cb25-331"><a href="#cb25-331" aria-hidden="true" tabindex="-1"></a>    iou <span class="op">=</span> <span class="bu">float</span>(ious[annotation_index, prediction_index])</span>
+<span id="cb25-332"><a href="#cb25-332" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-333"><a href="#cb25-333" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> iou <span class="op">&gt;=</span> minimum_iou:</span>
+<span id="cb25-334"><a href="#cb25-334" aria-hidden="true" tabindex="-1"></a>        matches.append(</span>
+<span id="cb25-335"><a href="#cb25-335" aria-hidden="true" tabindex="-1"></a>            {</span>
+<span id="cb25-336"><a href="#cb25-336" aria-hidden="true" tabindex="-1"></a>                <span class="st">"annotation_index"</span>: <span class="bu">int</span>(annotation_index),</span>
+<span id="cb25-337"><a href="#cb25-337" aria-hidden="true" tabindex="-1"></a>                <span class="st">"prediction_index"</span>: <span class="bu">int</span>(prediction_index),</span>
+<span id="cb25-338"><a href="#cb25-338" aria-hidden="true" tabindex="-1"></a>                <span class="st">"iou"</span>: iou,</span>
+<span id="cb25-339"><a href="#cb25-339" aria-hidden="true" tabindex="-1"></a>            }</span>
+<span id="cb25-340"><a href="#cb25-340" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb25-341"><a href="#cb25-341" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-342"><a href="#cb25-342" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(matches)</span>
+<span id="cb25-343"><a href="#cb25-343" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-344"><a href="#cb25-344" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-345"><a href="#cb25-345" aria-hidden="true" tabindex="-1"></a>For our current example, this gives:</span>
+<span id="cb25-346"><a href="#cb25-346" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-347"><a href="#cb25-347" aria-hidden="true" tabindex="-1"></a><span class="in">```text</span></span>
+<span id="cb25-348"><a href="#cb25-348" aria-hidden="true" tabindex="-1"></a><span class="in">[{'annotation_index': 0, 'prediction_index': 1, 'iou': 0.6}]</span></span>
+<span id="cb25-349"><a href="#cb25-349" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-350"><a href="#cb25-350" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-351"><a href="#cb25-351" aria-hidden="true" tabindex="-1"></a>The list <span class="in">`matches`</span> contains one dictionary per accepted pair. This result records annotation box 1 matched to predicted box 2. Annotation box 2 and predicted box 1 remain unmatched.</span>
+<span id="cb25-352"><a href="#cb25-352" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-353"><a href="#cb25-353" aria-hidden="true" tabindex="-1"></a>Here, we do not reconsider the assignment after rejecting a pair. Maximising total IoU first does not necessarily give the largest possible number of matches above the threshold.</span>
+<span id="cb25-354"><a href="#cb25-354" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-355"><a href="#cb25-355" aria-hidden="true" tabindex="-1"></a><span class="fu">### Counting true positives, false positives and false negatives</span></span>
+<span id="cb25-356"><a href="#cb25-356" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-357"><a href="#cb25-357" aria-hidden="true" tabindex="-1"></a>We use the supplied <span class="co">[</span><span class="ot">player annotations</span><span class="co">](dataset.qmd#view-the-annotations)</span> as our ‘ground truth’ reference for the six-player task. For this evaluation, we count an annotated player as detected when our one-to-one assignment selects a pair between that player's annotation box and a <span class="in">`person`</span> prediction, and the pair's IoU is at least the chosen minimum.</span>
+<span id="cb25-358"><a href="#cb25-358" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-359"><a href="#cb25-359" aria-hidden="true" tabindex="-1"></a>Using these criteria, we define:</span>
+<span id="cb25-360"><a href="#cb25-360" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-361"><a href="#cb25-361" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**True positives (TP):** the number of accepted pairings of a <span class="in">`person`</span> prediction box with a player annotation box.</span>
+<span id="cb25-362"><a href="#cb25-362" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**False positives (FP):** the number of <span class="in">`person`</span> prediction boxes with no accepted match to a player annotation box.</span>
+<span id="cb25-363"><a href="#cb25-363" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**False negatives (FN):** the number of player annotation boxes with no accepted match to a <span class="in">`person`</span> prediction box.</span>
 <span id="cb25-364"><a href="#cb25-364" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-365"><a href="#cb25-365" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"TP:"</span>, true_positives)</span>
-<span id="cb25-366"><a href="#cb25-366" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"FP:"</span>, false_positives)</span>
-<span id="cb25-367"><a href="#cb25-367" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"FN:"</span>, false_negatives)</span>
-<span id="cb25-368"><a href="#cb25-368" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb25-369"><a href="#cb25-369" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-370"><a href="#cb25-370" aria-hidden="true" tabindex="-1"></a>For our two-by-two example, this gives:</span>
-<span id="cb25-371"><a href="#cb25-371" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-372"><a href="#cb25-372" aria-hidden="true" tabindex="-1"></a><span class="in">```text</span></span>
-<span id="cb25-373"><a href="#cb25-373" aria-hidden="true" tabindex="-1"></a><span class="in">TP: 1</span></span>
-<span id="cb25-374"><a href="#cb25-374" aria-hidden="true" tabindex="-1"></a><span class="in">FP: 1</span></span>
-<span id="cb25-375"><a href="#cb25-375" aria-hidden="true" tabindex="-1"></a><span class="in">FN: 1</span></span>
-<span id="cb25-376"><a href="#cb25-376" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb25-377"><a href="#cb25-377" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-378"><a href="#cb25-378" aria-hidden="true" tabindex="-1"></a>The rejected pair contributes one FP (predicted box 1) and one FN (annotation box 2). These counts describe agreement under our chosen matching rule and IoU threshold.</span>
-<span id="cb25-379"><a href="#cb25-379" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-380"><a href="#cb25-380" aria-hidden="true" tabindex="-1"></a><span class="fu">### Precision and recall</span></span>
-<span id="cb25-381"><a href="#cb25-381" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-382"><a href="#cb25-382" aria-hidden="true" tabindex="-1"></a>**Precision** is the proportion of <span class="in">`person`</span> predictions that have an accepted match to a player annotation:</span>
-<span id="cb25-383"><a href="#cb25-383" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-384"><a href="#cb25-384" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb25-385"><a href="#cb25-385" aria-hidden="true" tabindex="-1"></a>\text{precision} = \frac{\mathrm{TP}}{\mathrm{TP} + \mathrm{FP}}.</span>
-<span id="cb25-386"><a href="#cb25-386" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb25-387"><a href="#cb25-387" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-388"><a href="#cb25-388" aria-hidden="true" tabindex="-1"></a>**Recall** is the proportion of player annotations that have an accepted match to a <span class="in">`person`</span> prediction:</span>
-<span id="cb25-389"><a href="#cb25-389" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-390"><a href="#cb25-390" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb25-391"><a href="#cb25-391" aria-hidden="true" tabindex="-1"></a>\text{recall} = \frac{\mathrm{TP}}{\mathrm{TP} + \mathrm{FN}}.</span>
-<span id="cb25-392"><a href="#cb25-392" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb25-393"><a href="#cb25-393" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-394"><a href="#cb25-394" aria-hidden="true" tabindex="-1"></a>Here, $\mathrm{TP} + \mathrm{FP}$ is the total number of predictions, while $\mathrm{TP} + \mathrm{FN}$ is the total number of player annotations.</span>
-<span id="cb25-395"><a href="#cb25-395" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-396"><a href="#cb25-396" aria-hidden="true" tabindex="-1"></a>Precision is undefined when there are no predictions, and recall is undefined when there are no annotations. We use <span class="in">`0.0`</span> as a coding convention for these cases. The inline <span class="in">`if ... else`</span> expressions use the ratio when its denominator is positive, and return <span class="in">`0.0`</span> otherwise:</span>
-<span id="cb25-397"><a href="#cb25-397" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-398"><a href="#cb25-398" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
-<span id="cb25-399"><a href="#cb25-399" aria-hidden="true" tabindex="-1"></a>predicted_count <span class="op">=</span> true_positives <span class="op">+</span> false_positives</span>
-<span id="cb25-400"><a href="#cb25-400" aria-hidden="true" tabindex="-1"></a>annotation_count <span class="op">=</span> true_positives <span class="op">+</span> false_negatives</span>
-<span id="cb25-401"><a href="#cb25-401" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-402"><a href="#cb25-402" aria-hidden="true" tabindex="-1"></a>precision <span class="op">=</span> true_positives <span class="op">/</span> predicted_count <span class="cf">if</span> predicted_count <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">else</span> <span class="fl">0.0</span></span>
-<span id="cb25-403"><a href="#cb25-403" aria-hidden="true" tabindex="-1"></a>recall <span class="op">=</span> true_positives <span class="op">/</span> annotation_count <span class="cf">if</span> annotation_count <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">else</span> <span class="fl">0.0</span></span>
+<span id="cb25-365"><a href="#cb25-365" aria-hidden="true" tabindex="-1"></a>False positives are false alarms for our player-detection task, while false negatives are misses. This is analogous to the distinction between Type I and Type II errors in hypothesis testing. Here, the errors are defined by the player annotations and our matching criterion. As in hypothesis testing, there is often a trade-off or tension between reducing these errors, i.e., reducing one tends to increase the other.</span>
+<span id="cb25-366"><a href="#cb25-366" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-367"><a href="#cb25-367" aria-hidden="true" tabindex="-1"></a>Each accepted match accounts for one predicted box and one annotation box, so we can calculate the counts as follows:</span>
+<span id="cb25-368"><a href="#cb25-368" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-369"><a href="#cb25-369" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb25-370"><a href="#cb25-370" aria-hidden="true" tabindex="-1"></a>true_positives <span class="op">=</span> <span class="bu">len</span>(matches)</span>
+<span id="cb25-371"><a href="#cb25-371" aria-hidden="true" tabindex="-1"></a>false_positives <span class="op">=</span> <span class="bu">len</span>(prediction_boxes) <span class="op">-</span> true_positives</span>
+<span id="cb25-372"><a href="#cb25-372" aria-hidden="true" tabindex="-1"></a>false_negatives <span class="op">=</span> <span class="bu">len</span>(annotation_boxes) <span class="op">-</span> true_positives</span>
+<span id="cb25-373"><a href="#cb25-373" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-374"><a href="#cb25-374" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"TP:"</span>, true_positives)</span>
+<span id="cb25-375"><a href="#cb25-375" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"FP:"</span>, false_positives)</span>
+<span id="cb25-376"><a href="#cb25-376" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"FN:"</span>, false_negatives)</span>
+<span id="cb25-377"><a href="#cb25-377" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-378"><a href="#cb25-378" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-379"><a href="#cb25-379" aria-hidden="true" tabindex="-1"></a>For our two-by-two example, this gives:</span>
+<span id="cb25-380"><a href="#cb25-380" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-381"><a href="#cb25-381" aria-hidden="true" tabindex="-1"></a><span class="in">```text</span></span>
+<span id="cb25-382"><a href="#cb25-382" aria-hidden="true" tabindex="-1"></a><span class="in">TP: 1</span></span>
+<span id="cb25-383"><a href="#cb25-383" aria-hidden="true" tabindex="-1"></a><span class="in">FP: 1</span></span>
+<span id="cb25-384"><a href="#cb25-384" aria-hidden="true" tabindex="-1"></a><span class="in">FN: 1</span></span>
+<span id="cb25-385"><a href="#cb25-385" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-386"><a href="#cb25-386" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-387"><a href="#cb25-387" aria-hidden="true" tabindex="-1"></a>The rejected pair contributes one FP (predicted box 1) and one FN (annotation box 2). These counts describe agreement under our chosen matching rule and IoU threshold.</span>
+<span id="cb25-388"><a href="#cb25-388" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-389"><a href="#cb25-389" aria-hidden="true" tabindex="-1"></a><span class="fu">### Precision and recall</span></span>
+<span id="cb25-390"><a href="#cb25-390" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-391"><a href="#cb25-391" aria-hidden="true" tabindex="-1"></a>**Precision** is the proportion of <span class="in">`person`</span> predictions that have an accepted match to a player annotation:</span>
+<span id="cb25-392"><a href="#cb25-392" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-393"><a href="#cb25-393" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb25-394"><a href="#cb25-394" aria-hidden="true" tabindex="-1"></a>\text{precision} = \frac{\mathrm{TP}}{\mathrm{TP} + \mathrm{FP}}.</span>
+<span id="cb25-395"><a href="#cb25-395" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb25-396"><a href="#cb25-396" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-397"><a href="#cb25-397" aria-hidden="true" tabindex="-1"></a>**Recall** is the proportion of player annotations that have an accepted match to a <span class="in">`person`</span> prediction:</span>
+<span id="cb25-398"><a href="#cb25-398" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-399"><a href="#cb25-399" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb25-400"><a href="#cb25-400" aria-hidden="true" tabindex="-1"></a>\text{recall} = \frac{\mathrm{TP}}{\mathrm{TP} + \mathrm{FN}}.</span>
+<span id="cb25-401"><a href="#cb25-401" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb25-402"><a href="#cb25-402" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-403"><a href="#cb25-403" aria-hidden="true" tabindex="-1"></a>Here, $\mathrm{TP} + \mathrm{FP}$ is the total number of predictions, while $\mathrm{TP} + \mathrm{FN}$ is the total number of player annotations.</span>
 <span id="cb25-404"><a href="#cb25-404" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-405"><a href="#cb25-405" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Precision:"</span>, precision)</span>
-<span id="cb25-406"><a href="#cb25-406" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Recall:"</span>, recall)</span>
-<span id="cb25-407"><a href="#cb25-407" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb25-408"><a href="#cb25-408" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-409"><a href="#cb25-409" aria-hidden="true" tabindex="-1"></a>For our two-by-two example, this gives:</span>
+<span id="cb25-405"><a href="#cb25-405" aria-hidden="true" tabindex="-1"></a>Precision is undefined when there are no predictions, and recall is undefined when there are no annotations. We use <span class="in">`0.0`</span> as a coding convention for these cases. The inline <span class="in">`if ... else`</span> expressions use the ratio when its denominator is positive, and return <span class="in">`0.0`</span> otherwise:</span>
+<span id="cb25-406"><a href="#cb25-406" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-407"><a href="#cb25-407" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb25-408"><a href="#cb25-408" aria-hidden="true" tabindex="-1"></a>predicted_count <span class="op">=</span> true_positives <span class="op">+</span> false_positives</span>
+<span id="cb25-409"><a href="#cb25-409" aria-hidden="true" tabindex="-1"></a>annotation_count <span class="op">=</span> true_positives <span class="op">+</span> false_negatives</span>
 <span id="cb25-410"><a href="#cb25-410" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-411"><a href="#cb25-411" aria-hidden="true" tabindex="-1"></a><span class="in">```text</span></span>
-<span id="cb25-412"><a href="#cb25-412" aria-hidden="true" tabindex="-1"></a><span class="in">Precision: 0.5</span></span>
-<span id="cb25-413"><a href="#cb25-413" aria-hidden="true" tabindex="-1"></a><span class="in">Recall: 0.5</span></span>
-<span id="cb25-414"><a href="#cb25-414" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb25-415"><a href="#cb25-415" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-416"><a href="#cb25-416" aria-hidden="true" tabindex="-1"></a>Precision is 0.5 because one of the two <span class="in">`person`</span> predictions has an accepted match. Recall is 0.5 because one of the two annotated players is counted as detected.</span>
+<span id="cb25-411"><a href="#cb25-411" aria-hidden="true" tabindex="-1"></a>precision <span class="op">=</span> true_positives <span class="op">/</span> predicted_count <span class="cf">if</span> predicted_count <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">else</span> <span class="fl">0.0</span></span>
+<span id="cb25-412"><a href="#cb25-412" aria-hidden="true" tabindex="-1"></a>recall <span class="op">=</span> true_positives <span class="op">/</span> annotation_count <span class="cf">if</span> annotation_count <span class="op">&gt;</span> <span class="dv">0</span> <span class="cf">else</span> <span class="fl">0.0</span></span>
+<span id="cb25-413"><a href="#cb25-413" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-414"><a href="#cb25-414" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Precision:"</span>, precision)</span>
+<span id="cb25-415"><a href="#cb25-415" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Recall:"</span>, recall)</span>
+<span id="cb25-416"><a href="#cb25-416" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
 <span id="cb25-417"><a href="#cb25-417" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-418"><a href="#cb25-418" aria-hidden="true" tabindex="-1"></a>As with false positives and false negatives, precision and recall often trade off when we vary the detector’s confidence threshold. For example, keeping only higher-scoring predictions may reduce false positives and increase precision, but can also discard predictions that would have matched player annotations, increasing false negatives and therefore lowering recall. This effect is not guaranteed and depends on context and how predictions correspond to targets. Here, for example, a high-scoring <span class="in">`person`</span> prediction may still correspond to an observer rather than an active player.</span>
+<span id="cb25-418"><a href="#cb25-418" aria-hidden="true" tabindex="-1"></a>For our two-by-two example, this gives:</span>
 <span id="cb25-419"><a href="#cb25-419" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-420"><a href="#cb25-420" aria-hidden="true" tabindex="-1"></a><span class="fu">## Choosing and interpreting evaluation measures</span></span>
-<span id="cb25-421"><a href="#cb25-421" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-422"><a href="#cb25-422" aria-hidden="true" tabindex="-1"></a><span class="fu">### Confusion matrices and accuracy</span></span>
-<span id="cb25-423"><a href="#cb25-423" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-424"><a href="#cb25-424" aria-hidden="true" tabindex="-1"></a>For a simple two-class classification problem, we label the class of interest **positive** and the other class **negative**. Each example has a supplied class label and one predicted label. A **confusion matrix** counts the resulting outcomes:</span>
-<span id="cb25-425"><a href="#cb25-425" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-426"><a href="#cb25-426" aria-hidden="true" tabindex="-1"></a>| Supplied label | Predicted positive | Predicted negative |</span>
-<span id="cb25-427"><a href="#cb25-427" aria-hidden="true" tabindex="-1"></a>|:--|:--|:--|</span>
-<span id="cb25-428"><a href="#cb25-428" aria-hidden="true" tabindex="-1"></a>| Positive | TP | FN |</span>
-<span id="cb25-429"><a href="#cb25-429" aria-hidden="true" tabindex="-1"></a>| Negative | FP | TN |</span>
+<span id="cb25-420"><a href="#cb25-420" aria-hidden="true" tabindex="-1"></a><span class="in">```text</span></span>
+<span id="cb25-421"><a href="#cb25-421" aria-hidden="true" tabindex="-1"></a><span class="in">Precision: 0.5</span></span>
+<span id="cb25-422"><a href="#cb25-422" aria-hidden="true" tabindex="-1"></a><span class="in">Recall: 0.5</span></span>
+<span id="cb25-423"><a href="#cb25-423" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb25-424"><a href="#cb25-424" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-425"><a href="#cb25-425" aria-hidden="true" tabindex="-1"></a>Precision is 0.5 because one of the two <span class="in">`person`</span> predictions has an accepted match. Recall is 0.5 because one of the two annotated players is counted as detected.</span>
+<span id="cb25-426"><a href="#cb25-426" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-427"><a href="#cb25-427" aria-hidden="true" tabindex="-1"></a>As with false positives and false negatives, precision and recall often trade off when we vary the detector’s confidence threshold. For example, keeping only higher-scoring predictions may reduce false positives and increase precision, but can also discard predictions that would have matched player annotations, increasing false negatives and therefore lowering recall. This effect is not guaranteed and depends on context and how predictions correspond to targets. Here, for example, a high-scoring <span class="in">`person`</span> prediction may still correspond to an observer rather than an active player.</span>
+<span id="cb25-428"><a href="#cb25-428" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-429"><a href="#cb25-429" aria-hidden="true" tabindex="-1"></a><span class="fu">### Comparing matching rules</span></span>
 <span id="cb25-430"><a href="#cb25-430" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-431"><a href="#cb25-431" aria-hidden="true" tabindex="-1"></a>A **true negative (TN)** is a negative example correctly classified as negative. For these labelled examples, **classification accuracy** is the fraction counted in the TP and TN cells:</span>
+<span id="cb25-431"><a href="#cb25-431" aria-hidden="true" tabindex="-1"></a>We can compare matching rules using the same two annotations and two predictions. Suppose prediction 1 has confidence 0.95 and prediction 2 has confidence 0.85. Keep both predictions; their confidence scores determine the order for greedy matching. We will compare the rules at minimum IoUs of 0.50 and 0.70.</span>
 <span id="cb25-432"><a href="#cb25-432" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-433"><a href="#cb25-433" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb25-434"><a href="#cb25-434" aria-hidden="true" tabindex="-1"></a>\text{accuracy} = \frac{\mathrm{TP} + \mathrm{TN}}{\mathrm{TP} + \mathrm{FP} + \mathrm{FN} + \mathrm{TN}}.</span>
-<span id="cb25-435"><a href="#cb25-435" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb25-436"><a href="#cb25-436" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-437"><a href="#cb25-437" aria-hidden="true" tabindex="-1"></a>In **object detection**, the number and locations of predicted boxes are themselves part of the output. Matching gives us TP, FP and FN, but there is no natural count of all the background boxes that the detector correctly did not report, i.e. TN. Ordinary classification accuracy is therefore not an appropriate summary of our box-matching evaluation. Note though that precision and recall can be calculated without a TN count:</span>
-<span id="cb25-438"><a href="#cb25-438" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-439"><a href="#cb25-439" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb25-440"><a href="#cb25-440" aria-hidden="true" tabindex="-1"></a>\text{precision} = \frac{\mathrm{TP}}{\mathrm{TP} + \mathrm{FP}},</span>
-<span id="cb25-441"><a href="#cb25-441" aria-hidden="true" tabindex="-1"></a>\qquad</span>
-<span id="cb25-442"><a href="#cb25-442" aria-hidden="true" tabindex="-1"></a>\text{recall} = \frac{\mathrm{TP}}{\mathrm{TP} + \mathrm{FN}}.</span>
-<span id="cb25-443"><a href="#cb25-443" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb25-444"><a href="#cb25-444" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-445"><a href="#cb25-445" aria-hidden="true" tabindex="-1"></a><span class="fu">### Which measure of performance is best?</span></span>
+<span id="cb25-433"><a href="#cb25-433" aria-hidden="true" tabindex="-1"></a>The IoUs are:</span>
+<span id="cb25-434"><a href="#cb25-434" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-435"><a href="#cb25-435" aria-hidden="true" tabindex="-1"></a>| | Prediction 1 | Prediction 2 |</span>
+<span id="cb25-436"><a href="#cb25-436" aria-hidden="true" tabindex="-1"></a>|---|---:|---:|</span>
+<span id="cb25-437"><a href="#cb25-437" aria-hidden="true" tabindex="-1"></a>| Annotation 1 | 0.80 | 0.60 |</span>
+<span id="cb25-438"><a href="#cb25-438" aria-hidden="true" tabindex="-1"></a>| Annotation 2 | 0.50 | 0.14 |</span>
+<span id="cb25-439"><a href="#cb25-439" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-440"><a href="#cb25-440" aria-hidden="true" tabindex="-1"></a>**Assignment followed by rejection**</span>
+<span id="cb25-441"><a href="#cb25-441" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-442"><a href="#cb25-442" aria-hidden="true" tabindex="-1"></a>The maximum-total-IoU assignment pairs annotation 1 with prediction 2 (IoU 0.60), and annotation 2 with prediction 1 (IoU 0.50). Their total IoU is 1.10, compared with approximately 0.94 for the other pairing.</span>
+<span id="cb25-443"><a href="#cb25-443" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-444"><a href="#cb25-444" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>With a minimum IoU of **0.50**, both pairs are accepted: **TP = 2, FP = 0, FN = 0**.</span>
+<span id="cb25-445"><a href="#cb25-445" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>With a minimum IoU of **0.70**, both pairs are rejected: **TP = 0, FP = 2, FN = 2**.</span>
 <span id="cb25-446"><a href="#cb25-446" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-447"><a href="#cb25-447" aria-hidden="true" tabindex="-1"></a>There is no universally best measure of object detection performance: the choice depends on which errors matter for the application. For our player-detection task, we will read the TP, FP and FN counts and precision/recall together with the box IoUs and overlays to check for ‘localisation’ quality in addition to 0/1 detection. **F1** combines precision and recall into one measure but can hide the balance between false positives and false negatives.</span>
+<span id="cb25-447"><a href="#cb25-447" aria-hidden="true" tabindex="-1"></a>In the second case, annotation 1 and prediction 1 have IoU 0.80, but this pair was not selected by the original assignment. Applying the IoU threshold afterwards leaves both boxes unmatched, without reconsidering this pair. In this example, it would be sensible to reconsider the unmatched boxes or apply the threshold before assignment: either would recover this valid match and avoid one false positive and one false negative.</span>
 <span id="cb25-448"><a href="#cb25-448" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-449"><a href="#cb25-449" aria-hidden="true" tabindex="-1"></a>So far, we have chosen one confidence threshold. Keeping the images, annotations and matching criterion fixed, we can also vary the detector's confidence threshold and calculate precision and recall at different settings. A **precision–recall curve** plots the resulting pairs, with recall on the horizontal axis and precision on the vertical axis. Each plotted point represents a confidence-threshold choice for which both measures are defined. For a given object class, **average precision (AP)** is based on the area under a precision–recall curve.</span>
+<span id="cb25-449"><a href="#cb25-449" aria-hidden="true" tabindex="-1"></a>**Threshold before assignment**</span>
 <span id="cb25-450"><a href="#cb25-450" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-451"><a href="#cb25-451" aria-hidden="true" tabindex="-1"></a><span class="fu">### Training loss and evaluation data</span></span>
+<span id="cb25-451"><a href="#cb25-451" aria-hidden="true" tabindex="-1"></a>Pairs below the minimum IoU are not allowed as matches. We then maximise total IoU over the remaining one-to-one matches, allowing boxes to remain unmatched.</span>
 <span id="cb25-452"><a href="#cb25-452" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-453"><a href="#cb25-453" aria-hidden="true" tabindex="-1"></a>Note that the <span class="co">[</span><span class="ot">**training loss**</span><span class="co">](training.qmd#training-loss)</span> refers to the quantity minimised when fitting model parameters. Here we are using a pre-trained model fitted to other data, and evaluating it on our own data without updating its weights. A loss function can also be used to evaluate new predictions. In this example, we use IoU, accepted-match counts, precision and recall, rather than recomputing YOLO's training loss.</span>
-<span id="cb25-454"><a href="#cb25-454" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-455"><a href="#cb25-455" aria-hidden="true" tabindex="-1"></a>We are still choosing settings for the whole pipeline, such as the confidence threshold and court-filter margin. These can be thought of as **hyperparameters** of the pipeline. Since we use this clip to make those choices, we should treat it as **development (or validation) data**, not an untouched test set.</span>
-<span id="cb25-456"><a href="#cb25-456" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-457"><a href="#cb25-457" aria-hidden="true" tabindex="-1"></a>To assess how the chosen pipeline performs on new recordings, we would need **test recordings** not used for those choices. Note that just randomly separating neighbouring frames from the same clip would provide a much weaker test, as those frames are very similar (i.e. correspond to highly correlated data points).</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb25-453"><a href="#cb25-453" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>At **0.50**, the eligible IoUs are 0.80, 0.60 and 0.50. Choosing the 0.60 and 0.50 pairs gives the largest total: **TP = 2, FP = 0, FN = 0**.</span>
+<span id="cb25-454"><a href="#cb25-454" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>At **0.70**, only annotation 1 paired with prediction 1 is eligible, with IoU 0.80: **TP = 1, FP = 1, FN = 1**.</span>
+<span id="cb25-455"><a href="#cb25-455" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-456"><a href="#cb25-456" aria-hidden="true" tabindex="-1"></a>Here, the threshold determines which pairs can enter the assignment, rather than only which assigned pairs are retained.</span>
+<span id="cb25-457"><a href="#cb25-457" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-458"><a href="#cb25-458" aria-hidden="true" tabindex="-1"></a>**Confidence-ordered greedy matching**</span>
+<span id="cb25-459"><a href="#cb25-459" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-460"><a href="#cb25-460" aria-hidden="true" tabindex="-1"></a>Predictions are considered from highest to lowest confidence. Each prediction is matched to the remaining annotation with the highest IoU, provided that IoU meets the threshold. Once matched, that annotation is unavailable to later predictions.</span>
+<span id="cb25-461"><a href="#cb25-461" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-462"><a href="#cb25-462" aria-hidden="true" tabindex="-1"></a>At a minimum IoU of **0.50**, prediction 1 goes first because its confidence is 0.95, compared with 0.85 for prediction 2. It takes annotation 1, with IoU 0.80. Prediction 2 then has no eligible annotation left: its IoU with annotation 2 is only 0.14. This gives **TP = 1, FP = 1, FN = 1**.</span>
+<span id="cb25-463"><a href="#cb25-463" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-464"><a href="#cb25-464" aria-hidden="true" tabindex="-1"></a>Greedy matching can therefore miss an opportunity to accept two reasonable matches because it commits to one stronger match first. In this example, that produces an additional false negative and false positive. The greedy rule prioritises higher-confidence predictions rather than choosing the matches jointly.</span>
+<span id="cb25-465"><a href="#cb25-465" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-466"><a href="#cb25-466" aria-hidden="true" tabindex="-1"></a>At a minimum IoU of **0.70**, the 0.80 pair is still accepted and prediction 2 still has no eligible annotation. The counts are again **TP = 1, FP = 1, FN = 1**.</span>
+<span id="cb25-467"><a href="#cb25-467" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-468"><a href="#cb25-468" aria-hidden="true" tabindex="-1"></a>| Minimum IoU | Rule | TP | FP | FN | Precision | Recall |</span>
+<span id="cb25-469"><a href="#cb25-469" aria-hidden="true" tabindex="-1"></a>|---|---|---:|---:|---:|---:|---:|</span>
+<span id="cb25-470"><a href="#cb25-470" aria-hidden="true" tabindex="-1"></a>| 0.50 | Assignment, then rejection | 2 | 0 | 0 | 1.00 | 1.00 |</span>
+<span id="cb25-471"><a href="#cb25-471" aria-hidden="true" tabindex="-1"></a>| 0.50 | Threshold before assignment | 2 | 0 | 0 | 1.00 | 1.00 |</span>
+<span id="cb25-472"><a href="#cb25-472" aria-hidden="true" tabindex="-1"></a>| 0.50 | Confidence-ordered greedy | 1 | 1 | 1 | 0.50 | 0.50 |</span>
+<span id="cb25-473"><a href="#cb25-473" aria-hidden="true" tabindex="-1"></a>| 0.70 | Assignment, then rejection | 0 | 2 | 2 | 0.00 | 0.00 |</span>
+<span id="cb25-474"><a href="#cb25-474" aria-hidden="true" tabindex="-1"></a>| 0.70 | Threshold before assignment | 1 | 1 | 1 | 0.50 | 0.50 |</span>
+<span id="cb25-475"><a href="#cb25-475" aria-hidden="true" tabindex="-1"></a>| 0.70 | Confidence-ordered greedy | 1 | 1 | 1 | 0.50 | 0.50 |</span>
+<span id="cb25-476"><a href="#cb25-476" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-477"><a href="#cb25-477" aria-hidden="true" tabindex="-1"></a><span class="fu">### Filtering predictions before evaluation</span></span>
+<span id="cb25-478"><a href="#cb25-478" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-479"><a href="#cb25-479" aria-hidden="true" tabindex="-1"></a>In the comparison above, we kept the prediction boxes fixed. We can also filter predictions before matching them to the annotations. Besides using a confidence cutoff, we can use the estimated court positions to reject detections outside the court.</span>
+<span id="cb25-480"><a href="#cb25-480" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-481"><a href="#cb25-481" aria-hidden="true" tabindex="-1"></a>To see what a filter changes, we keep the annotations, matching rule and minimum IoU fixed. We then recompute the matches using the retained predictions and compare the resulting counts, precision and recall.</span>
+<span id="cb25-482"><a href="#cb25-482" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-483"><a href="#cb25-483" aria-hidden="true" tabindex="-1"></a>Let's return to the eight saved <span class="in">`person`</span> detections in frame 50, selected with confidence at least 0.50. We use assignment followed by rejection, with a minimum IoU of 0.50, and compare against the same six player annotations.</span>
+<span id="cb25-484"><a href="#cb25-484" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-485"><a href="#cb25-485" aria-hidden="true" tabindex="-1"></a>The court filter introduced in <span class="co">[</span><span class="ot">Checking the court positions</span><span class="co">](camera_models.qmd#checking-the-court-positions)</span> retains detections D2–D7 and removes D1 and D8. Recomputing the matches gives:</span>
+<span id="cb25-486"><a href="#cb25-486" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-487"><a href="#cb25-487" aria-hidden="true" tabindex="-1"></a>| | Predictions | TP | FP | FN | Precision | Recall |</span>
+<span id="cb25-488"><a href="#cb25-488" aria-hidden="true" tabindex="-1"></a>|---|---:|---:|---:|---:|---:|---:|</span>
+<span id="cb25-489"><a href="#cb25-489" aria-hidden="true" tabindex="-1"></a>| Before court filter | 8 | 6 | 2 | 0 | 0.75 | 1.00 |</span>
+<span id="cb25-490"><a href="#cb25-490" aria-hidden="true" tabindex="-1"></a>| After court filter | 6 | 6 | 0 | 0 | 1.00 | 1.00 |</span>
+<span id="cb25-491"><a href="#cb25-491" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-492"><a href="#cb25-492" aria-hidden="true" tabindex="-1"></a>In this frame, the filter removes two false positives without losing any accepted player matches.</span>
+<span id="cb25-493"><a href="#cb25-493" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-494"><a href="#cb25-494" aria-hidden="true" tabindex="-1"></a>Precision and recall of 1 do not mean that the predicted boxes line up exactly with the annotations. For example, one accepted pair still has IoU about 0.58.</span>
+<span id="cb25-495"><a href="#cb25-495" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-496"><a href="#cb25-496" aria-hidden="true" tabindex="-1"></a>The filter can also make errors. A poor estimate of floor contact or an inaccurate camera mapping can put a player outside the court region, causing a false negative. Conversely, being inside the region does not guarantee that a person is an active player.</span>
+<span id="cb25-497"><a href="#cb25-497" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-498"><a href="#cb25-498" aria-hidden="true" tabindex="-1"></a><span class="fu">## Choosing and interpreting evaluation measures</span></span>
+<span id="cb25-499"><a href="#cb25-499" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-500"><a href="#cb25-500" aria-hidden="true" tabindex="-1"></a><span class="fu">### Confusion matrices and accuracy</span></span>
+<span id="cb25-501"><a href="#cb25-501" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-502"><a href="#cb25-502" aria-hidden="true" tabindex="-1"></a>For a simple two-class classification problem, we label the class of interest **positive** and the other class **negative**. Each example has a supplied class label and one predicted label. A **confusion matrix** counts the resulting outcomes:</span>
+<span id="cb25-503"><a href="#cb25-503" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-504"><a href="#cb25-504" aria-hidden="true" tabindex="-1"></a>| Supplied label | Predicted positive | Predicted negative |</span>
+<span id="cb25-505"><a href="#cb25-505" aria-hidden="true" tabindex="-1"></a>|:--|:--|:--|</span>
+<span id="cb25-506"><a href="#cb25-506" aria-hidden="true" tabindex="-1"></a>| Positive | TP | FN |</span>
+<span id="cb25-507"><a href="#cb25-507" aria-hidden="true" tabindex="-1"></a>| Negative | FP | TN |</span>
+<span id="cb25-508"><a href="#cb25-508" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-509"><a href="#cb25-509" aria-hidden="true" tabindex="-1"></a>A **true negative (TN)** is a negative example correctly classified as negative. For these labelled examples, **classification accuracy** is the fraction counted in the TP and TN cells:</span>
+<span id="cb25-510"><a href="#cb25-510" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-511"><a href="#cb25-511" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb25-512"><a href="#cb25-512" aria-hidden="true" tabindex="-1"></a>\text{accuracy} = \frac{\mathrm{TP} + \mathrm{TN}}{\mathrm{TP} + \mathrm{FP} + \mathrm{FN} + \mathrm{TN}}.</span>
+<span id="cb25-513"><a href="#cb25-513" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb25-514"><a href="#cb25-514" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-515"><a href="#cb25-515" aria-hidden="true" tabindex="-1"></a>In **object detection**, the number and locations of predicted boxes are themselves part of the output. Matching gives us TP, FP and FN, but there is no natural count of all the background boxes that the detector correctly did not report, i.e. TN. Ordinary classification accuracy is therefore not an appropriate summary of our box-matching evaluation. Note though that precision and recall can be calculated without a TN count:</span>
+<span id="cb25-516"><a href="#cb25-516" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-517"><a href="#cb25-517" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb25-518"><a href="#cb25-518" aria-hidden="true" tabindex="-1"></a>\text{precision} = \frac{\mathrm{TP}}{\mathrm{TP} + \mathrm{FP}},</span>
+<span id="cb25-519"><a href="#cb25-519" aria-hidden="true" tabindex="-1"></a>\qquad</span>
+<span id="cb25-520"><a href="#cb25-520" aria-hidden="true" tabindex="-1"></a>\text{recall} = \frac{\mathrm{TP}}{\mathrm{TP} + \mathrm{FN}}.</span>
+<span id="cb25-521"><a href="#cb25-521" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb25-522"><a href="#cb25-522" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-523"><a href="#cb25-523" aria-hidden="true" tabindex="-1"></a><span class="fu">### Which measure of performance is best?</span></span>
+<span id="cb25-524"><a href="#cb25-524" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-525"><a href="#cb25-525" aria-hidden="true" tabindex="-1"></a>There is no universally best measure of object detection performance: the choice depends on which errors matter for the application. For our player-detection task, we will read the TP, FP and FN counts and precision/recall together with the box IoUs and overlays to check for ‘localisation’ quality in addition to 0/1 detection. **F1** combines precision and recall into one measure but can hide the balance between false positives and false negatives.</span>
+<span id="cb25-526"><a href="#cb25-526" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-527"><a href="#cb25-527" aria-hidden="true" tabindex="-1"></a>So far, we have chosen one confidence threshold. Keeping the images, annotations and matching criterion fixed, we can also vary the detector's confidence threshold and calculate precision and recall at different settings. A **precision–recall curve** plots the resulting pairs, with recall on the horizontal axis and precision on the vertical axis. Each plotted point represents a confidence-threshold choice for which both measures are defined. For a given object class, **average precision (AP)** is based on the area under a precision–recall curve.</span>
+<span id="cb25-528"><a href="#cb25-528" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-529"><a href="#cb25-529" aria-hidden="true" tabindex="-1"></a><span class="fu">### Training loss and evaluation data</span></span>
+<span id="cb25-530"><a href="#cb25-530" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-531"><a href="#cb25-531" aria-hidden="true" tabindex="-1"></a>Note that the <span class="co">[</span><span class="ot">**training loss**</span><span class="co">](training.qmd#training-loss)</span> refers to the quantity minimised when fitting model parameters. Here we are using a pre-trained model fitted to other data, and evaluating it on our own data without updating its weights. A loss function can also be used to evaluate new predictions. In this example, we use IoU, accepted-match counts, precision and recall, rather than recomputing YOLO's training loss.</span>
+<span id="cb25-532"><a href="#cb25-532" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-533"><a href="#cb25-533" aria-hidden="true" tabindex="-1"></a>We are still choosing settings for the whole pipeline, such as the confidence threshold and court-filter margin. These can be thought of as **hyperparameters** of the pipeline. Since we use this clip to make those choices, we should treat it as **development (or validation) data**, not an untouched test set.</span>
+<span id="cb25-534"><a href="#cb25-534" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-535"><a href="#cb25-535" aria-hidden="true" tabindex="-1"></a>To assess how the chosen pipeline performs on new recordings, we would need **test recordings** not used for those choices. Note that just randomly separating neighbouring frames from the same clip would provide a much weaker test, as those frames are very similar (i.e. correspond to highly correlated data points).</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 <footer class="footer">
