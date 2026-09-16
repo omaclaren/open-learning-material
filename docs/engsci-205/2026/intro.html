@@ -1,0 +1,1036 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.549">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>EngSci 205: Engineering-Centric Machine Learning - Introduction</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./index.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="html-preview.css">
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./intro.html">Introduction</a></li></ol></nav>
+        <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">EngSci 205: Engineering-Centric Machine Learning</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Preface</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./intro.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text">Introduction</span></a>
+  </div>
+</li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#the-bitter-lesson" id="toc-the-bitter-lesson" class="nav-link active" data-scroll-target="#the-bitter-lesson">The Bitter Lesson</a></li>
+  <li><a href="#is-data-enough" id="toc-is-data-enough" class="nav-link" data-scroll-target="#is-data-enough">Is data enough?</a></li>
+  <li><a href="#where-to" id="toc-where-to" class="nav-link" data-scroll-target="#where-to">Where to?</a></li>
+  <li><a href="#basic-setting" id="toc-basic-setting" class="nav-link" data-scroll-target="#basic-setting">Basic setting</a></li>
+  <li><a href="#basic-types-of-assumptions" id="toc-basic-types-of-assumptions" class="nav-link" data-scroll-target="#basic-types-of-assumptions">Basic types of assumptions</a></li>
+  <li><a href="#stochastic-process-models" id="toc-stochastic-process-models" class="nav-link" data-scroll-target="#stochastic-process-models">Stochastic process models</a></li>
+  <li><a href="#state-space-models" id="toc-state-space-models" class="nav-link" data-scroll-target="#state-space-models">State space models</a></li>
+  <li><a href="#stepping-back-conceptual-picture" id="toc-stepping-back-conceptual-picture" class="nav-link" data-scroll-target="#stepping-back-conceptual-picture">Stepping back: conceptual picture</a></li>
+  <li><a href="#the-nonlinear-pendulum" id="toc-the-nonlinear-pendulum" class="nav-link" data-scroll-target="#the-nonlinear-pendulum">The nonlinear pendulum</a></li>
+  <li><a href="#the-linear-pendulum" id="toc-the-linear-pendulum" class="nav-link" data-scroll-target="#the-linear-pendulum">The linear pendulum</a></li>
+  <li><a href="#predicting-the-pendulum" id="toc-predicting-the-pendulum" class="nav-link" data-scroll-target="#predicting-the-pendulum">Predicting the pendulum</a></li>
+  <li><a href="#predicting-the-pendulum-empirical-approach" id="toc-predicting-the-pendulum-empirical-approach" class="nav-link" data-scroll-target="#predicting-the-pendulum-empirical-approach">Predicting the pendulum: empirical approach</a></li>
+  <li><a href="#predicting-the-pendulum-interpolation-problem" id="toc-predicting-the-pendulum-interpolation-problem" class="nav-link" data-scroll-target="#predicting-the-pendulum-interpolation-problem">Predicting the pendulum: interpolation problem</a></li>
+  <li><a href="#predicting-the-pendulum-interpolation-problem-1" id="toc-predicting-the-pendulum-interpolation-problem-1" class="nav-link" data-scroll-target="#predicting-the-pendulum-interpolation-problem-1">Predicting the pendulum: interpolation problem</a></li>
+  <li><a href="#predicting-the-pendulum-extrapolation-problem" id="toc-predicting-the-pendulum-extrapolation-problem" class="nav-link" data-scroll-target="#predicting-the-pendulum-extrapolation-problem">Predicting the pendulum: extrapolation problem</a></li>
+  <li><a href="#predicting-the-pendulum-extrapolation-problem-1" id="toc-predicting-the-pendulum-extrapolation-problem-1" class="nav-link" data-scroll-target="#predicting-the-pendulum-extrapolation-problem-1">Predicting the pendulum: extrapolation problem</a></li>
+  <li><a href="#extrapolation-problem-simple-period-based-method" id="toc-extrapolation-problem-simple-period-based-method" class="nav-link" data-scroll-target="#extrapolation-problem-simple-period-based-method">Extrapolation problem: simple period-based method</a></li>
+  <li><a href="#extrapolation-problem-basis-functions-and-features-method" id="toc-extrapolation-problem-basis-functions-and-features-method" class="nav-link" data-scroll-target="#extrapolation-problem-basis-functions-and-features-method">Extrapolation problem: basis functions and features method</a></li>
+  <li><a href="#overfitting-instability-etc." id="toc-overfitting-instability-etc." class="nav-link" data-scroll-target="#overfitting-instability-etc.">Overfitting, instability etc.</a></li>
+  <li><a href="#extrapolation-problem-simple-autoregressive-model" id="toc-extrapolation-problem-simple-autoregressive-model" class="nav-link" data-scroll-target="#extrapolation-problem-simple-autoregressive-model">Extrapolation problem: simple autoregressive model</a></li>
+  <li><a href="#extrapolation-problem-simple-autoregressive-model-1" id="toc-extrapolation-problem-simple-autoregressive-model-1" class="nav-link" data-scroll-target="#extrapolation-problem-simple-autoregressive-model-1">Extrapolation problem: simple autoregressive model</a></li>
+  <li><a href="#manual-lagged-features" id="toc-manual-lagged-features" class="nav-link" data-scroll-target="#manual-lagged-features">Manual lagged features</a></li>
+  <li><a href="#extrapolation-problem-simple-autoregressive-model-2" id="toc-extrapolation-problem-simple-autoregressive-model-2" class="nav-link" data-scroll-target="#extrapolation-problem-simple-autoregressive-model-2">Extrapolation problem: simple autoregressive model</a></li>
+  <li><a href="#extrapolation-problem-simple-autoregressive-model-3" id="toc-extrapolation-problem-simple-autoregressive-model-3" class="nav-link" data-scroll-target="#extrapolation-problem-simple-autoregressive-model-3">Extrapolation problem: simple autoregressive model</a></li>
+  <li><a href="#assumptions-make-data-representative" id="toc-assumptions-make-data-representative" class="nav-link" data-scroll-target="#assumptions-make-data-representative">Assumptions make data representative!</a></li>
+  <li><a href="#features-vs-architecture-vs-regularisation" id="toc-features-vs-architecture-vs-regularisation" class="nav-link" data-scroll-target="#features-vs-architecture-vs-regularisation">Features vs architecture vs regularisation</a></li>
+  <li><a href="#regularisation-and-hybrid-models" id="toc-regularisation-and-hybrid-models" class="nav-link" data-scroll-target="#regularisation-and-hybrid-models">Regularisation and hybrid models</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Introduction</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>What is <strong>machine learning</strong>? What is <strong>engineering</strong>? How are they related? These questions are too difficult to answer properly but we can give some brief ideas. You will have seen some of these ideas already in the first part of the course, but we recap them here as they will inform our approach in what follows.</p>
+<p>The first key ingredient in machine learning is <strong>data</strong>. This can be in the form of <strong>numerical measurements</strong> but could also be <strong>text</strong>, <strong>images</strong>, <strong>videos</strong> and so on. Of course scientists, engineers, and statisticians have been using data long before ‘machine learning’ was a thing (although the term ‘machine learning’ and related terms like artificial intelligence and machine intelligence date back to around the 1950s). Sometimes people say machine learning is nothing but statistics! So, what distinguishes machine learning from other fields that use data? One of the key aspects of machine learning is a focus on <strong>prediction</strong> or, more generally, <strong>performance on a well-defined task in some specific domain</strong>, <strong>without</strong> necessarily being concerned with <strong>understanding the domain</strong> in the traditional ‘scientific’ sense. Consider for example the following quote from the 2008 Wired article on <a href="https://www.wired.com/2008/06/pb-theory/">‘The End of Theory’</a> (emphasis added):</p>
+<blockquote class="blockquote">
+<p>Google’s founding philosophy is that we don’t know why this page is better than that one: If the statistics of incoming links say it is, that’s good enough. No semantic or causal analysis is required. That’s why Google can <strong>translate languages without actually ‘knowing’ them</strong> (given equal corpus data, Google can translate Klingon into Farsi as easily as it can translate French into German). And why it can <strong>match ads to content without any knowledge</strong> or assumptions about the ads or the content.</p>
+</blockquote>
+<p>Note the above piece highlights the performance of a <strong>clearly-defined task</strong> in a specific domain – translate given text from one language to another, choose an ad to show when someone visits a website – <strong>without explicit ‘knowledge’</strong> of the broader domain (language, advertising psychology). The author of the above piece makes a <strong>controverisal comparison</strong> to the scientific approach:</p>
+<blockquote class="blockquote">
+<p>The <strong>scientific method</strong> is built around <strong>testable hypotheses</strong>. These <strong>models</strong>, for the most part, are systems visualized in the <strong>minds of scientists</strong>. The models are then <strong>tested</strong>, and experiments <strong>confirm or falsify theoretical models of how the world works</strong>. This is the way science has worked for hundreds of years.</p>
+</blockquote>
+<blockquote class="blockquote">
+<p>Scientists are trained to recognize that <strong>correlation is not causation</strong>, that no conclusions should be drawn simply on the basis of correlation between X and Y (it could just be a coincidence). Instead, <strong>you must understand the underlying mechanisms that connect the two</strong>. Once you have a model, you can connect the data sets with confidence. <strong>Data without a model is just noise</strong>.</p>
+</blockquote>
+<blockquote class="blockquote">
+<p>But faced with <strong>massive data</strong>, this approach to science — hypothesize, model, test — is becoming <strong>obsolete</strong> <span class="math inline">\(\dots\)</span></p>
+</blockquote>
+<blockquote class="blockquote">
+<p>There is now a better way. [lots of data means we can] say: <strong>“Correlation is enough.” We can stop looking for models</strong>. We can analyze the data without hypotheses about what it might show. We can throw the numbers into the biggest computing clusters the world has ever seen and <strong>let statistical algorithms find patterns</strong> where science cannot.”</p>
+</blockquote>
+<p>These are strong claims! <strong>How justified are these?</strong> And where do engineers fit in?</p>
+<section id="the-bitter-lesson" class="level2">
+<h2 class="anchored" data-anchor-id="the-bitter-lesson">The Bitter Lesson</h2>
+<p>A <strong>similar but slightly less strong claim</strong> about the power of <strong>data and computation relative to theory and understanding</strong> is made by Richard Sutton in his 2019 essay ‘The Bitter Lesson’:</p>
+<blockquote class="blockquote">
+<p>The biggest lesson that can be read from 70 years of AI research is that general methods that leverage computation are ultimately the most effective, and by a large margin…<strong>Seeking an improvement that makes a difference in the shorter term, researchers seek to leverage their human knowledge of the domain, but the only thing that matters in the long run is the leveraging of computation</strong>…the statistical methods won out over the human-knowledge-based methods…The recent rise of deep learning in speech recognition is the most recent step in this consistent direction. Deep learning methods rely even less on human knowledge, and use even more computation, together with learning on huge training sets, to produce dramatically better speech recognition systems….This is a big lesson…We have to learn the bitter lesson that <strong>building in how we think we think does not work in the long run</strong>. The bitter lesson is based on the historical observations that 1) AI researchers have often tried to build knowledge into their agents, 2) this always helps in the short term, and is personally satisfying to the researcher, but 3) in the long run it plateaus and even inhibits further progress, and 4) breakthrough progress eventually arrives by an opposing approach based on scaling computation by search and learning. The eventual success is tinged with bitterness, and often incompletely digested, because it is success over a favored, human-centric approach…The two methods that seem to scale arbitrarily in this way are search and learning.</p>
+</blockquote>
+</section>
+<section id="is-data-enough" class="level2">
+<h2 class="anchored" data-anchor-id="is-data-enough">Is data enough?</h2>
+<p>The strongest claim above that ‘data are all you need’ is provocative but oversold. One way to illustrate this is to distinguish between <strong>passive</strong> observation and prediction of a system under given conditions and <strong>intervention</strong> on a system that changes the conditions.</p>
+<p><strong>Example:</strong> suppose that you observe the weather every day and record whether it rains or not. You also place a bucket outside and record how full the bucket gets. Clearly there will be a ‘statistical’ or ‘correlational’ pattern/relationship between whether the bucket has water in it and whether it has rained. This means, for example, that if you forgot to look outside during the day but still collected the bucket at the end of the day you could successfully ‘predict’ (or ‘retrodict’) whether it had rained or not. However, suppose then that you wake up and want to go outside for a picnic. If you take the statistical pattern too seriously and have no notion of cause and effect <em>you might think that to prevent it raining you should make sure the bucket doesn’t get full – So you simply cover the bucket and head out for your picnic!</em></p>
+<p>Now, the machine learner may reply that the problem is we haven’t actually collected data on what happens when the bucket is artifically covered. But this is part of the point – one of the reasons we develop scientific theories and mechanistic understanding is to <strong>generalise</strong> to new contexts and scenarios: our bucket – rain relationship is stable within a limited domain but the laws of physics (presumably) hold throughout the entire universe. Our understanding of cause and effect, accumulated throughout human history, allows us to say that rain causes the bucket to fill but the bucket filling does not cause the rain, without needing to collect additional data.</p>
+<p>Despite this warning, the machine learner raises a strong, interesting and potentially bitter point: in many real-world contexts we are interested in <strong>the environment is stable enough, the available data is representative enough, and the performance goals well-defined enough that we don’t necessarily need a deep understanding</strong> of all the mechanistic processes and causes and effects involved in order to carry out a task well.</p>
+</section>
+<section id="where-to" class="level2">
+<h2 class="anchored" data-anchor-id="where-to">Where to?</h2>
+<p>In this course we will look at the intersection between <strong>machine learning</strong> and <strong>engineering</strong> and consider when or how building in <strong>engineering and scientific knowledge</strong> can help us <strong>learn from data</strong> in a more <strong>data-efficient</strong>, <strong>robust</strong>, and <strong>generalisable</strong> way, even if only in the <strong>short term</strong>. After all, we might say that the <strong>Engineering Lesson</strong> is that we need to solve problems <strong>now</strong>, with the resources we have, and not wait for the ‘long term’!</p>
+</section>
+<section id="basic-setting" class="level2">
+<h2 class="anchored" data-anchor-id="basic-setting">Basic setting</h2>
+<p>In the standard setting of <strong>supervised</strong> machine learning, we have access to <strong>training data</strong>, consisting of a series of <strong>examples</strong>: <span class="math display">\[
+(x,y)_1, (x,y)_2,\dots,(x,y)_m,
+\]</span> i.e. <span class="math display">\[(x_1,y_1), (x_2,y_2),\dots,(x_m,y_m),\]</span> composed of <strong>features</strong> (or inputs/covariates) <span class="math inline">\(x_i\)</span>, <span class="math inline">\(i=1,\dots,m\)</span> and <strong>targets</strong> (or outcomes/repsonses/labels) <span class="math inline">\(y_i\)</span>, <span class="math inline">\(i=1,\dots,m\)</span>. Both the <span class="math inline">\(x_i\)</span> and <span class="math inline">\(y_i\)</span> may be numbers, vectors, functions, images, etc.</p>
+<p>The goal is then, e.g., to <strong>predict</strong> the target <span class="math inline">\(y_j\)</span> for a new set of features <span class="math inline">\(x_j\)</span>, coming from an unseen or future <strong>test dataset</strong> or test scenario.</p>
+<p>In machine learning, as opposed to statistics or scientific modelling, the aim is typically to make as <strong>minimal assumptions as possible on the underlying mechanisms</strong> generating the data. However, many standard methods and theoretical frameworks implicitly or explicitly assume that the data is independent and identically distributed (or at least ‘exchangeable’). This is actually a fairly strong assumption, especially for engineering applications!</p>
+<p>More generally, the basic conceptual assumption is that <strong>the training data is representative of the test data</strong> in some sense. Making this precise, without just assuming iid data, is a difficult and often ignored task! However, in scientific and engineering applications, ensuring the training data is representative of the scenarios in which the model will be used is often even more important than usual.</p>
+<p>Let’s briefly discuss some basic assumptions on how the data is generated.</p>
+</section>
+<section id="basic-types-of-assumptions" class="level2">
+<h2 class="anchored" data-anchor-id="basic-types-of-assumptions">Basic types of assumptions</h2>
+<p>A common assumption is that there is an underlying <strong>function</strong> <span class="math inline">\(f\)</span> that maps features to targets: <span class="math display">\[y = f(x).\]</span> More generally we might have a <strong>noisy</strong> mapping such as <span class="math display">\[y = f(x) + e\]</span> or, more generally, <span class="math display">\[y = f(x,e).\]</span> where <span class="math inline">\(e\)</span> is an (unobserved) error term.</p>
+<p>Even this can be an approximation though! For example, if <span class="math inline">\(x\)</span> represents <strong>time</strong> and <span class="math inline">\(y\)</span> represents the <strong>value</strong> of some dynamically varying quantity, the above model assumes <strong>deterministic dynamics</strong> with only observation error.</p>
+<p>Such deterministic models are common in engineering applications (e.g.&nbsp;systems governed by ordinary or partial differential equations), but more generally we may wish to use a <strong>stochastic process</strong> model, in which the dynamics themselves are stochastic.</p>
+</section>
+<section id="stochastic-process-models" class="level2">
+<h2 class="anchored" data-anchor-id="stochastic-process-models">Stochastic process models</h2>
+<p>For models in which the dynamics themselves are stochastic or noisy, the models are typically represented (assuming discrete time!) in forms such as <span class="math display">\[
+y_{t} = f(y_{t-1},y_{t-2},y_{t-3},\dots,e_t)
+\]</span> i.e.&nbsp;the <strong>present (or future) is a function of the past (or past up until the present) and some error term</strong>. This is often called an <strong>autoregressive</strong> model in statistics and machine learning.</p>
+<p>This form is itself <strong>inspired by scientific modelling</strong>: years of experience have taught us that such models are useful ways to capture ideas of ‘cause and effect’ in dynamic systems. E.g. Newton’s laws can be written, once discretised, as a noise-free version of the above.</p>
+<p>We can massage this back into our <span class="math inline">\((x,y)\)</span> format by taking <span class="math inline">\(x\)</span> to be the <strong>‘history’</strong> <span class="math inline">\(\mathcal{H}_{t-1}\)</span> of <span class="math inline">\(y\)</span> up to <span class="math inline">\(t-1\)</span>, i.e.&nbsp;the <strong>past (or lagged) values</strong> of <span class="math inline">\(y\)</span>: <span class="math display">\[
+(x,y)_t = (\mathcal{H}_{t-1},y_t) = ((y_{t-1},y_{t-2},...),y_t).
+\]</span> Now we again have a model in the standard form <span class="math display">\[y_t \approx f(x_t) = f(\mathcal{H}_{t-1})\]</span> where the approximation may be represented by additive or non-additive error terms giving stochastic dynamics.</p>
+<p>What if we want to repeat the procedure to predict <span class="math inline">\(y_{t+1}\)</span>? We need to update the history to include both the new <span class="math inline">\(y_t\)</span> and the past history! This can be thought of as a model of <strong>history updating</strong>: <span class="math display">\[
+\begin{aligned}
+\mathcal{H_t} = (y_t,\mathcal{H}_{t-1}) &amp;= (f(\mathcal{H}_{t-1}),\mathcal{H}_{t-1})\\ &amp;= g(\mathcal{H}_{t-1}).
+\end{aligned}
+\]</span></p>
+</section>
+<section id="state-space-models" class="level2">
+<h2 class="anchored" data-anchor-id="state-space-models">State space models</h2>
+<p>The ‘history updating’ idea leads naturally to the ‘systems dynamics’ concept of <strong>system state</strong>: we define the concept of the state of a dynamic system as the ‘relevant history’ required for predicting the next <span class="math inline">\(y_t\)</span> value. We can define the state vector at time <span class="math inline">\(t-1\)</span> as <span class="math display">\[z_{t-1} = \mathcal{H}_{t-n:t-1} = (y_{t-1}, \dots, y_{t-n})\]</span> for <span class="math inline">\(n\geq 1\)</span>, and give the <strong>state update</strong> or <strong>process model</strong> equation as <span class="math display">\[z_t = g(z_{t-1}) = (f(\mathcal{H}_{t-n:t-1}),\mathcal{H}_{t-n+1:t-1}),\]</span> where <span class="math inline">\(\mathcal{H}_{t_1:t_2} = \emptyset\)</span> if <span class="math inline">\(t_1 &gt; t_2\)</span>. This represents a setting where we only need to remember up to a finite number of past values in order to predict the future, and will hence forget the rest. This is a type of <strong>Markovian</strong> assumption.</p>
+<p>Higher-order differential equations can always be converted to <strong>state space</strong> or first order form (see MM2/3/4?); for example <strong>Newton’s second law</strong> is a <strong>second-order</strong> (in time) differential equation that becomes a <strong>system of two first order</strong> differential equations for position and momentum when in state space form.</p>
+<p>More generally, observation and process noise can be represented in terms of a <strong>state space</strong> or <strong>hidden state</strong> model such as: <span class="math display">\[
+\begin{aligned}
+y_t &amp;= f(z_t) + e_t\\
+z_t &amp;= g(z_{t-1},\epsilon_t)
+\end{aligned}
+\]</span> where <span class="math inline">\(e_t\)</span> is (additive) observation error, <span class="math inline">\(\epsilon_t\)</span> is (possibly non-additive) ‘process’ error and typically only <span class="math inline">\((t,y)\)</span> i.e.&nbsp;<span class="math inline">\(y_t\)</span> is observed. The ‘state space evolution’ describes the dependence of the present on the past and is unobserved. The observation equation describes instantaneous but noisy or indirect observations of the current state.</p>
+<p>A deterministic model with observation noise can also be thought of as a special case of the above where there is no process error.</p>
+</section>
+<section id="stepping-back-conceptual-picture" class="level2">
+<h2 class="anchored" data-anchor-id="stepping-back-conceptual-picture">Stepping back: conceptual picture</h2>
+<p>As we have seen there are many types of dependence assumptions we can make. In general though, we are trying to apply our system in a relatively <strong>stable environment</strong> that we can imagine is characterised in an engineering sense by a <strong>system boundary</strong> and fixed <strong>system constants</strong> denoted here by <span class="math inline">\(\mu\)</span> (note: these could be e.g.&nbsp;fixed mean, variance of a random environment!).</p>
+<p>This gives a rough conceptual picture as below:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figures/conceptual-model.svg" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+<p>where, as discussed, we may need to carefully define our <span class="math inline">\(x\)</span>, <span class="math inline">\(y\)</span>, <span class="math inline">\(e\)</span>, <span class="math inline">\(\mu\)</span> etc variables depending on what sort of minimal assumptions we are willing to make.</p>
+<p>Enough generalities! Let’s consider a <strong>specific physical system</strong> and how the above ideas can help us use machine learning to approximate and predict it.</p>
+</section>
+<section id="the-nonlinear-pendulum" class="level2">
+<h2 class="anchored" data-anchor-id="the-nonlinear-pendulum">The nonlinear pendulum</h2>
+<p>Many problems in engineering and science are governed by differential equations. For example, the angular motion <span class="math inline">\(\theta(t)\)</span> of a pendulum with length <span class="math inline">\(l\)</span> subject to Newton’s laws and no friction or air resistance, is given by <span class="math display">\[
+\frac{d^2\theta}{dt^2} + \frac{g}{l}\sin \theta = 0
+\]</span> with initial conditions <span class="math display">\[
+\theta(0) = \theta_0,\ \ \frac{d\theta}{dt}(0) = v_0
+\]</span> A schematic is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figures/pendulum.svg" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+<p>Derivation: in class! See also MM2 or Greenberg (1998) ‘Advanced Engineering Mathematics’.</p>
+<p>Note that this is a <strong>nonlinear</strong>, <strong>second-order</strong> ordinary differential equation in <strong>time</strong>. The solution, <span class="math inline">\(\theta(t)\)</span>, is a <strong>deterministic</strong> function of time that cannot be given in terms of so-called elementary functions, though it can be solved in terms of elliptic integrals. More complex models, e.g.&nbsp;including forcing or damping, can generate chaotic solutions, and must be solved by numerical simulation.</p>
+</section>
+<section id="the-linear-pendulum" class="level2">
+<h2 class="anchored" data-anchor-id="the-linear-pendulum">The linear pendulum</h2>
+<p>We can also make the <strong>small angle approximation</strong> <span class="math inline">\(\sin \theta \approx \theta\)</span> to obtain the <strong>linear pendulum</strong> model: <span class="math display">\[
+\frac{d^2\theta}{dt^2} + \frac{g}{l}\theta = 0
+\]</span> with initial conditions <span class="math display">\[
+\theta(0) = \theta_0,\ \ \frac{d\theta}{dt} = v_0
+\]</span> This is now a <strong>linear</strong>, <strong>second-order</strong> ordinary differential equation in <strong>time</strong>. The solution, <span class="math inline">\(\theta(t)\)</span>, is again a <strong>deterministic</strong> function of time.</p>
+<p>This has an explicit solution: <span class="math display">\[
+\theta(t) = \theta_{\text{max}}\cos \left(\sqrt{\frac{g}{l}}t + \phi\right)
+\]</span> where <span class="math inline">\(\phi\)</span> is a phase shift term and <span class="math inline">\(\theta_{\text{max}}\)</span> is the maximum angular displacement, and both these terms depend on the initial conditions. If the initial velocity is zero, this simplifies to <span class="math display">\[
+\theta(t) = \theta_0\cos \left(\sqrt{\frac{g}{l}}t\right)
+\]</span> i.e.&nbsp;<span class="math inline">\(\theta_{\text{max}} = \theta_0\)</span> and <span class="math inline">\(\phi = 0\)</span>.</p>
+<p><em>We will assume zero initial velocity for both the linear and nonlinear pendulumns from now on for simplicity.</em></p>
+</section>
+<section id="predicting-the-pendulum" class="level2">
+<h2 class="anchored" data-anchor-id="predicting-the-pendulum">Predicting the pendulum</h2>
+<p>Now, suppose we have <span class="math inline">\(M\)</span>, (possibly noisy) observations of the form <span class="math display">\[(t_i,\theta_i),\ i=1,\dots,M\]</span> from a pendulum (possibly nonlinear!) and wish to predict <span class="math inline">\(\theta_j\)</span> for a new, given <span class="math inline">\(t_j\)</span>. We consider two cases of <span class="math inline">\(t_j\)</span>, one that lies ‘within’ the range of observed data, and one that lies ‘outside’ the observed range. These corresponds to <strong>interpolation</strong> and <strong>extrapolation</strong> tasks, respectively.</p>
+<div id="17adb10a" class="cell" data-execution_count="1">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="intro_files/figure-html/cell-2-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>What can we do? The classical scientific/engineering approach is to <strong>directly use our knowledge of the pendulum equations</strong>. For example, if we know <span class="math inline">\(g\)</span> and <span class="math inline">\(l\)</span>, as well as the initial conditions, we can simply <strong>solve or simulate</strong> our model to obtain <span class="math inline">\(\theta(t;g,l,\theta_0,v_0) = \theta(t;\mu)\)</span>, where <span class="math inline">\(\mu = (g,l,\theta_0,v_0)\)</span> represents our system parameters (assumed constant here).</p>
+<p>If we didn’t know some of our parameters, the classical approach is then extended to first carry out <strong>parameter estimation</strong> for the parameters given data and then proceed as above with these estimates. This sort of approach is covered in other courses. What does a ‘machine learner’ do instead?</p>
+</section>
+<section id="predicting-the-pendulum-empirical-approach" class="level2">
+<h2 class="anchored" data-anchor-id="predicting-the-pendulum-empirical-approach">Predicting the pendulum: empirical approach</h2>
+<p>Here, instead, we want to explore the possibility of <strong>working as directly with the data as possible</strong>, and see what minimal additional assumptions we can make in order to carry out the <strong>prediction task</strong>. This can be thought of as <strong>empirical modelling</strong>, rather than scientific or engineering modelling.</p>
+<p>Here are three simple approaches to predicting at the ‘within domain’ time point, i.e.&nbsp;the <strong>interpolation</strong> problem:</p>
+<ul>
+<li>Find the time point closest to the desired prediction point and use the associated <span class="math inline">\(\theta\)</span> value.<br>
+</li>
+<li>More generally, take the average of values associated with the <span class="math inline">\(K\)</span> closest time points (K-Nearest Neighbours!).<br>
+</li>
+<li>Fit a machine learning/statistical regression function to the given training points and predict at the new time point using this.</li>
+</ul>
+<p>How well does this work? Let’s see!</p>
+</section>
+<section id="predicting-the-pendulum-interpolation-problem" class="level2">
+<h2 class="anchored" data-anchor-id="predicting-the-pendulum-interpolation-problem">Predicting the pendulum: interpolation problem</h2>
+<p>Simple nearest neighbour approaches:</p>
+<div id="0667fb5a" class="cell" data-execution_count="2">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="intro_files/figure-html/cell-3-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="fa15b213" class="cell" data-execution_count="3">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="intro_files/figure-html/cell-4-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="predicting-the-pendulum-interpolation-problem-1" class="level2">
+<h2 class="anchored" data-anchor-id="predicting-the-pendulum-interpolation-problem-1">Predicting the pendulum: interpolation problem</h2>
+<p>Using a simple neural net:</p>
+<div id="039f8a98" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-overflow-wrap code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn <span class="im">import</span> neural_network</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>regr <span class="op">=</span>neural_network.MLPRegressor(max_iter<span class="op">=</span><span class="dv">5000</span>,</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>                        activation<span class="op">=</span><span class="st">'logistic'</span>,solver<span class="op">=</span><span class="st">'lbfgs'</span>)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> t_data.reshape(<span class="op">-</span><span class="dv">1</span>,<span class="dv">1</span>)</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> y_data</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>regr.fit(X, y)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="51bfce19" class="cell" data-execution_count="5">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="intro_files/figure-html/cell-6-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="predicting-the-pendulum-extrapolation-problem" class="level2">
+<h2 class="anchored" data-anchor-id="predicting-the-pendulum-extrapolation-problem">Predicting the pendulum: extrapolation problem</h2>
+<p>What about the extrapolation problem? Let’s naively try our best previous approaches. First, using two closest time points:</p>
+<div id="657178ca" class="cell" data-execution_count="6">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="intro_files/figure-html/cell-7-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="predicting-the-pendulum-extrapolation-problem-1" class="level2">
+<h2 class="anchored" data-anchor-id="predicting-the-pendulum-extrapolation-problem-1">Predicting the pendulum: extrapolation problem</h2>
+<p>Next, a neural network:</p>
+<div id="1f8aa2ce" class="cell" data-execution_count="7">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="intro_files/figure-html/cell-8-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Not particularly good or reliable in either case! The problem is that the time point (or feature) we wish to predict is <em>a priori</em> quite different to the previous points that we’ve seen…</p>
+<p>However, it <em>does</em> perhaps seem like we might be able to predict better than we are currently! Why? One answer is that <strong>the data appear to exhibit some form of regularity</strong>, e.g.&nbsp;approximate periodicity etc.</p>
+<p>Can we do better?</p>
+</section>
+<section id="extrapolation-problem-simple-period-based-method" class="level2">
+<h2 class="anchored" data-anchor-id="extrapolation-problem-simple-period-based-method">Extrapolation problem: simple period-based method</h2>
+<p>A simple observation is that our data appear somewhat periodic, i.e. <span class="math display">\[
+\theta(t + T) \approx \theta(t)
+\]</span> for some period <span class="math inline">\(T\)</span>. This is also obvious from the solution to the ODE model, i.e.&nbsp;our engineering/scientific knowledge!</p>
+<p>The time taken for the pendulum to return to its initial value is approximately 2.75 seconds, which is our estimate of <span class="math inline">\(T\)</span>.</p>
+<p>In this case, rather than find the closest absolute time point, we could find the closest point ‘within the cycle’, i.e.&nbsp;match to <span class="math inline">\(t\)</span> <em>modulo</em> <span class="math inline">\(T\)</span>, written ‘<span class="math inline">\(t\bmod T\)</span>’. Recall that e.g.&nbsp;7 mod 5 = 2, 14 mod 6 = 2 etc, i.e.&nbsp;we get the <em>remainder</em> when dividing the first number by the second. Our target time, here 7. If our period is about 2.75, then we should take the <span class="math inline">\(y\)</span> values with <span class="math inline">\(t\)</span> values closest to about 7 mod 2.75 = 1.5. Let’s try!</p>
+<div id="d798ab2e" class="cell" data-execution_count="8">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="intro_files/figure-html/cell-9-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="extrapolation-problem-basis-functions-and-features-method" class="level2">
+<h2 class="anchored" data-anchor-id="extrapolation-problem-basis-functions-and-features-method">Extrapolation problem: basis functions and features method</h2>
+<p>The above approach works but requires e.g.&nbsp;a periodic assumption which may not generalise very easily. A related but more general approach is to represent our solution as a linear or nonlinear combination of periodic functions. In the linear case this is a <strong>Fourier series</strong>!</p>
+<p>Approaches to time series based on Fourier methods are called <strong>spectral</strong> methods; more generally, this is a <strong>basis function</strong> approach, assuming our function can be easily constructed from linear combinations of a simpler set of basis functions.</p>
+<p>Machine learners also call such basis functions <strong>features</strong> and may consider prediction based linear or <em>nonlinear</em> combinations of these (functional) features.</p>
+<p>Motivated by a Fourier cosine series, let’s try using a small collection of features (basis functions) of the form <span class="math inline">\(\cos \frac{2n\pi t}{T}\)</span>, for <span class="math inline">\(n=1,\dots,4\)</span> (say) and <span class="math inline">\(T=2.75\)</span> (our estimated period), as features in a <strong>linear regression</strong>.</p>
+<div id="ee34d740" class="cell" data-execution_count="9">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="intro_files/figure-html/cell-10-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="overfitting-instability-etc." class="level2">
+<h2 class="anchored" data-anchor-id="overfitting-instability-etc.">Overfitting, instability etc.</h2>
+<p>This works reasonably for these particular choices, but depends on the number and type of terms included.</p>
+<p>Here’s the same process for <span class="math inline">\(n=1,\dots,10\)</span>. The fit to the observed data is much the same, but our predictions between observations are now much worse (though they happen to still be reasonably good at our actual point of interest).</p>
+<div id="5d3b7c0b" class="cell" data-execution_count="10">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="intro_files/figure-html/cell-11-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>While there are various ways to use and improve spectral methods, let’s consider another alternative.</p>
+</section>
+<section id="extrapolation-problem-simple-autoregressive-model" class="level2">
+<h2 class="anchored" data-anchor-id="extrapolation-problem-simple-autoregressive-model">Extrapolation problem: simple autoregressive model</h2>
+<p>Suppose we wish to use our knowledge that a pendulum can be modelled by a second order differential equation, but don’t want to derive or solve the equation as such. We can argue as follows. A first order derivative of <span class="math inline">\(y(t)\)</span> can be approximated (using the ‘past’, i.e.&nbsp;backward differences) by <span class="math display">\[
+\frac{dy}{dt} \approx \frac{y(t) - y(t-h)}{h}
+\]</span> Given a differential equation of the form <span class="math display">\[
+\frac{dy}{dt} = f(y)
+\]</span> we can thus write this as a simple update rule <span class="math display">\[
+y(t) \approx y(t-h) + f(y(t-h))h = F(y(t-h))
+\]</span> where the present (or future) is given by a an update function <span class="math inline">\(F\)</span> of the past (or present).</p>
+<p>A second order time derivative can be discretised approximately as <span class="math display">\[
+\frac{d^2y}{dt^2} \approx \frac{\frac{y(t)-y(t-h)}{h}-\frac{y(t-h)-y(t-2h)}{h}}{h} =\frac{y(t) - 2y(t-h) + y(t-2h)}{h^2}
+\]</span> If we take <span class="math inline">\(h=1\)</span> for simplicitly, we might expect that a second order system can be approximated by an update rule of the form <span class="math display">\[
+y(t) \approx F(y(t-1),y(t-2))
+\]</span> This motivates us to try a second-order <strong>autoregression</strong>: build a model to predict the current <span class="math inline">\(y\)</span> values from its past two values. </p>
+</section>
+<section id="extrapolation-problem-simple-autoregressive-model-1" class="level2">
+<h2 class="anchored" data-anchor-id="extrapolation-problem-simple-autoregressive-model-1">Extrapolation problem: simple autoregressive model</h2>
+<p>In an autoregressive approach of order <span class="math inline">\(k\)</span> with <span class="math inline">\(m\)</span> realisations of our primary variable, we effectively have a smaple size of <span class="math inline">\(m-k\)</span>, i.e.&nbsp;the number of ‘(past, present)’ pairs in the data. E.g. for <span class="math inline">\(m=6\)</span> and <span class="math inline">\(k=2\)</span> we get four pairs: <img src="figures/auto.svg" class="img-fluid quarto-figure quarto-figure-center"> To carry out autoregression, we simply construct a target vector of present values, dropping the first <span class="math inline">\(k\)</span>, and <strong>delay feature vectors</strong>, each lagging the target vector by one additional increment.</p>
+<p>E.g. <span class="math inline">\(\dots\)</span></p>
+</section>
+<section id="manual-lagged-features" class="level2">
+<h2 class="anchored" data-anchor-id="manual-lagged-features">Manual lagged features</h2>
+<p>We can e.g.&nbsp;use <code>np.roll</code> to created lagged features; see below. Note that the future is carrying out its oscillation <em>before</em> the lagged variables, as we want!</p>
+<div id="ab2711a9" class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>k <span class="op">=</span> <span class="dv">2</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>y_data_target <span class="op">=</span> np.roll(y_data,<span class="dv">0</span>)[k:]</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>X_lagged <span class="op">=</span> np.zeros((<span class="bu">len</span>(y_data_target),k))</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>,k):</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    X_lagged[:,i] <span class="op">=</span> np.roll(y_data,i<span class="op">+</span><span class="dv">1</span>)[k:]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="e1ae056f" class="cell" data-execution_count="12">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="intro_files/figure-html/cell-13-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="extrapolation-problem-simple-autoregressive-model-2" class="level2">
+<h2 class="anchored" data-anchor-id="extrapolation-problem-simple-autoregressive-model-2">Extrapolation problem: simple autoregressive model</h2>
+<p>Using <code>X_lagged</code> and <code>y_data_target</code> from above in a <em>linear regression</em> model (we can also do nonlinear<span class="math inline">\(\dots\)</span>) gives us a model of the form <span class="math display">\[
+\theta_{t+1} \approx F(\theta_{t},\theta_{t-1}) = a\theta_{t} + b\theta_{t-1} + c
+\]</span> i.e.&nbsp;a <em>one-step-ahead</em> prediction model given the two-lag (relative to the prediction) <em>history</em>. How do we predict multiple steps ahead? We <strong>iterate</strong> the one-step prediction model! (Technically we are iterating the <em>mean</em> to get the predictive mean.)</p>
+<p>This works best if we use the <strong>state space</strong> form to keep track of the current two-lag history required for predicting the next variable and updating to the next relevant history (state): <span class="math display">\[
+\begin{bmatrix}\theta_{t+1}\\\theta_{t}\end{bmatrix} \approx \begin{bmatrix}F(\theta_{t},\theta_{t-1})\\\theta_{t}\end{bmatrix} = G\left(\begin{bmatrix}\theta_{t}\\\theta_{t-1}\end{bmatrix}\right)
+\]</span> In our linear case, assuming <span class="math inline">\(c = 0\)</span> for simplicity, this could be written in matrix form as <span class="math display">\[
+\begin{bmatrix}\theta_{t+1}\\\theta_{t}\end{bmatrix} \approx \begin{bmatrix} a &amp; b\\1 &amp; 0
+\end{bmatrix} \begin{bmatrix}\theta_{t}\\\theta_{t-1}\end{bmatrix}
+\]</span> Then, applying the predictions sequentially (or recursively), we get the <span class="math inline">\(n\)</span>-step-ahead prediction as the first component of: <span class="math display">\[
+\begin{bmatrix}\theta_{t+n}\\\theta_{t+n-1}\end{bmatrix} \approx G(G(\dots G(\begin{bmatrix}\theta_{t}\\\theta_{t-1}\end{bmatrix}))) = G^{n}\left(\begin{bmatrix}\theta_{t}\\\theta_{t-1}\end{bmatrix}\right)
+\]</span> i.e.&nbsp;for our linear case <span class="math display">\[
+\begin{bmatrix}\theta_{t+n}\\\theta_{t+n-1}\end{bmatrix} \approx A^n \begin{bmatrix}\theta_{t}\\\theta_{t-1}\end{bmatrix}
+\]</span> with <span class="math display">\[
+A = \begin{bmatrix} a &amp; b\\1 &amp; 0
+\end{bmatrix}.
+\]</span></p>
+</section>
+<section id="extrapolation-problem-simple-autoregressive-model-3" class="level2">
+<h2 class="anchored" data-anchor-id="extrapolation-problem-simple-autoregressive-model-3">Extrapolation problem: simple autoregressive model</h2>
+<p>Let’s predict both the point of interest and a few extra time steps beyond that:</p>
+<div id="9ba88bc2" class="cell" data-execution_count="13">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="intro_files/figure-html/cell-14-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Not bad! It captures the general oscillatory behaviour, though it does seem to be more damped than the true motion. This is not uncommon as we are emphasising fit to the <strong>dynamics</strong>, sometimes called <strong>gradient matching</strong>, rather than fit to the <strong>trajectory</strong>, sometimes called <strong>trajectory</strong> or <strong>integral matching</strong> (terms used when fitting ODE models in the classical style).</p>
+<p>More sophisticated approaches along these lines include more complex <strong>linear</strong> models at both the dynamics and trajectory level, as well as <strong>nonlinear time series</strong> versions. <strong>State space</strong> approaches are particularly powerful, and lead to <strong>Kalman filtering</strong> and nonlinear extensions for smoothing and predicting time series.</p>
+<p>In addition, the basic concept of <strong>autoregression</strong> is a key component of modern LLM neural nets like ChatGPT! It essentially predicts the next word based on the input prompt (history).</p>
+</section>
+<section id="assumptions-make-data-representative" class="level2">
+<h2 class="anchored" data-anchor-id="assumptions-make-data-representative">Assumptions make data representative!</h2>
+<p>Let’s regroup. What have we learned? We have seen that in order to predict new data we have to <strong>make assumptions that go beyond the data</strong>.</p>
+<p>This is a general lesson that has been known since at least <strong>Hume</strong> (1739) introduced the <strong>problem of induction</strong> (likely much much earlier)!</p>
+<p>In <em>A Treatise of Human Nature</em>, Hume states:</p>
+<blockquote class="blockquote">
+<p>there can be no demonstrative arguments to prove, that those instances, of which we have had no experience, resemble those, of which we have had experience</p>
+</blockquote>
+<p>The physicist Max Born in <em>Natural Philosophy of Cause and Chance</em> (1949) summarised the problem as:</p>
+<blockquote class="blockquote">
+<p>no observation or experiment, however extended, can give more than a finite number of repetitions; therefore, the statement of a law – B depends on A – always transcends experience. Yet this kind of statement is made everywhere and all the time, and sometimes from scanty material.</p>
+</blockquote>
+<p>There have been a range of proposed resolutions of the problem of induction, from probabilistic proposals to Popper’s argument that science does not need induction, summarised in <em>Conjectures and Refutations</em> (1962):</p>
+<blockquote class="blockquote">
+<p>Hume, I felt, was perfectly right in pointing out that induction cannot be logically justified<span class="math inline">\(\dots\)</span>Induction, i.e.&nbsp;inference based on many observations, is a myth. It is neither a psychological fact, nor a fact of ordinary life, nor one of scientific procedure<span class="math inline">\(\dots\)</span>The actual procedure of science is to operate with conjectures<span class="math inline">\(\dots\)</span>Repeated observations and experiments function in science as <em>tests</em> of our conjectures or hypotheses, i.e.&nbsp;as attempted refutations.</p>
+</blockquote>
+<p>Regardless of one’s preferred approach to the problem of induction, <strong>all involve making assumptions (or at least conjectures) to go beyond the available data</strong>, whether explicit or implicit.</p>
+</section>
+<section id="features-vs-architecture-vs-regularisation" class="level2">
+<h2 class="anchored" data-anchor-id="features-vs-architecture-vs-regularisation">Features vs architecture vs regularisation</h2>
+<p>In machine learning, people often talk about ‘inductive bias’ and related types of <strong>good</strong>, or at least <strong>necessary biases</strong>. E.g., from Karniadakis et. al (2021): <img src="figures/bias-extended.png" class="img-fluid quarto-figure quarto-figure-center" style="width:70.0%"></p>
+</section>
+<section id="regularisation-and-hybrid-models" class="level2">
+<h2 class="anchored" data-anchor-id="regularisation-and-hybrid-models">Regularisation and hybrid models</h2>
+<p>We have given a taste of different ways to make assumptions and improve predictions beyond our immediate data.</p>
+<p>For the remainder, we will look in more detail at simple ways to build models and incoporate engineering knowledge. In particular, we are going to focus on what the previous quoted article calls <strong>learning bias</strong>, which amounts to including physical or engineering constraints in a ‘soft’ (vs.&nbsp;exactly enforced) manner, via penalty or so-called <strong>regularisation</strong> terms.</p>
+<p>Because such an approach includes both a flexible data model and an approximately enforced physical model, we will call these <strong>hybrid models</strong> (though this term is used by many authors in many ways).</p>
+<p>Note: Regularisation and related topics are covered in much more detail in e.g.&nbsp;<strong>ENGSCI 721</strong>.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./index.html" class="pagination-link  aria-label=" preface"="">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Preface</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>ENGSCI 205 — Week 1 notes.</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+<p><a href="downloads/EML-Week-01.pdf">Week 1 PDF</a></p>
+</div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

@@ -1,0 +1,10 @@
+/* HTML-only compatibility; never loaded by the authoring PDF build. */
+main { min-width: 0; }
+main mjx-container[display="true"] {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-top: 0.15rem;
+  padding-bottom: 0.15rem;
+}

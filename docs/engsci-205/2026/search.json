@@ -1,0 +1,292 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "EngSci 205: Engineering-Centric Machine Learning",
+    "section": "",
+    "text": "Preface\nThe following notes were prepared by me (Oliver Maclaren) and Ruanui Nicholson for ENGSCI 205: Engineering-Centric Machine Learning, based on discussions with Piaras Kelly, Justin Fernandez, Cameron Walker, Andreas Kempa-Liehr, Ivan Koptev, and others.\nThey assume some basic familiarity with fitting simple statistical machine learning models using e.g. scikit-learn. The focus is on high-level ideas about what we put into these models, as well as on developing practical familiarity working with multi-dimensional arrays called tensors in PyTorch in order to construct basic linear and nonlinear (neural) models for oneself. After initial introductory material, we focus on incorporate engineering or scientific insights via penalty or regularisation terms in linear and nonlinear models.\nThe plan is roughly\n\nWeek 1: Key ideas\nWeek 2: Vectors, matrices, and tensors in PyTorch\nWeek 3: Making linear data models yourself\nWeek 4: Incorporating scientific knowledge in penalty terms\nWeek 5: Making nonlinear data models (neural networks)\nWeek 6: Incorporating scientific knowledge in neural networks",
+    "crumbs": [
+      "Preface"
+    ]
+  },
+  {
+    "objectID": "intro.html",
+    "href": "intro.html",
+    "title": "Introduction",
+    "section": "",
+    "text": "The Bitter Lesson\nA similar but slightly less strong claim about the power of data and computation relative to theory and understanding is made by Richard Sutton in his 2019 essay ‘The Bitter Lesson’:",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "intro.html#the-bitter-lesson",
+    "href": "intro.html#the-bitter-lesson",
+    "title": "Introduction",
+    "section": "",
+    "text": "The biggest lesson that can be read from 70 years of AI research is that general methods that leverage computation are ultimately the most effective, and by a large margin…Seeking an improvement that makes a difference in the shorter term, researchers seek to leverage their human knowledge of the domain, but the only thing that matters in the long run is the leveraging of computation…the statistical methods won out over the human-knowledge-based methods…The recent rise of deep learning in speech recognition is the most recent step in this consistent direction. Deep learning methods rely even less on human knowledge, and use even more computation, together with learning on huge training sets, to produce dramatically better speech recognition systems….This is a big lesson…We have to learn the bitter lesson that building in how we think we think does not work in the long run. The bitter lesson is based on the historical observations that 1) AI researchers have often tried to build knowledge into their agents, 2) this always helps in the short term, and is personally satisfying to the researcher, but 3) in the long run it plateaus and even inhibits further progress, and 4) breakthrough progress eventually arrives by an opposing approach based on scaling computation by search and learning. The eventual success is tinged with bitterness, and often incompletely digested, because it is success over a favored, human-centric approach…The two methods that seem to scale arbitrarily in this way are search and learning.",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "intro.html#is-data-enough",
+    "href": "intro.html#is-data-enough",
+    "title": "Introduction",
+    "section": "Is data enough?",
+    "text": "Is data enough?\nThe strongest claim above that ‘data are all you need’ is provocative but oversold. One way to illustrate this is to distinguish between passive observation and prediction of a system under given conditions and intervention on a system that changes the conditions.\nExample: suppose that you observe the weather every day and record whether it rains or not. You also place a bucket outside and record how full the bucket gets. Clearly there will be a ‘statistical’ or ‘correlational’ pattern/relationship between whether the bucket has water in it and whether it has rained. This means, for example, that if you forgot to look outside during the day but still collected the bucket at the end of the day you could successfully ‘predict’ (or ‘retrodict’) whether it had rained or not. However, suppose then that you wake up and want to go outside for a picnic. If you take the statistical pattern too seriously and have no notion of cause and effect you might think that to prevent it raining you should make sure the bucket doesn’t get full – So you simply cover the bucket and head out for your picnic!\nNow, the machine learner may reply that the problem is we haven’t actually collected data on what happens when the bucket is artifically covered. But this is part of the point – one of the reasons we develop scientific theories and mechanistic understanding is to generalise to new contexts and scenarios: our bucket – rain relationship is stable within a limited domain but the laws of physics (presumably) hold throughout the entire universe. Our understanding of cause and effect, accumulated throughout human history, allows us to say that rain causes the bucket to fill but the bucket filling does not cause the rain, without needing to collect additional data.\nDespite this warning, the machine learner raises a strong, interesting and potentially bitter point: in many real-world contexts we are interested in the environment is stable enough, the available data is representative enough, and the performance goals well-defined enough that we don’t necessarily need a deep understanding of all the mechanistic processes and causes and effects involved in order to carry out a task well.",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "intro.html#where-to",
+    "href": "intro.html#where-to",
+    "title": "Introduction",
+    "section": "Where to?",
+    "text": "Where to?\nIn this course we will look at the intersection between machine learning and engineering and consider when or how building in engineering and scientific knowledge can help us learn from data in a more data-efficient, robust, and generalisable way, even if only in the short term. After all, we might say that the Engineering Lesson is that we need to solve problems now, with the resources we have, and not wait for the ‘long term’!",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "intro.html#basic-setting",
+    "href": "intro.html#basic-setting",
+    "title": "Introduction",
+    "section": "Basic setting",
+    "text": "Basic setting\nIn the standard setting of supervised machine learning, we have access to training data, consisting of a series of examples: \\[\n(x,y)_1, (x,y)_2,\\dots,(x,y)_m,\n\\] i.e. \\[(x_1,y_1), (x_2,y_2),\\dots,(x_m,y_m),\\] composed of features (or inputs/covariates) \\(x_i\\), \\(i=1,\\dots,m\\) and targets (or outcomes/repsonses/labels) \\(y_i\\), \\(i=1,\\dots,m\\). Both the \\(x_i\\) and \\(y_i\\) may be numbers, vectors, functions, images, etc.\nThe goal is then, e.g., to predict the target \\(y_j\\) for a new set of features \\(x_j\\), coming from an unseen or future test dataset or test scenario.\nIn machine learning, as opposed to statistics or scientific modelling, the aim is typically to make as minimal assumptions as possible on the underlying mechanisms generating the data. However, many standard methods and theoretical frameworks implicitly or explicitly assume that the data is independent and identically distributed (or at least ‘exchangeable’). This is actually a fairly strong assumption, especially for engineering applications!\nMore generally, the basic conceptual assumption is that the training data is representative of the test data in some sense. Making this precise, without just assuming iid data, is a difficult and often ignored task! However, in scientific and engineering applications, ensuring the training data is representative of the scenarios in which the model will be used is often even more important than usual.\nLet’s briefly discuss some basic assumptions on how the data is generated.",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "intro.html#basic-types-of-assumptions",
+    "href": "intro.html#basic-types-of-assumptions",
+    "title": "Introduction",
+    "section": "Basic types of assumptions",
+    "text": "Basic types of assumptions\nA common assumption is that there is an underlying function \\(f\\) that maps features to targets: \\[y = f(x).\\] More generally we might have a noisy mapping such as \\[y = f(x) + e\\] or, more generally, \\[y = f(x,e).\\] where \\(e\\) is an (unobserved) error term.\nEven this can be an approximation though! For example, if \\(x\\) represents time and \\(y\\) represents the value of some dynamically varying quantity, the above model assumes deterministic dynamics with only observation error.\nSuch deterministic models are common in engineering applications (e.g. systems governed by ordinary or partial differential equations), but more generally we may wish to use a stochastic process model, in which the dynamics themselves are stochastic.",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "intro.html#stochastic-process-models",
+    "href": "intro.html#stochastic-process-models",
+    "title": "Introduction",
+    "section": "Stochastic process models",
+    "text": "Stochastic process models\nFor models in which the dynamics themselves are stochastic or noisy, the models are typically represented (assuming discrete time!) in forms such as \\[\ny_{t} = f(y_{t-1},y_{t-2},y_{t-3},\\dots,e_t)\n\\] i.e. the present (or future) is a function of the past (or past up until the present) and some error term. This is often called an autoregressive model in statistics and machine learning.\nThis form is itself inspired by scientific modelling: years of experience have taught us that such models are useful ways to capture ideas of ‘cause and effect’ in dynamic systems. E.g. Newton’s laws can be written, once discretised, as a noise-free version of the above.\nWe can massage this back into our \\((x,y)\\) format by taking \\(x\\) to be the ‘history’ \\(\\mathcal{H}_{t-1}\\) of \\(y\\) up to \\(t-1\\), i.e. the past (or lagged) values of \\(y\\): \\[\n(x,y)_t = (\\mathcal{H}_{t-1},y_t) = ((y_{t-1},y_{t-2},...),y_t).\n\\] Now we again have a model in the standard form \\[y_t \\approx f(x_t) = f(\\mathcal{H}_{t-1})\\] where the approximation may be represented by additive or non-additive error terms giving stochastic dynamics.\nWhat if we want to repeat the procedure to predict \\(y_{t+1}\\)? We need to update the history to include both the new \\(y_t\\) and the past history! This can be thought of as a model of history updating: \\[\n\\begin{aligned}\n\\mathcal{H_t} = (y_t,\\mathcal{H}_{t-1}) &= (f(\\mathcal{H}_{t-1}),\\mathcal{H}_{t-1})\\\\ &= g(\\mathcal{H}_{t-1}).\n\\end{aligned}\n\\]",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "intro.html#state-space-models",
+    "href": "intro.html#state-space-models",
+    "title": "Introduction",
+    "section": "State space models",
+    "text": "State space models\nThe ‘history updating’ idea leads naturally to the ‘systems dynamics’ concept of system state: we define the concept of the state of a dynamic system as the ‘relevant history’ required for predicting the next \\(y_t\\) value. We can define the state vector at time \\(t-1\\) as \\[z_{t-1} = \\mathcal{H}_{t-n:t-1} = (y_{t-1}, \\dots, y_{t-n})\\] for \\(n\\geq 1\\), and give the state update or process model equation as \\[z_t = g(z_{t-1}) = (f(\\mathcal{H}_{t-n:t-1}),\\mathcal{H}_{t-n+1:t-1}),\\] where \\(\\mathcal{H}_{t_1:t_2} = \\emptyset\\) if \\(t_1 &gt; t_2\\). This represents a setting where we only need to remember up to a finite number of past values in order to predict the future, and will hence forget the rest. This is a type of Markovian assumption.\nHigher-order differential equations can always be converted to state space or first order form (see MM2/3/4?); for example Newton’s second law is a second-order (in time) differential equation that becomes a system of two first order differential equations for position and momentum when in state space form.\nMore generally, observation and process noise can be represented in terms of a state space or hidden state model such as: \\[\n\\begin{aligned}\ny_t &= f(z_t) + e_t\\\\\nz_t &= g(z_{t-1},\\epsilon_t)\n\\end{aligned}\n\\] where \\(e_t\\) is (additive) observation error, \\(\\epsilon_t\\) is (possibly non-additive) ‘process’ error and typically only \\((t,y)\\) i.e. \\(y_t\\) is observed. The ‘state space evolution’ describes the dependence of the present on the past and is unobserved. The observation equation describes instantaneous but noisy or indirect observations of the current state.\nA deterministic model with observation noise can also be thought of as a special case of the above where there is no process error.",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "intro.html#stepping-back-conceptual-picture",
+    "href": "intro.html#stepping-back-conceptual-picture",
+    "title": "Introduction",
+    "section": "Stepping back: conceptual picture",
+    "text": "Stepping back: conceptual picture\nAs we have seen there are many types of dependence assumptions we can make. In general though, we are trying to apply our system in a relatively stable environment that we can imagine is characterised in an engineering sense by a system boundary and fixed system constants denoted here by \\(\\mu\\) (note: these could be e.g. fixed mean, variance of a random environment!).\nThis gives a rough conceptual picture as below:\n\n\n\n\n\nwhere, as discussed, we may need to carefully define our \\(x\\), \\(y\\), \\(e\\), \\(\\mu\\) etc variables depending on what sort of minimal assumptions we are willing to make.\nEnough generalities! Let’s consider a specific physical system and how the above ideas can help us use machine learning to approximate and predict it.",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "intro.html#the-nonlinear-pendulum",
+    "href": "intro.html#the-nonlinear-pendulum",
+    "title": "Introduction",
+    "section": "The nonlinear pendulum",
+    "text": "The nonlinear pendulum\nMany problems in engineering and science are governed by differential equations. For example, the angular motion \\(\\theta(t)\\) of a pendulum with length \\(l\\) subject to Newton’s laws and no friction or air resistance, is given by \\[\n\\frac{d^2\\theta}{dt^2} + \\frac{g}{l}\\sin \\theta = 0\n\\] with initial conditions \\[\n\\theta(0) = \\theta_0,\\ \\ \\frac{d\\theta}{dt}(0) = v_0\n\\] A schematic is shown below.\n\n\n\n\n\nDerivation: in class! See also MM2 or Greenberg (1998) ‘Advanced Engineering Mathematics’.\nNote that this is a nonlinear, second-order ordinary differential equation in time. The solution, \\(\\theta(t)\\), is a deterministic function of time that cannot be given in terms of so-called elementary functions, though it can be solved in terms of elliptic integrals. More complex models, e.g. including forcing or damping, can generate chaotic solutions, and must be solved by numerical simulation.",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "intro.html#the-linear-pendulum",
+    "href": "intro.html#the-linear-pendulum",
+    "title": "Introduction",
+    "section": "The linear pendulum",
+    "text": "The linear pendulum\nWe can also make the small angle approximation \\(\\sin \\theta \\approx \\theta\\) to obtain the linear pendulum model: \\[\n\\frac{d^2\\theta}{dt^2} + \\frac{g}{l}\\theta = 0\n\\] with initial conditions \\[\n\\theta(0) = \\theta_0,\\ \\ \\frac{d\\theta}{dt} = v_0\n\\] This is now a linear, second-order ordinary differential equation in time. The solution, \\(\\theta(t)\\), is again a deterministic function of time.\nThis has an explicit solution: \\[\n\\theta(t) = \\theta_{\\text{max}}\\cos \\left(\\sqrt{\\frac{g}{l}}t + \\phi\\right)\n\\] where \\(\\phi\\) is a phase shift term and \\(\\theta_{\\text{max}}\\) is the maximum angular displacement, and both these terms depend on the initial conditions. If the initial velocity is zero, this simplifies to \\[\n\\theta(t) = \\theta_0\\cos \\left(\\sqrt{\\frac{g}{l}}t\\right)\n\\] i.e. \\(\\theta_{\\text{max}} = \\theta_0\\) and \\(\\phi = 0\\).\nWe will assume zero initial velocity for both the linear and nonlinear pendulumns from now on for simplicity.",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "intro.html#predicting-the-pendulum",
+    "href": "intro.html#predicting-the-pendulum",
+    "title": "Introduction",
+    "section": "Predicting the pendulum",
+    "text": "Predicting the pendulum\nNow, suppose we have \\(M\\), (possibly noisy) observations of the form \\[(t_i,\\theta_i),\\ i=1,\\dots,M\\] from a pendulum (possibly nonlinear!) and wish to predict \\(\\theta_j\\) for a new, given \\(t_j\\). We consider two cases of \\(t_j\\), one that lies ‘within’ the range of observed data, and one that lies ‘outside’ the observed range. These corresponds to interpolation and extrapolation tasks, respectively.\n\n\n\n\n\n\n\n\n\nWhat can we do? The classical scientific/engineering approach is to directly use our knowledge of the pendulum equations. For example, if we know \\(g\\) and \\(l\\), as well as the initial conditions, we can simply solve or simulate our model to obtain \\(\\theta(t;g,l,\\theta_0,v_0) = \\theta(t;\\mu)\\), where \\(\\mu = (g,l,\\theta_0,v_0)\\) represents our system parameters (assumed constant here).\nIf we didn’t know some of our parameters, the classical approach is then extended to first carry out parameter estimation for the parameters given data and then proceed as above with these estimates. This sort of approach is covered in other courses. What does a ‘machine learner’ do instead?",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "intro.html#predicting-the-pendulum-empirical-approach",
+    "href": "intro.html#predicting-the-pendulum-empirical-approach",
+    "title": "Introduction",
+    "section": "Predicting the pendulum: empirical approach",
+    "text": "Predicting the pendulum: empirical approach\nHere, instead, we want to explore the possibility of working as directly with the data as possible, and see what minimal additional assumptions we can make in order to carry out the prediction task. This can be thought of as empirical modelling, rather than scientific or engineering modelling.\nHere are three simple approaches to predicting at the ‘within domain’ time point, i.e. the interpolation problem:\n\nFind the time point closest to the desired prediction point and use the associated \\(\\theta\\) value.\n\nMore generally, take the average of values associated with the \\(K\\) closest time points (K-Nearest Neighbours!).\n\nFit a machine learning/statistical regression function to the given training points and predict at the new time point using this.\n\nHow well does this work? Let’s see!",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "intro.html#predicting-the-pendulum-interpolation-problem",
+    "href": "intro.html#predicting-the-pendulum-interpolation-problem",
+    "title": "Introduction",
+    "section": "Predicting the pendulum: interpolation problem",
+    "text": "Predicting the pendulum: interpolation problem\nSimple nearest neighbour approaches:",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "intro.html#predicting-the-pendulum-interpolation-problem-1",
+    "href": "intro.html#predicting-the-pendulum-interpolation-problem-1",
+    "title": "Introduction",
+    "section": "Predicting the pendulum: interpolation problem",
+    "text": "Predicting the pendulum: interpolation problem\nUsing a simple neural net:\n\nfrom sklearn import neural_network\nregr =neural_network.MLPRegressor(max_iter=5000,\n                        activation='logistic',solver='lbfgs')\nX = t_data.reshape(-1,1)\ny = y_data\nregr.fit(X, y)",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "intro.html#predicting-the-pendulum-extrapolation-problem",
+    "href": "intro.html#predicting-the-pendulum-extrapolation-problem",
+    "title": "Introduction",
+    "section": "Predicting the pendulum: extrapolation problem",
+    "text": "Predicting the pendulum: extrapolation problem\nWhat about the extrapolation problem? Let’s naively try our best previous approaches. First, using two closest time points:",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "intro.html#predicting-the-pendulum-extrapolation-problem-1",
+    "href": "intro.html#predicting-the-pendulum-extrapolation-problem-1",
+    "title": "Introduction",
+    "section": "Predicting the pendulum: extrapolation problem",
+    "text": "Predicting the pendulum: extrapolation problem\nNext, a neural network:\n\n\n\n\n\n\n\n\n\nNot particularly good or reliable in either case! The problem is that the time point (or feature) we wish to predict is a priori quite different to the previous points that we’ve seen…\nHowever, it does perhaps seem like we might be able to predict better than we are currently! Why? One answer is that the data appear to exhibit some form of regularity, e.g. approximate periodicity etc.\nCan we do better?",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "intro.html#extrapolation-problem-simple-period-based-method",
+    "href": "intro.html#extrapolation-problem-simple-period-based-method",
+    "title": "Introduction",
+    "section": "Extrapolation problem: simple period-based method",
+    "text": "Extrapolation problem: simple period-based method\nA simple observation is that our data appear somewhat periodic, i.e. \\[\n\\theta(t + T) \\approx \\theta(t)\n\\] for some period \\(T\\). This is also obvious from the solution to the ODE model, i.e. our engineering/scientific knowledge!\nThe time taken for the pendulum to return to its initial value is approximately 2.75 seconds, which is our estimate of \\(T\\).\nIn this case, rather than find the closest absolute time point, we could find the closest point ‘within the cycle’, i.e. match to \\(t\\) modulo \\(T\\), written ‘\\(t\\bmod T\\)’. Recall that e.g. 7 mod 5 = 2, 14 mod 6 = 2 etc, i.e. we get the remainder when dividing the first number by the second. Our target time, here 7. If our period is about 2.75, then we should take the \\(y\\) values with \\(t\\) values closest to about 7 mod 2.75 = 1.5. Let’s try!",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "intro.html#extrapolation-problem-basis-functions-and-features-method",
+    "href": "intro.html#extrapolation-problem-basis-functions-and-features-method",
+    "title": "Introduction",
+    "section": "Extrapolation problem: basis functions and features method",
+    "text": "Extrapolation problem: basis functions and features method\nThe above approach works but requires e.g. a periodic assumption which may not generalise very easily. A related but more general approach is to represent our solution as a linear or nonlinear combination of periodic functions. In the linear case this is a Fourier series!\nApproaches to time series based on Fourier methods are called spectral methods; more generally, this is a basis function approach, assuming our function can be easily constructed from linear combinations of a simpler set of basis functions.\nMachine learners also call such basis functions features and may consider prediction based linear or nonlinear combinations of these (functional) features.\nMotivated by a Fourier cosine series, let’s try using a small collection of features (basis functions) of the form \\(\\cos \\frac{2n\\pi t}{T}\\), for \\(n=1,\\dots,4\\) (say) and \\(T=2.75\\) (our estimated period), as features in a linear regression.",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "intro.html#overfitting-instability-etc.",
+    "href": "intro.html#overfitting-instability-etc.",
+    "title": "Introduction",
+    "section": "Overfitting, instability etc.",
+    "text": "Overfitting, instability etc.\nThis works reasonably for these particular choices, but depends on the number and type of terms included.\nHere’s the same process for \\(n=1,\\dots,10\\). The fit to the observed data is much the same, but our predictions between observations are now much worse (though they happen to still be reasonably good at our actual point of interest).\n\n\n\n\n\n\n\n\n\nWhile there are various ways to use and improve spectral methods, let’s consider another alternative.",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "intro.html#extrapolation-problem-simple-autoregressive-model",
+    "href": "intro.html#extrapolation-problem-simple-autoregressive-model",
+    "title": "Introduction",
+    "section": "Extrapolation problem: simple autoregressive model",
+    "text": "Extrapolation problem: simple autoregressive model\nSuppose we wish to use our knowledge that a pendulum can be modelled by a second order differential equation, but don’t want to derive or solve the equation as such. We can argue as follows. A first order derivative of \\(y(t)\\) can be approximated (using the ‘past’, i.e. backward differences) by \\[\n\\frac{dy}{dt} \\approx \\frac{y(t) - y(t-h)}{h}\n\\] Given a differential equation of the form \\[\n\\frac{dy}{dt} = f(y)\n\\] we can thus write this as a simple update rule \\[\ny(t) \\approx y(t-h) + f(y(t-h))h = F(y(t-h))\n\\] where the present (or future) is given by a an update function \\(F\\) of the past (or present).\nA second order time derivative can be discretised approximately as \\[\n\\frac{d^2y}{dt^2} \\approx \\frac{\\frac{y(t)-y(t-h)}{h}-\\frac{y(t-h)-y(t-2h)}{h}}{h} =\\frac{y(t) - 2y(t-h) + y(t-2h)}{h^2}\n\\] If we take \\(h=1\\) for simplicitly, we might expect that a second order system can be approximated by an update rule of the form \\[\ny(t) \\approx F(y(t-1),y(t-2))\n\\] This motivates us to try a second-order autoregression: build a model to predict the current \\(y\\) values from its past two values.",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "intro.html#extrapolation-problem-simple-autoregressive-model-1",
+    "href": "intro.html#extrapolation-problem-simple-autoregressive-model-1",
+    "title": "Introduction",
+    "section": "Extrapolation problem: simple autoregressive model",
+    "text": "Extrapolation problem: simple autoregressive model\nIn an autoregressive approach of order \\(k\\) with \\(m\\) realisations of our primary variable, we effectively have a smaple size of \\(m-k\\), i.e. the number of ‘(past, present)’ pairs in the data. E.g. for \\(m=6\\) and \\(k=2\\) we get four pairs:  To carry out autoregression, we simply construct a target vector of present values, dropping the first \\(k\\), and delay feature vectors, each lagging the target vector by one additional increment.\nE.g. \\(\\dots\\)",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "intro.html#manual-lagged-features",
+    "href": "intro.html#manual-lagged-features",
+    "title": "Introduction",
+    "section": "Manual lagged features",
+    "text": "Manual lagged features\nWe can e.g. use np.roll to created lagged features; see below. Note that the future is carrying out its oscillation before the lagged variables, as we want!\n\nk = 2\ny_data_target = np.roll(y_data,0)[k:]\nX_lagged = np.zeros((len(y_data_target),k))\nfor i in range(0,k):\n    X_lagged[:,i] = np.roll(y_data,i+1)[k:]",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "intro.html#extrapolation-problem-simple-autoregressive-model-2",
+    "href": "intro.html#extrapolation-problem-simple-autoregressive-model-2",
+    "title": "Introduction",
+    "section": "Extrapolation problem: simple autoregressive model",
+    "text": "Extrapolation problem: simple autoregressive model\nUsing X_lagged and y_data_target from above in a linear regression model (we can also do nonlinear\\(\\dots\\)) gives us a model of the form \\[\n\\theta_{t+1} \\approx F(\\theta_{t},\\theta_{t-1}) = a\\theta_{t} + b\\theta_{t-1} + c\n\\] i.e. a one-step-ahead prediction model given the two-lag (relative to the prediction) history. How do we predict multiple steps ahead? We iterate the one-step prediction model! (Technically we are iterating the mean to get the predictive mean.)\nThis works best if we use the state space form to keep track of the current two-lag history required for predicting the next variable and updating to the next relevant history (state): \\[\n\\begin{bmatrix}\\theta_{t+1}\\\\\\theta_{t}\\end{bmatrix} \\approx \\begin{bmatrix}F(\\theta_{t},\\theta_{t-1})\\\\\\theta_{t}\\end{bmatrix} = G\\left(\\begin{bmatrix}\\theta_{t}\\\\\\theta_{t-1}\\end{bmatrix}\\right)\n\\] In our linear case, assuming \\(c = 0\\) for simplicity, this could be written in matrix form as \\[\n\\begin{bmatrix}\\theta_{t+1}\\\\\\theta_{t}\\end{bmatrix} \\approx \\begin{bmatrix} a & b\\\\1 & 0\n\\end{bmatrix} \\begin{bmatrix}\\theta_{t}\\\\\\theta_{t-1}\\end{bmatrix}\n\\] Then, applying the predictions sequentially (or recursively), we get the \\(n\\)-step-ahead prediction as the first component of: \\[\n\\begin{bmatrix}\\theta_{t+n}\\\\\\theta_{t+n-1}\\end{bmatrix} \\approx G(G(\\dots G(\\begin{bmatrix}\\theta_{t}\\\\\\theta_{t-1}\\end{bmatrix}))) = G^{n}\\left(\\begin{bmatrix}\\theta_{t}\\\\\\theta_{t-1}\\end{bmatrix}\\right)\n\\] i.e. for our linear case \\[\n\\begin{bmatrix}\\theta_{t+n}\\\\\\theta_{t+n-1}\\end{bmatrix} \\approx A^n \\begin{bmatrix}\\theta_{t}\\\\\\theta_{t-1}\\end{bmatrix}\n\\] with \\[\nA = \\begin{bmatrix} a & b\\\\1 & 0\n\\end{bmatrix}.\n\\]",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "intro.html#extrapolation-problem-simple-autoregressive-model-3",
+    "href": "intro.html#extrapolation-problem-simple-autoregressive-model-3",
+    "title": "Introduction",
+    "section": "Extrapolation problem: simple autoregressive model",
+    "text": "Extrapolation problem: simple autoregressive model\nLet’s predict both the point of interest and a few extra time steps beyond that:\n\n\n\n\n\n\n\n\n\nNot bad! It captures the general oscillatory behaviour, though it does seem to be more damped than the true motion. This is not uncommon as we are emphasising fit to the dynamics, sometimes called gradient matching, rather than fit to the trajectory, sometimes called trajectory or integral matching (terms used when fitting ODE models in the classical style).\nMore sophisticated approaches along these lines include more complex linear models at both the dynamics and trajectory level, as well as nonlinear time series versions. State space approaches are particularly powerful, and lead to Kalman filtering and nonlinear extensions for smoothing and predicting time series.\nIn addition, the basic concept of autoregression is a key component of modern LLM neural nets like ChatGPT! It essentially predicts the next word based on the input prompt (history).",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "intro.html#assumptions-make-data-representative",
+    "href": "intro.html#assumptions-make-data-representative",
+    "title": "Introduction",
+    "section": "Assumptions make data representative!",
+    "text": "Assumptions make data representative!\nLet’s regroup. What have we learned? We have seen that in order to predict new data we have to make assumptions that go beyond the data.\nThis is a general lesson that has been known since at least Hume (1739) introduced the problem of induction (likely much much earlier)!\nIn A Treatise of Human Nature, Hume states:\n\nthere can be no demonstrative arguments to prove, that those instances, of which we have had no experience, resemble those, of which we have had experience\n\nThe physicist Max Born in Natural Philosophy of Cause and Chance (1949) summarised the problem as:\n\nno observation or experiment, however extended, can give more than a finite number of repetitions; therefore, the statement of a law – B depends on A – always transcends experience. Yet this kind of statement is made everywhere and all the time, and sometimes from scanty material.\n\nThere have been a range of proposed resolutions of the problem of induction, from probabilistic proposals to Popper’s argument that science does not need induction, summarised in Conjectures and Refutations (1962):\n\nHume, I felt, was perfectly right in pointing out that induction cannot be logically justified\\(\\dots\\)Induction, i.e. inference based on many observations, is a myth. It is neither a psychological fact, nor a fact of ordinary life, nor one of scientific procedure\\(\\dots\\)The actual procedure of science is to operate with conjectures\\(\\dots\\)Repeated observations and experiments function in science as tests of our conjectures or hypotheses, i.e. as attempted refutations.\n\nRegardless of one’s preferred approach to the problem of induction, all involve making assumptions (or at least conjectures) to go beyond the available data, whether explicit or implicit.",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "intro.html#features-vs-architecture-vs-regularisation",
+    "href": "intro.html#features-vs-architecture-vs-regularisation",
+    "title": "Introduction",
+    "section": "Features vs architecture vs regularisation",
+    "text": "Features vs architecture vs regularisation\nIn machine learning, people often talk about ‘inductive bias’ and related types of good, or at least necessary biases. E.g., from Karniadakis et. al (2021):",
+    "crumbs": [
+      "Introduction"
+    ]
+  },
+  {
+    "objectID": "intro.html#regularisation-and-hybrid-models",
+    "href": "intro.html#regularisation-and-hybrid-models",
+    "title": "Introduction",
+    "section": "Regularisation and hybrid models",
+    "text": "Regularisation and hybrid models\nWe have given a taste of different ways to make assumptions and improve predictions beyond our immediate data.\nFor the remainder, we will look in more detail at simple ways to build models and incoporate engineering knowledge. In particular, we are going to focus on what the previous quoted article calls learning bias, which amounts to including physical or engineering constraints in a ‘soft’ (vs. exactly enforced) manner, via penalty or so-called regularisation terms.\nBecause such an approach includes both a flexible data model and an approximately enforced physical model, we will call these hybrid models (though this term is used by many authors in many ways).\nNote: Regularisation and related topics are covered in much more detail in e.g. ENGSCI 721.",
+    "crumbs": [
+      "Introduction"
+    ]
+  }
+]
