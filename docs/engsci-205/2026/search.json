@@ -288,5 +288,275 @@
     "crumbs": [
       "Introduction"
     ]
+  },
+  {
+    "objectID": "vectors_matrices_tensors.html",
+    "href": "vectors_matrices_tensors.html",
+    "title": "Vectors, matrices, arrays, tensors",
+    "section": "",
+    "text": "Tensors\nMachine learners like to call multi-dimensional arrays tensors. Be warned that ‘tensor’, much like ‘vector’, is a term with many different definitions and meanings across mathematics, physics, computing, etc. Here we think of a number as a zeroth order array, a vector as a one-dimensional array, a matrix as a two-dimensional array/tensor, and a tensor in general as an \\(n\\)-dimensional array for any \\(n\\). Thus a number is a tensor, a vector is a tensor, a matrix is a tensor, a three-dimensional array is a tensor etc. For us, tensor \\(\\equiv n\\)-dimensional array.\nJust like a two-dimensional matrix might just represent plain data stored in a two dimensional array but could also represent a linear mapping of one-dimensional arrays (vectors) to one-dimensional arrays (vectors), a tensor can represent e.g. just \\(n\\)-dimensional data arrays but also a linear mapping of lower dimensional tensors to lower dimensional tensors. For example, linear image filters can be thought of as four-dimensional tensors that linearly map two-dimensional images to two-dimensional images. For now, though, just remember tensor \\(\\equiv n\\)-dimensional array.\nTo carry out machine learning tasks, we will consider a library that duplicates much of what NumPy offers, while adding additional features important for machine learning: PyTorch. While this is designed specially for neural networks, which we will look at later, for now we can think of it as a direct NumPy replacement for working with arrays and doing basic linear algebra (typically with the same syntax and function names). As you might expect, though, what NumPy calls an array PyTorch calls a tensor! Similar libraries exist, e.g. JAX, which again closely follows NumPy while adding additional features useful for machine learning.\nA nice reference for PyTorch, that we draw on a lot here, is ‘Deep Learning with PyTorch’ by Stevens, Antiga, and Viehmann (2020).",
+    "crumbs": [
+      "Vectors, matrices, arrays, tensors"
+    ]
+  },
+  {
+    "objectID": "vectors_matrices_tensors.html#arraystensors",
+    "href": "vectors_matrices_tensors.html#arraystensors",
+    "title": "Vectors, matrices, arrays, tensors",
+    "section": "Arrays/tensors",
+    "text": "Arrays/tensors\nTensors are hard to visualise in high-dimensions. At some point it becomes easier to just think abstractly in terms of indices. However, you can also imagine nested indexing of two-dimensional arrays (third figure):",
+    "crumbs": [
+      "Vectors, matrices, arrays, tensors"
+    ]
+  },
+  {
+    "objectID": "vectors_matrices_tensors.html#arrays-in-numpy",
+    "href": "vectors_matrices_tensors.html#arrays-in-numpy",
+    "title": "Vectors, matrices, arrays, tensors",
+    "section": "Arrays in NumPy",
+    "text": "Arrays in NumPy\nHere are some simple multi-dimensional arrays in NumPy:\n\nimport numpy as np\nA = np.array([[1,2,3],[4,5,6]])\nprint('Array and dimensions:')\nprint(A)\nprint(A.shape)\n\nArray and dimensions:\n[[1 2 3]\n [4 5 6]]\n(2, 3)\n\n\n\nA = np.array([[[1,2,3],[4,5,6]],\n              [[7,8,9],[10,11,12]],\n              [[13,14,15],[16,17,18]]\n             ])\nprint('Array and dimensions:')\nprint(A)\nprint(A.shape)\n\nArray and dimensions:\n[[[ 1  2  3]\n  [ 4  5  6]]\n\n [[ 7  8  9]\n  [10 11 12]]\n\n [[13 14 15]\n  [16 17 18]]]\n(3, 2, 3)",
+    "crumbs": [
+      "Vectors, matrices, arrays, tensors"
+    ]
+  },
+  {
+    "objectID": "vectors_matrices_tensors.html#tensors-in-pytorch",
+    "href": "vectors_matrices_tensors.html#tensors-in-pytorch",
+    "title": "Vectors, matrices, arrays, tensors",
+    "section": "Tensors in PyTorch",
+    "text": "Tensors in PyTorch\nTensors work the same as arrays in NumPy. E.g.\n\nimport torch\nA = torch.tensor([[1,2,3],[4,5,6]])\nprint('Tensor and dimensions:')\nprint(A)\nprint(A.shape)\n\nTensor and dimensions:\ntensor([[1, 2, 3],\n        [4, 5, 6]])\ntorch.Size([2, 3])\n\n\n\nA = torch.tensor([[[1,2,3],[4,5,6]],\n                  [[7,8,9],[10,11,12]],\n                  [[13,14,15],[16,17,18]]\n                  ])\nprint('Tensor and dimensions:')\nprint(A)\nprint(A.shape)\n\nTensor and dimensions:\ntensor([[[ 1,  2,  3],\n         [ 4,  5,  6]],\n\n        [[ 7,  8,  9],\n         [10, 11, 12]],\n\n        [[13, 14, 15],\n         [16, 17, 18]]])\ntorch.Size([3, 2, 3])",
+    "crumbs": [
+      "Vectors, matrices, arrays, tensors"
+    ]
+  },
+  {
+    "objectID": "vectors_matrices_tensors.html#why-gpus-derivatives",
+    "href": "vectors_matrices_tensors.html#why-gpus-derivatives",
+    "title": "Vectors, matrices, arrays, tensors",
+    "section": "Why? GPUs! Derivatives!",
+    "text": "Why? GPUs! Derivatives!\nWhile NumPy provides a range of highly efficient array operations and linear algebra, PyTorch and related libraries for deep learning bring (at least) two key extra ingredients: ability to use GPUs (Graphics Processing Units) for computation and ability to automatically compute derivatives of arbitrarily composed functions of tensors.\nWe will return to the derivative capability shortly. Firstly, what about GPUs? In the 2000s, Graphics Processing Units (GPUs) were significantly developed to support the needs of increasingly realistic computer games. This turned out to make them especially useful for highly parallel computation in general. Neural networks, like much of scientific computing, involve large amounts of highly parallelisable computation and machine learning researchers in the 2010s began using GPUs to train large neural networks. In addition, there have been recent efforts to develop specialised TPUs – Tensor Processing Units!\nPyTorch and related frameworks can run computations on CPUs or supported GPUs. PyTorch tensors have an attribute device, which is where the tensor data is stored and operated on. Tensors are created on the CPU by default; for NVIDIA GPUs, we use device='cuda', where CUDA is NVIDIA’s programming interface to their GPUs. Google Colab (which we will use in labs) can provide free access to GPUs, though availability is not guaranteed, and we will look at using these via PyTorch during labs. For simple operations and models, however, we can just use normal CPUs.",
+    "crumbs": [
+      "Vectors, matrices, arrays, tensors"
+    ]
+  },
+  {
+    "objectID": "vectors_matrices_tensors.html#but-first-basic-tensor-usage-in-pytorch",
+    "href": "vectors_matrices_tensors.html#but-first-basic-tensor-usage-in-pytorch",
+    "title": "Vectors, matrices, arrays, tensors",
+    "section": "But first: basic tensor usage in PyTorch",
+    "text": "But first: basic tensor usage in PyTorch\nSee http://pytorch.org/docs for full details! Roughly, we have\n\nTensor creation\nIndexing, slicing, joining, mutating operations\nMathematical operations\n\nPointwise functions applying to each element\nAggregation operations (like mean or standard deviation) over multiple elements\nLinear algebra operations for scalar, vector and matrix operations\nRandom sampling operations\n\nData saving and loading (serialisation)\nEtc!\n\nAs mentioned, many of these follow the same syntax as NumPy, when applicable.\nHere we will mainly look at some simple manipulations of image data for illustration, which comes up in many engineering applications e.g. medical imaging, as well as when dealing with spatial data in general, like measuring a temperature field. Instead of medical or physical field data, though, we will use a cute cat for illustration!\nBonus: There is also a nice package einops, compatible with NumPy, PyTorch, TensorFlow, JAX etc, that encodes various tensor operations in a nice ‘Einstein-inspired’ tensor index notation.",
+    "crumbs": [
+      "Vectors, matrices, arrays, tensors"
+    ]
+  },
+  {
+    "objectID": "vectors_matrices_tensors.html#loading-data",
+    "href": "vectors_matrices_tensors.html#loading-data",
+    "title": "Vectors, matrices, arrays, tensors",
+    "section": "Loading data",
+    "text": "Loading data\nWe can load images with many libraries, including PyTorch. Here, though, we will first use the imageio library to load in an image of a cute cat (from the dataset associated with the book ‘Deep Learning with PyTorch’ referenced above) as a NumPy array.\n\nimport imageio.v3 as iio\nimport matplotlib.pyplot as plt\nimg_arr = iio.imread('./data/cat3.png')\nplt.figure()\nplt.imshow(img_arr)\nplt.show()\nprint('image array shape:')\nprint(img_arr.shape)\n\n\n\n\n\n\n\n\nimage array shape:\n(256, 256, 3)\n\n\nLet’s turn this into a PyTorch tensor.",
+    "crumbs": [
+      "Vectors, matrices, arrays, tensors"
+    ]
+  },
+  {
+    "objectID": "vectors_matrices_tensors.html#converting-to-a-tensor",
+    "href": "vectors_matrices_tensors.html#converting-to-a-tensor",
+    "title": "Vectors, matrices, arrays, tensors",
+    "section": "Converting to a tensor",
+    "text": "Converting to a tensor\n\n# create a pytorch tensor\nimg_tensor = torch.from_numpy(img_arr)\nimg_tensor = img_tensor.float()/255 # ensure float32 dtype\n\nNote though (see above) the shape is Height x Width x Channels, where Channels holds the Red Green Blue (RGB) color information. While this is standard for NumPy (and Matplotlib), PyTorch typically assumes a Channels x Height x Width format for images.\nThis is a chance to use the permute operation (which, as described below, actually constructs a view of the original data rather than a copy):\n\n# create a pytorch tensor as a view\n# new index ordering (0,1,2) -&gt; (2,0,1)\ncat = torch.permute(img_tensor, (2, 0, 1)) \nprint('Tensor shape (size):')\nprint(cat.shape)\n\nTensor shape (size):\ntorch.Size([3, 256, 256])\n\n\nWe can also, e.g., slice tensors just like with NumPy arrays.\n\n# create a pytorch tensor as a view\n# new index ordering (0,1,2) -&gt; (2,0,1)\ncat_red = cat[0,:,:]\nprint('Tensor slice shape (size):')\nprint(cat_red.shape)\n\nTensor slice shape (size):\ntorch.Size([256, 256])",
+    "crumbs": [
+      "Vectors, matrices, arrays, tensors"
+    ]
+  },
+  {
+    "objectID": "vectors_matrices_tensors.html#arraystensors-storage-vs-access",
+    "href": "vectors_matrices_tensors.html#arraystensors-storage-vs-access",
+    "title": "Vectors, matrices, arrays, tensors",
+    "section": "Arrays/tensors: storage vs access",
+    "text": "Arrays/tensors: storage vs access\nAlthough we interact with tensors as multi-dimensional arrays, for efficient computation, tensor values are actually stored in memory in linear, contiguous chunks (i.e. continuous sequence of memory locations). When working with tensors, we typically just change how we access or index the underlying chunk of memory rather than copying the stored values, saving memory. This idea is represented by a view, a ‘virtual’ tensor that accesses the same memory but with a different shape or indexing.\nSome operations, like slicing or permuting (swapping or rearranging) dimensions, change how we index (refer to) the stored data without rearranging it in memory (where it is actually stored). The order we read elements of the tensor in terms of indices, e.g. row by row for a matrix (2D tensor) in PyTorch, might then not correspond to consecutively stored elements in memory. This is a non-contiguous layout. For example, flattening a transposed matrix while preserving its row-by-row order can require a copy, so attempting this with the no-copy view method can give an error.\nThe contiguous() method returns a tensor whose elements are stored consecutively in indexing order. It makes a copy if needed; otherwise it returns the original tensor. The result looks the same to us: the tensor’s shape and the values at its indices do not change. What may change is how those values are arranged in memory.\nThe reshape operation creates a view if the requested shape can be represented as a view using the existing layout in memory; otherwise it makes a copy with a compatible memory layout. The view method never copies the data, and gives an error if the requested shape cannot be represented as a view.\nIt can be important to know whether a tensor operation copies the underlying data or just returns a new view of the same data; e.g. modifying values via a view modifies the results of all other views of the same data, while modifying a copy doesn’t. However, making a copy means twice the memory! In general, check the documentation of the given operation if you need to know what’s happening! You can manually check by using .untyped_storage().data_ptr() on two tensors to check if they point to the same memory or not.\n\n# same memory location (same pointer)!\nprint(cat_red.untyped_storage().data_ptr())\nprint(cat.untyped_storage().data_ptr())\n\n4968120320\n4968120320",
+    "crumbs": [
+      "Vectors, matrices, arrays, tensors"
+    ]
+  },
+  {
+    "objectID": "vectors_matrices_tensors.html#arraystensors-storage-vs-access-views",
+    "href": "vectors_matrices_tensors.html#arraystensors-storage-vs-access-views",
+    "title": "Vectors, matrices, arrays, tensors",
+    "section": "Arrays/tensors: storage vs access (views)",
+    "text": "Arrays/tensors: storage vs access (views)\n\n\n\nFrom ‘Deep Learning with PyTorch’ by Stevens, Antiga, and Viehmann (2020)!\n\n\nWe won’t focus too much on this here, but it can be important to understand how views and storage work in more advanced use cases. In brief:\n\nA ‘storage’ is a block of contiguous memory holding a tensor’s underlying data.\nA tensor can be thought of as a view of some storage, i.e. a way of indexing or accessing some fixed storage. Views are defined by three attributes: a size (shape) tuple, a storage offset number, and a stride tuple. The stride tuple gives the number of elements for each dimension that need to be skipped in storage between consecutive elements along the given dimension in the tensor.\n\nFor more, see the book ‘Deep Learning with PyTorch’, from where the above picture is taken.",
+    "crumbs": [
+      "Vectors, matrices, arrays, tensors"
+    ]
+  },
+  {
+    "objectID": "vectors_matrices_tensors.html#common-shapes",
+    "href": "vectors_matrices_tensors.html#common-shapes",
+    "title": "Vectors, matrices, arrays, tensors",
+    "section": "Common shapes",
+    "text": "Common shapes\nWhen working with data we usually have many samples. E.g. rather than only having a single image, we usually have many example images in our training set. Because neural networks and other machine learning algorithms typically work with very large datasets, datasets are usually divided into batches: smaller subsets of the full dataset. This reduces the memory load and allows for efficient parallel processing using GPUs. For this reason, the ‘sample number’ dimension in tensor datasets is often called the batch dimension, with indices ranging over the number of samples in the batch.\nTypical tensor indexing layouts for various types of data are:\n\n(Batch, Features) for tabular/structured datasets\n(Batch, Timesteps, Features) for time-series datasets\n(Batch, Channel, Height, Width) for image/2D spatial datasets\n(Batch, Channel, Depth, Height, Width) for volumetric/3D spatial datasets\n(Batch, Frame, Channel, Height, Width) for video/spatiotemporal datasets\n\netc.\nNote that some libraries, e.g. matplotlib for plotting, TensorFlow for neural networks, adopt a channels last convention for image data, while PyTorch adopts a channels first (relative to image dimensions) convention. This is because it can be more efficient for particular image operations like convolutions. We can always quickly switch the indexing by calling permute, or related operations, which reorders the indices without copying the data, making it memory-efficient.",
+    "crumbs": [
+      "Vectors, matrices, arrays, tensors"
+    ]
+  },
+  {
+    "objectID": "vectors_matrices_tensors.html#using-unfold-to-generate-sliding-window-views-along-a-dimension",
+    "href": "vectors_matrices_tensors.html#using-unfold-to-generate-sliding-window-views-along-a-dimension",
+    "title": "Vectors, matrices, arrays, tensors",
+    "section": "Using ‘unfold’ to generate ‘sliding window views’ along a dimension",
+    "text": "Using ‘unfold’ to generate ‘sliding window views’ along a dimension\nPyTorch tensors have an unfold(dimension, size, step) method that returns a view of the original tensor which contains all slices of size size from the tensor along the dimension given by dimension, taking steps of length step.\nYou can think of this as using a sliding window to generate a sequence of views along a given dimension.\nThe returned tensor (view) has the same shape as the original except that it replaces the unfolded dimension by a new dimension of size floor((original_size - size) / step) + 1 at the same location, and adds an additional dimension of size size at the end of the tensor.\nIf we imagine indexing into \\(A[i,j,k,\\dots]\\) in the order \\(i, j, \\dots\\) then we:\n\nIndex as usual in the same order until the unfolded index is reached\n\nThe unfolded index is then replaced at that point by a new index corresponding to the window number of the sliding window that slides along that dimension\n\nAn additional within window index is added to the very end of the indexing chain\n\nWe continue with the rest of the indexing until we reach the within window index we added\n\nWe finally index within the window.",
+    "crumbs": [
+      "Vectors, matrices, arrays, tensors"
+    ]
+  },
+  {
+    "objectID": "vectors_matrices_tensors.html#using-unfold-to-generate-sliding-window-views-along-a-dimension-1",
+    "href": "vectors_matrices_tensors.html#using-unfold-to-generate-sliding-window-views-along-a-dimension-1",
+    "title": "Vectors, matrices, arrays, tensors",
+    "section": "Using ‘unfold’ to generate ‘sliding window views’ along a dimension",
+    "text": "Using ‘unfold’ to generate ‘sliding window views’ along a dimension\nIn terms of indices, we get e.g.\n\\[[i,j,k] \\overset{\\text{unfold}(\\text{dim}=0)}{\\mapsto} [i_{\\text{window}},j,k,l_{\\text{within }i_{\\text{window}}}]\\]\n\\[[i,j,k] \\overset{\\text{unfold}(\\text{dim}=1)}{\\mapsto} [i,j_{\\text{window}},k,l_{\\text{within }j_{\\text{window}}}]\\]\nwhere the subscript ‘window’ refers to the ‘window number’ index and subscript ‘within’ to the element number (starting from 0 again) ‘within’ the window given by the window number index.\nNote that the other indices are left alone and the ‘within window’ index is added to the end of the index list, hence becoming the column index for when displayed on screen. Visually:",
+    "crumbs": [
+      "Vectors, matrices, arrays, tensors"
+    ]
+  },
+  {
+    "objectID": "vectors_matrices_tensors.html#example",
+    "href": "vectors_matrices_tensors.html#example",
+    "title": "Vectors, matrices, arrays, tensors",
+    "section": "Example",
+    "text": "Example\n\nx = torch.arange(1., 7)\nprint(x)\nprint(x.shape)\ny = x.unfold(0, 2, 1)\nprint('')\nprint(y)\nprint(y.shape)\nz = x.unfold(0, 2, 2)\nprint('')\nprint(z)\nprint(z.shape)\n\ntensor([1., 2., 3., 4., 5., 6.])\ntorch.Size([6])\n\ntensor([[1., 2.],\n        [2., 3.],\n        [3., 4.],\n        [4., 5.],\n        [5., 6.]])\ntorch.Size([5, 2])\n\ntensor([[1., 2.],\n        [3., 4.],\n        [5., 6.]])\ntorch.Size([3, 2])\n\n\nNote: because the ‘within window’ index is added to the end, this will index the columns when displayed as a nested collection of two-dimensional arrays.",
+    "crumbs": [
+      "Vectors, matrices, arrays, tensors"
+    ]
+  },
+  {
+    "objectID": "vectors_matrices_tensors.html#example-1",
+    "href": "vectors_matrices_tensors.html#example-1",
+    "title": "Vectors, matrices, arrays, tensors",
+    "section": "Example",
+    "text": "Example\n\nx = torch.arange(1., 7).view(2,3) #like reshape\nprint(x)\nprint(x.shape)\ny = x.unfold(0, 2, 1)\nprint('')\nprint(y)\nprint(y.shape)\nz = x.unfold(1, 2, 1)\nprint('')\nprint(z)\nprint(z.shape)\n\ntensor([[1., 2., 3.],\n        [4., 5., 6.]])\ntorch.Size([2, 3])\n\ntensor([[[1., 4.],\n         [2., 5.],\n         [3., 6.]]])\ntorch.Size([1, 3, 2])\n\ntensor([[[1., 2.],\n         [2., 3.]],\n\n        [[4., 5.],\n         [5., 6.]]])\ntorch.Size([2, 2, 2])",
+    "crumbs": [
+      "Vectors, matrices, arrays, tensors"
+    ]
+  },
+  {
+    "objectID": "vectors_matrices_tensors.html#example-2",
+    "href": "vectors_matrices_tensors.html#example-2",
+    "title": "Vectors, matrices, arrays, tensors",
+    "section": "Example",
+    "text": "Example\nGiven a matrix we can unfold along each dimension sequentially to generate two-dimensional sliding windows. That is, \\[\\begin{aligned}[i,j] &\\overset{\\text{unfold}(\\text{dim}=0)}{\\mapsto} [i_{\\text{window}},j,k_{\\text{within }i_{\\text{window}}}] \\\\\n\\\\\n[i_{\\text{window}},j,k_{\\text{within }i_{\\text{window}}}] &\\overset{\\text{unfold}(\\text{dim}=1)}{\\mapsto} [i_{\\text{window}},j_{\\text{window}},k_{\\text{within }i_{\\text{window}}},l_{\\text{within }j_{\\text{window}}}]\\end{aligned}\\]\n\nx = torch.arange(1., 9).view(2,4) #like reshape\nprint(x)\nprint(x.shape)\ny = x.unfold(0, 2, 1).unfold(1,2,1)\nprint('')\nprint(y)\nprint(y.shape)\n\ntensor([[1., 2., 3., 4.],\n        [5., 6., 7., 8.]])\ntorch.Size([2, 4])\n\ntensor([[[[1., 2.],\n          [5., 6.]],\n\n         [[2., 3.],\n          [6., 7.]],\n\n         [[3., 4.],\n          [7., 8.]]]])\ntorch.Size([1, 3, 2, 2])",
+    "crumbs": [
+      "Vectors, matrices, arrays, tensors"
+    ]
+  },
+  {
+    "objectID": "vectors_matrices_tensors.html#using-unfold-to-generate-non-overlapping-patches-of-an-image",
+    "href": "vectors_matrices_tensors.html#using-unfold-to-generate-non-overlapping-patches-of-an-image",
+    "title": "Vectors, matrices, arrays, tensors",
+    "section": "Using unfold to generate non-overlapping patches of an image",
+    "text": "Using unfold to generate non-overlapping patches of an image\nUnfolding in multiple dimensions can be a little confusing but you’ll get the hang of it! Let’s try partitioning a 4-by-4 2D tensor into a 4D tensor made up of four non-overlapping 2-by-2 tensors:\n\nA = torch.arange(16).view(4,4)\nprint(A)\nprint('')\nB = (A.unfold(0,2,2)).unfold(1,2,2)\nprint(B)\n\ntensor([[ 0,  1,  2,  3],\n        [ 4,  5,  6,  7],\n        [ 8,  9, 10, 11],\n        [12, 13, 14, 15]])\n\ntensor([[[[ 0,  1],\n          [ 4,  5]],\n\n         [[ 2,  3],\n          [ 6,  7]]],\n\n\n        [[[ 8,  9],\n          [12, 13]],\n\n         [[10, 11],\n          [14, 15]]]])",
+    "crumbs": [
+      "Vectors, matrices, arrays, tensors"
+    ]
+  },
+  {
+    "objectID": "vectors_matrices_tensors.html#cat-split-into-patches",
+    "href": "vectors_matrices_tensors.html#cat-split-into-patches",
+    "title": "Vectors, matrices, arrays, tensors",
+    "section": "Cat split into patches",
+    "text": "Cat split into patches\nNow let’s split our cat picture into non-overlapping patches, setting step = size, and plot our patched cat! The final row and column of pixels are left out here because 256 is not a multiple of 51.\n\n# Move channels to last dimension for plotting\npatches = cat.unfold(1, 51, 51).unfold(2, 51, 51)\npatches = patches.permute(1, 2, 3, 4, 0)  \n# Number of patches along each dimension\nnum_patches_x, num_patches_y = patches.shape[:2]\n\n# Initialize a plot\nfig, axes = plt.subplots(num_patches_x, num_patches_y, \n                        figsize=(10, 10))\n\n# Plot each patch\nfor i in range(num_patches_x):\n    for j in range(num_patches_y):\n        patch = patches[i, j]  \n        axes[i, j].imshow(patch)\n        axes[i, j].axis('off')\n\nplt.tight_layout()\nplt.show()",
+    "crumbs": [
+      "Vectors, matrices, arrays, tensors"
+    ]
+  },
+  {
+    "objectID": "vectors_matrices_tensors.html#zero-padding",
+    "href": "vectors_matrices_tensors.html#zero-padding",
+    "title": "Vectors, matrices, arrays, tensors",
+    "section": "Zero padding",
+    "text": "Zero padding\nWe can also first zero pad around the edges of the image to ensure potentially overlapping windows can fit at each pixel. PyTorch has a special function pad for this in the torch.nn.functional module. Let’s make cat patches of size 51-by-51, one for each pixel, so pad by 25.\n\n# zero padding\nimport torch.nn.functional as F\npadded_cat = F.pad(cat, pad=(25, 25, 25, 25), \n                    mode='constant', value=0)\n\nWe first unfold the first image dimension (after channels) into length 51 slices, one for each pixel. Then unfold into length 51 slices along the other image dimension similarly. This creates 51 x 51 size patches, one for each pixel, and each containing 3 colour channels.\n\npatches = padded_cat.unfold(1, 51, 1).unfold(2, 51, 1)\npatches.shape\n\ntorch.Size([3, 256, 256, 51, 51])\n\n\n\n# Visualise some patches.\n# Need to move the colour channel last for matplotlib.\npatches_disp = patches.permute(1,2,3,4,0)\nplt.figure()\nplt.imshow(patches_disp[0,0,:,:]) # corner patch\nplt.show()\nplt.figure()\nplt.imshow(patches_disp[120,170,:,:]) # ...eye patch\nplt.show()",
+    "crumbs": [
+      "Vectors, matrices, arrays, tensors"
+    ]
+  },
+  {
+    "objectID": "vectors_matrices_tensors.html#cat-split-into-patches-zero-padding",
+    "href": "vectors_matrices_tensors.html#cat-split-into-patches-zero-padding",
+    "title": "Vectors, matrices, arrays, tensors",
+    "section": "Cat split into patches: zero padding",
+    "text": "Cat split into patches: zero padding\nNow let’s add zero padding to see the effect. For simplicity we will use non-overlapping windows so we don’t have to try visualise 256*256 = 65536 windows!\n\n# Move channels to last dimension for plotting\npatches = padded_cat.unfold(1, 51, 51).unfold(2, 51, 51)\npatches = patches.permute(1, 2, 3, 4, 0)  \n# Number of patches along each dimension\nnum_patches_x, num_patches_y = patches.shape[:2]\n\n# Initialize a plot\nfig, axes = plt.subplots(num_patches_x, num_patches_y, \n                        figsize=(10, 10))\n\n# Plot each patch\nfor i in range(num_patches_x):\n    for j in range(num_patches_y):\n        patch = patches[i, j]  \n        axes[i, j].imshow(patch)\n        axes[i, j].axis('off')\n\nplt.tight_layout()\nplt.show()",
+    "crumbs": [
+      "Vectors, matrices, arrays, tensors"
+    ]
+  },
+  {
+    "objectID": "vectors_matrices_tensors.html#why-patches",
+    "href": "vectors_matrices_tensors.html#why-patches",
+    "title": "Vectors, matrices, arrays, tensors",
+    "section": "Why patches?",
+    "text": "Why patches?\nNote that a patch is a local region in a spatial object like an image. Just like we typically model dynamic physical systems as evolving according to local-in-time dynamics, with the update step depending on the recent past, spatial and spatiotemporal dependencies are also typically local in nature.\nWhat does physics say about why this is? When Newton proposed his famous Law of Gravitation, it involved, mathematically, action at a distance. However, Newton was not happy about this, saying it was\n\nit is inconceivable that inanimate brute matter should, without the mediation of something else which is not material, operate upon and affect other matter without mutual contact\n\nLater it was discovered, in relativistic field theories, that interactions can be described as propagating locally, via fields defined in space and time, at no more than the speed of light, rather than instantaneously across arbitrary distances.\nIn machine learning for image analysis, Yann LeCun and others noted that the individual neurons of the visual system in animals each respond only to small, local, overlapping regions of the overall visual field of view. Patches! This led to convolutional neural networks, that were until recently the gold standard machine learning approach to image analysis. These focus initially on detecting edges and texture, before aggregating these at higher and higher levels to reconstruct the overall image.\nMore recently, people have adapted so-called transformer models, traditionally used for language processing, to apply to image patches, where these are essentially treated as the ‘words’ of an image! Again, these local features are ‘aggregated’ into a global picture of the image, like making sentences from words.\nSo, in physics, biology and image analysis, we have good motivation to focus on local regions in space and time, and this is motivated by our scientific and engineering understanding of the world!",
+    "crumbs": [
+      "Vectors, matrices, arrays, tensors"
+    ]
+  },
+  {
+    "objectID": "vectors_matrices_tensors.html#cat-edges",
+    "href": "vectors_matrices_tensors.html#cat-edges",
+    "title": "Vectors, matrices, arrays, tensors",
+    "section": "Cat edges",
+    "text": "Cat edges\nWe will look at some of these ideas in more detail later. For now, here is the output of applying a spatially local (here patch-wise for patches centred at each pixel) horizontal edge detection filter to our cat! This involves applying a vertical finite difference operator to each patch: comparing rows above and below a pixel to detect horizontal boundaries.\nI did this manually by creating the patches using torch.unfold and then multiplying each patch by a filter kernel using something called torch.einsum. There are, of course, many built-in filters in many libraries for doing this sort of thing.",
+    "crumbs": [
+      "Vectors, matrices, arrays, tensors"
+    ]
+  },
+  {
+    "objectID": "vectors_matrices_tensors.html#back-to-derivatives",
+    "href": "vectors_matrices_tensors.html#back-to-derivatives",
+    "title": "Vectors, matrices, arrays, tensors",
+    "section": "Back to derivatives",
+    "text": "Back to derivatives\nOnce we have data and a machine learning model, we need to carry out parameter fitting, or weight learning for neural networks, where we typically aim to minimise some loss function. The loss function measures the machine learning model’s fit to data for any given set of model parameters (e.g. network weights). This is called training the model, and is what a statistician or engineer typically calls fitting a model or estimating parameters.\nNeural networks are usually trained by some form of gradient descent, where we iteratively update our model weights (i.e. parameter estimates) using gradients of the loss function. In ordinary gradient descent, the negative gradient gives the direction of greatest local decrease, but the step size (learning rate) also matters. For complex functions, reaching a local or global minimum is not guaranteed, though local minima are usually more accessible than global ones. Methods such as stochastic gradient descent can help us find useful local minima or other solutions, but we still need to check how well these generalise to data not used for fitting.\nThis leads to the other important extra ingredient we mentioned that PyTorch brings to the table: the ability to automatically compute derivatives of (fairly) arbitrary expressions made up of tensors and functions of tensors. If we think of our loss as \\[\\mbox{loss}(w,d) = \\mbox{loss}(y(w),d)\\] for parameters (weights) \\(w\\), data \\(d\\) and \\(y(w) = \\mbox{model}(w)\\). We usually want to minimise this with respect to the parameters \\(w\\) while holding the (training) data fixed. To compute the derivative with respect to \\(w\\) we can apply the chain rule. When the loss, model output, and \\(w\\) are all scalars, we get \\[ \\frac{\\partial }{\\partial w}\\mbox{loss}(y(w),d) = \\frac{\\partial \\mbox{loss}}{\\partial y}\\frac{\\partial y}{\\partial w}\\] Neural network models are typically made up of a series of composed functions (giving ‘layers’), essentially \\(y(w) = f(g(h(k(\\dots(w)))))\\), and applying the chain rule gives a long series of multiplications of derivatives.\nIn principle we can compute derivatives of many expressions by hand. However, PyTorch can do it for us, automatically and efficiently.",
+    "crumbs": [
+      "Vectors, matrices, arrays, tensors"
+    ]
+  },
+  {
+    "objectID": "vectors_matrices_tensors.html#computation-graphs",
+    "href": "vectors_matrices_tensors.html#computation-graphs",
+    "title": "Vectors, matrices, arrays, tensors",
+    "section": "Computation graphs",
+    "text": "Computation graphs\nWe will look at neural nets and gradient descent in more detail later. For now, the important thing is that during computation, we can imagine our tensors undergoing a series of basic operations, like multiplication, addition, squaring etc. This defines a computation graph. Normally, we just track the values going in and coming out of the functions. However, PyTorch can also track the derivatives of the functions along the computation graph and multiply them together to obtain the overall derivative (i.e. apply the chain rule!).\nWith gradient tracking enabled, PyTorch computes values as we move forward through the computation graph, while recording operations and saving information needed for the derivatives. It then applies the chain rule in the reverse or backward direction—starting from the loss and working back toward the parameters. This is particularly efficient when we have a single loss and many parameters. We won’t go into too much detail on this now, but this is the essence of the famous backpropagation approach to computing derivatives. The optimiser then uses these derivatives to update the parameters.\nAn illustration, again from ‘Deep Learning with PyTorch’ by Stevens, Antiga, and Viehmann (2020), is shown below.\nThere’s a lot going on here, so let’s look at a very simple, non-neural example!",
+    "crumbs": [
+      "Vectors, matrices, arrays, tensors"
+    ]
+  },
+  {
+    "objectID": "vectors_matrices_tensors.html#computation-graphs-1",
+    "href": "vectors_matrices_tensors.html#computation-graphs-1",
+    "title": "Vectors, matrices, arrays, tensors",
+    "section": "Computation graphs",
+    "text": "Computation graphs\n\n\n\nFrom ‘Deep Learning with PyTorch’ by Stevens, Antiga, and Viehmann (2020)!",
+    "crumbs": [
+      "Vectors, matrices, arrays, tensors"
+    ]
+  },
+  {
+    "objectID": "vectors_matrices_tensors.html#example-3",
+    "href": "vectors_matrices_tensors.html#example-3",
+    "title": "Vectors, matrices, arrays, tensors",
+    "section": "Example",
+    "text": "Example\nTo track derivatives through a computation graph, set requires_grad=True on the input tensor you want to differentiate with respect to. PyTorch can then record the operations involving that tensor and use a backward pass to compute the derivative of the output with respect to that input. In the example below, that tensor is x, the variable we want to optimise.\nLet’s solve \\[\\min_x\\ (x-10)^2\\]\n\n# Define the tensor variable to optimise and\n# keep track of gradients of anything that depends on it.\nx = torch.tensor([0.0], requires_grad=True)  \n\n# Define the optimizer. Only requires param not loss.\n# Stochastic Gradient Descent with learning rate 0.1\noptimizer = torch.optim.SGD([x], lr=0.1)  \n\n# Define the function to minimize\ndef func(x):\n    return (x - 10) ** 2\n\n# Optimization loop. Take 30 steps\nfor i in range(30):\n    optimizer.zero_grad() # Clear gradients from the last step.\n    loss = func(x)        # Compute the loss (objective function)\n    loss.backward()       # Backpropagate to compute gradients\n    optimizer.step()      # Adjust x based on gradients\n\n    print(f'Step {i}: x = {x.item()}, loss = {loss.item()}')\n\n# Final result\nprint(f'Optimized x: {x.item()}')\n\nStep 0: x = 2.0, loss = 100.0\nStep 1: x = 3.5999999046325684, loss = 64.0\nStep 2: x = 4.880000114440918, loss = 40.96000289916992\nStep 3: x = 5.904000282287598, loss = 26.214399337768555\nStep 4: x = 6.72320032119751, loss = 16.77721405029297\nStep 5: x = 7.3785600662231445, loss = 10.73741626739502\nStep 6: x = 7.902848243713379, loss = 6.871947288513184\nStep 7: x = 8.32227897644043, loss = 4.398045539855957\nStep 8: x = 8.65782356262207, loss = 2.8147478103637695\nStep 9: x = 8.92625904083252, loss = 1.8014376163482666\nStep 10: x = 9.141007423400879, loss = 1.1529196500778198\nStep 11: x = 9.312806129455566, loss = 0.7378682494163513\nStep 12: x = 9.450244903564453, loss = 0.47223541140556335\nStep 13: x = 9.560195922851562, loss = 0.3022306561470032\nStep 14: x = 9.648157119750977, loss = 0.19342762231826782\nStep 15: x = 9.718525886535645, loss = 0.12379341572523117\nStep 16: x = 9.774820327758789, loss = 0.07922767847776413\nStep 17: x = 9.819856643676758, loss = 0.05070588365197182\nStep 18: x = 9.85588550567627, loss = 0.032451629638671875\nStep 19: x = 9.884708404541016, loss = 0.020768987014889717\nStep 20: x = 9.907766342163086, loss = 0.013292152434587479\nStep 21: x = 9.926213264465332, loss = 0.008507047779858112\nStep 22: x = 9.940970420837402, loss = 0.005444482434540987\nStep 23: x = 9.952775955200195, loss = 0.0034844912588596344\nStep 24: x = 9.962221145629883, loss = 0.0022301103454083204\nStep 25: x = 9.96977710723877, loss = 0.0014272418338805437\nStep 26: x = 9.975821495056152, loss = 0.0009134232532233\nStep 27: x = 9.980657577514648, loss = 0.0005846000858582556\nStep 28: x = 9.984525680541992, loss = 0.0003741293039638549\nStep 29: x = 9.98762035369873, loss = 0.0002394545590505004\nOptimized x: 9.98762035369873",
+    "crumbs": [
+      "Vectors, matrices, arrays, tensors"
+    ]
+  },
+  {
+    "objectID": "vectors_matrices_tensors.html#notes",
+    "href": "vectors_matrices_tensors.html#notes",
+    "title": "Vectors, matrices, arrays, tensors",
+    "section": "Notes",
+    "text": "Notes\nThere’s a lot here that we haven’t gone into detail on. Briefly though,\n\nrequires_grad=True enables PyTorch to record the computation and save information needed to calculate derivatives. This flag propagates automatically through tracked operations.\nPyTorch normally stores gradients in .grad for leaf tensors with requires_grad=True. A leaf tensor is an input to the recorded computation graph, rather than the result of an operation in that graph. E.g. x is a leaf tensor, but u = x**2 is not.\nTo also store the loss gradient with respect to u, call u.retain_grad() before backward(). The result will then be available in u.grad.\nCalling .backward() adds the computed gradients to .grad, and normally releases the saved information used for that backward pass.\nSometimes we want to run backward twice through the same graph. E.g. two losses might use the same predictions, calculated in one forward pass, but we want to examine the gradient of each loss separately. We then run backward on each loss separately, clearing the accumulated gradients between calls. We generally need retain_graph=True on the first backward call to keep the information needed for the second.\nIn our training loop, however, each iteration recalculates loss = func(x) using the current value of x. This builds a new graph even though we have the same formula and the same parameter tensor, because PyTorch records the operations and saves the numerical values needed for backward each time we run the calculation. E.g. for u = x**2, the derivative is 2*x, so the backward calculation needs the value of x used in that forward calculation. We therefore don’t need retain_graph=True here.\nBackpropagation (.backward()) applies the chain rule, multiplying derivative terms from output to input (i.e., backward through the computation graph).\n\nWe use an optimizer to update specific tensors. The optimizer adjusts the specified tensors based on the gradients accumulated by .backward().\n\nGradients accumulate when we call .backward(). Calling optimizer.zero_grad() clears the gradients of the parameters managed by the optimiser. In the loop above, we do this each iteration so that .grad contains the current loss gradient rather than a sum from previous iterations. Calling optimizer.step() updates the parameters but does not clear their gradients.\n\nWe will return to this topic when we look at training neural networks! First, a detour to a simpler, linear world!",
+    "crumbs": [
+      "Vectors, matrices, arrays, tensors"
+    ]
   }
 ]

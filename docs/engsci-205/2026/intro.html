@@ -64,6 +64,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
+<link href="./vectors_matrices_tensors.html" rel="next">
 <link href="./index.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
@@ -178,6 +179,12 @@ window.Quarto = {
   <div class="sidebar-item-container"> 
   <a href="./intro.html" class="sidebar-item-text sidebar-link active">
  <span class="menu-text">Introduction</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./vectors_matrices_tensors.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Vectors, matrices, arrays, tensors</span></a>
   </div>
 </li>
     </ul>
@@ -366,7 +373,7 @@ z_t &amp;= g(z_{t-1},\epsilon_t)
 <section id="predicting-the-pendulum" class="level2">
 <h2 class="anchored" data-anchor-id="predicting-the-pendulum">Predicting the pendulum</h2>
 <p>Now, suppose we have <span class="math inline">\(M\)</span>, (possibly noisy) observations of the form <span class="math display">\[(t_i,\theta_i),\ i=1,\dots,M\]</span> from a pendulum (possibly nonlinear!) and wish to predict <span class="math inline">\(\theta_j\)</span> for a new, given <span class="math inline">\(t_j\)</span>. We consider two cases of <span class="math inline">\(t_j\)</span>, one that lies ‘within’ the range of observed data, and one that lies ‘outside’ the observed range. These corresponds to <strong>interpolation</strong> and <strong>extrapolation</strong> tasks, respectively.</p>
-<div id="17adb10a" class="cell" data-execution_count="1">
+<div id="5cab972c" class="cell" data-execution_count="1">
 <div class="cell-output cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -394,7 +401,7 @@ z_t &amp;= g(z_{t-1},\epsilon_t)
 <section id="predicting-the-pendulum-interpolation-problem" class="level2">
 <h2 class="anchored" data-anchor-id="predicting-the-pendulum-interpolation-problem">Predicting the pendulum: interpolation problem</h2>
 <p>Simple nearest neighbour approaches:</p>
-<div id="0667fb5a" class="cell" data-execution_count="2">
+<div id="48e84120" class="cell" data-execution_count="2">
 <div class="cell-output cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -403,7 +410,7 @@ z_t &amp;= g(z_{t-1},\epsilon_t)
 </div>
 </div>
 </div>
-<div id="fa15b213" class="cell" data-execution_count="3">
+<div id="e8c4e7e8" class="cell" data-execution_count="3">
 <div class="cell-output cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -416,7 +423,7 @@ z_t &amp;= g(z_{t-1},\epsilon_t)
 <section id="predicting-the-pendulum-interpolation-problem-1" class="level2">
 <h2 class="anchored" data-anchor-id="predicting-the-pendulum-interpolation-problem-1">Predicting the pendulum: interpolation problem</h2>
 <p>Using a simple neural net:</p>
-<div id="039f8a98" class="cell" data-execution_count="4">
+<div id="f375f2e2" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-overflow-wrap code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn <span class="im">import</span> neural_network</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>regr <span class="op">=</span>neural_network.MLPRegressor(max_iter<span class="op">=</span><span class="dv">5000</span>,</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>                        activation<span class="op">=</span><span class="st">'logistic'</span>,solver<span class="op">=</span><span class="st">'lbfgs'</span>)</span>
@@ -424,7 +431,7 @@ z_t &amp;= g(z_{t-1},\epsilon_t)
 <span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> y_data</span>
 <span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>regr.fit(X, y)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="51bfce19" class="cell" data-execution_count="5">
+<div id="0df43ef4" class="cell" data-execution_count="5">
 <div class="cell-output cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -437,7 +444,7 @@ z_t &amp;= g(z_{t-1},\epsilon_t)
 <section id="predicting-the-pendulum-extrapolation-problem" class="level2">
 <h2 class="anchored" data-anchor-id="predicting-the-pendulum-extrapolation-problem">Predicting the pendulum: extrapolation problem</h2>
 <p>What about the extrapolation problem? Let’s naively try our best previous approaches. First, using two closest time points:</p>
-<div id="657178ca" class="cell" data-execution_count="6">
+<div id="25188bbe" class="cell" data-execution_count="6">
 <div class="cell-output cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -450,7 +457,7 @@ z_t &amp;= g(z_{t-1},\epsilon_t)
 <section id="predicting-the-pendulum-extrapolation-problem-1" class="level2">
 <h2 class="anchored" data-anchor-id="predicting-the-pendulum-extrapolation-problem-1">Predicting the pendulum: extrapolation problem</h2>
 <p>Next, a neural network:</p>
-<div id="1f8aa2ce" class="cell" data-execution_count="7">
+<div id="321dacd4" class="cell" data-execution_count="7">
 <div class="cell-output cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -470,7 +477,7 @@ z_t &amp;= g(z_{t-1},\epsilon_t)
 \]</span> for some period <span class="math inline">\(T\)</span>. This is also obvious from the solution to the ODE model, i.e.&nbsp;our engineering/scientific knowledge!</p>
 <p>The time taken for the pendulum to return to its initial value is approximately 2.75 seconds, which is our estimate of <span class="math inline">\(T\)</span>.</p>
 <p>In this case, rather than find the closest absolute time point, we could find the closest point ‘within the cycle’, i.e.&nbsp;match to <span class="math inline">\(t\)</span> <em>modulo</em> <span class="math inline">\(T\)</span>, written ‘<span class="math inline">\(t\bmod T\)</span>’. Recall that e.g.&nbsp;7 mod 5 = 2, 14 mod 6 = 2 etc, i.e.&nbsp;we get the <em>remainder</em> when dividing the first number by the second. Our target time, here 7. If our period is about 2.75, then we should take the <span class="math inline">\(y\)</span> values with <span class="math inline">\(t\)</span> values closest to about 7 mod 2.75 = 1.5. Let’s try!</p>
-<div id="d798ab2e" class="cell" data-execution_count="8">
+<div id="c6f9c74f" class="cell" data-execution_count="8">
 <div class="cell-output cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -486,7 +493,7 @@ z_t &amp;= g(z_{t-1},\epsilon_t)
 <p>Approaches to time series based on Fourier methods are called <strong>spectral</strong> methods; more generally, this is a <strong>basis function</strong> approach, assuming our function can be easily constructed from linear combinations of a simpler set of basis functions.</p>
 <p>Machine learners also call such basis functions <strong>features</strong> and may consider prediction based linear or <em>nonlinear</em> combinations of these (functional) features.</p>
 <p>Motivated by a Fourier cosine series, let’s try using a small collection of features (basis functions) of the form <span class="math inline">\(\cos \frac{2n\pi t}{T}\)</span>, for <span class="math inline">\(n=1,\dots,4\)</span> (say) and <span class="math inline">\(T=2.75\)</span> (our estimated period), as features in a <strong>linear regression</strong>.</p>
-<div id="ee34d740" class="cell" data-execution_count="9">
+<div id="74a0579e" class="cell" data-execution_count="9">
 <div class="cell-output cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -500,7 +507,7 @@ z_t &amp;= g(z_{t-1},\epsilon_t)
 <h2 class="anchored" data-anchor-id="overfitting-instability-etc.">Overfitting, instability etc.</h2>
 <p>This works reasonably for these particular choices, but depends on the number and type of terms included.</p>
 <p>Here’s the same process for <span class="math inline">\(n=1,\dots,10\)</span>. The fit to the observed data is much the same, but our predictions between observations are now much worse (though they happen to still be reasonably good at our actual point of interest).</p>
-<div id="5d3b7c0b" class="cell" data-execution_count="10">
+<div id="073eb096" class="cell" data-execution_count="10">
 <div class="cell-output cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -534,14 +541,14 @@ y(t) \approx F(y(t-1),y(t-2))
 <section id="manual-lagged-features" class="level2">
 <h2 class="anchored" data-anchor-id="manual-lagged-features">Manual lagged features</h2>
 <p>We can e.g.&nbsp;use <code>np.roll</code> to created lagged features; see below. Note that the future is carrying out its oscillation <em>before</em> the lagged variables, as we want!</p>
-<div id="ab2711a9" class="cell" data-execution_count="11">
+<div id="65aaec5d" class="cell" data-execution_count="11">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>k <span class="op">=</span> <span class="dv">2</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>y_data_target <span class="op">=</span> np.roll(y_data,<span class="dv">0</span>)[k:]</span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>X_lagged <span class="op">=</span> np.zeros((<span class="bu">len</span>(y_data_target),k))</span>
 <span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">0</span>,k):</span>
 <span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>    X_lagged[:,i] <span class="op">=</span> np.roll(y_data,i<span class="op">+</span><span class="dv">1</span>)[k:]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="e1ae056f" class="cell" data-execution_count="12">
+<div id="44a932a0" class="cell" data-execution_count="12">
 <div class="cell-output cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -573,7 +580,7 @@ A = \begin{bmatrix} a &amp; b\\1 &amp; 0
 <section id="extrapolation-problem-simple-autoregressive-model-3" class="level2">
 <h2 class="anchored" data-anchor-id="extrapolation-problem-simple-autoregressive-model-3">Extrapolation problem: simple autoregressive model</h2>
 <p>Let’s predict both the point of interest and a few extra time steps beyond that:</p>
-<div id="9ba88bc2" class="cell" data-execution_count="13">
+<div id="9b1afab5" class="cell" data-execution_count="13">
 <div class="cell-output cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -1013,19 +1020,22 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       </a>          
   </div>
   <div class="nav-page nav-page-next">
+      <a href="./vectors_matrices_tensors.html" class="pagination-link" aria-label="Vectors, matrices, arrays, tensors">
+        <span class="nav-page-text">Vectors, matrices, arrays, tensors</span> <i class="bi bi-arrow-right-short"></i>
+      </a>
   </div>
 </nav>
 </div> <!-- /content -->
 <footer class="footer">
   <div class="nav-footer">
     <div class="nav-footer-left">
-<p>ENGSCI 205 — Week 1 notes.</p>
+<p>ENGSCI 205 — Weeks 1–2 notes.</p>
 </div>   
     <div class="nav-footer-center">
       &nbsp;
     </div>
     <div class="nav-footer-right">
-<p><a href="downloads/EML-Week-01.pdf">Week 1 PDF</a></p>
+<p><a href="downloads/EML-Week-01.pdf">Week 1 PDF</a> · <a href="downloads/EML-Week-02.pdf">Week 2 PDF</a></p>
 </div>
   </div>
 </footer>
