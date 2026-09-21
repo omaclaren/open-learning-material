@@ -1,0 +1,68 @@
+/* Navigation-only experiment. Never loaded by the authoring/PDF build. */
+#quarto-sidebar .sidebar-title { line-height: 1.35; }
+#quarto-sidebar .sidebar-item-container { margin: .15rem 0; }
+#quarto-sidebar .sidebar-link {
+  padding: .35rem .55rem;
+  margin-left: -.55rem;
+  border-radius: .2rem;
+  line-height: 1.35;
+}
+#quarto-sidebar .sidebar-link.active {
+  background: rgba(39, 128, 227, .065);
+}
+.engsci205-toc .toc-groups {
+  list-style: none;
+  padding: 0;
+  margin: .65rem 0 0;
+}
+.engsci205-toc .toc-group-item { margin: 0 0 .35rem; }
+.engsci205-toc summary {
+  display: flex;
+  align-items: baseline;
+  gap: .45rem;
+  list-style: none;
+  cursor: pointer;
+  padding: .3rem 0;
+  font-size: .9rem;
+  line-height: 1.4;
+  font-weight: 500;
+  color: var(--bs-body-color, #373a3c);
+}
+.engsci205-toc summary::-webkit-details-marker { display: none; }
+.engsci205-toc summary::before {
+  content: "›";
+  flex: 0 0 .45rem;
+  text-align: center;
+  color: #737b83;
+  transform-origin: center;
+}
+.engsci205-toc details[open] > summary::before { transform: rotate(90deg); }
+.engsci205-toc .is-current > summary,
+.engsci205-toc summary:hover { color: var(--bs-link-color, #2780e3); }
+.engsci205-toc summary:focus-visible,
+.engsci205-toc a:focus-visible {
+  outline: 2px solid var(--bs-link-color, #2780e3);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+.engsci205-toc .toc-group-links {
+  list-style: none;
+  margin: .2rem 0 .65rem .2rem;
+  padding: .05rem 0 .05rem .7rem;
+  border-left: 1px solid #dfe4e8;
+}
+.engsci205-toc .toc-group-links li { margin: 0; }
+.engsci205-toc .toc-group-links a {
+  display: block;
+  padding: .25rem 0;
+  font-size: .84rem;
+  line-height: 1.4;
+  color: #596169;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.engsci205-toc .toc-group-links a:hover,
+.engsci205-toc .toc-group-links a.is-current { color: var(--bs-link-color, #2780e3); }
+@media print {
+  .engsci205-toc { display: none; }
+}

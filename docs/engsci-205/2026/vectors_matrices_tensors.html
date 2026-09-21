@@ -1,12 +1,9 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
-<meta charset="utf-8">
-<meta name="generator" content="quarto-1.4.549">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-
-
+<html lang="en" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml"><head>
+<meta charset="utf-8"/>
+<meta content="quarto-1.4.549" name="generator"/>
+<meta content="width=device-width, initial-scale=1.0, user-scalable=yes" name="viewport"/>
 <title>EngSci 205: Engineering-Centric Machine Learning - Vectors, matrices, arrays, tensors</title>
 <style>
 code{white-space: pre-wrap;}
@@ -55,25 +52,23 @@ div.sourceCode
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
-
-
 <script src="site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="site_libs/quarto-nav/headroom.min.js"></script>
 <script src="site_libs/clipboard/clipboard.min.js"></script>
 <script src="site_libs/quarto-search/autocomplete.umd.js"></script>
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<link href="./intro.html" rel="prev">
+<meta content="./" name="quarto:offset"/>
+<link href="./intro.html" rel="prev"/>
 <script src="site_libs/quarto-html/quarto.js"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet"/>
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" id="quarto-text-highlighting-styles" rel="stylesheet"/>
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet"/>
+<link data-mode="light" href="site_libs/bootstrap/bootstrap.min.css" id="quarto-bootstrap" rel="stylesheet"/>
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -101,9 +96,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
-
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 <script type="text/javascript">
 const typesetMath = (el) => {
   if (window.MathJax) {
@@ -130,102 +123,67 @@ window.Quarto = {
   typesetMath
 };
 </script>
-
-<link rel="stylesheet" href="html-preview.css">
-</head>
-
+<link href="html-preview.css" rel="stylesheet"/>
+<link href="navigation-preview.css" rel="stylesheet"/><script defer="" src="navigation-preview.js"></script></head>
 <body class="nav-sidebar floating">
-
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top">
-  <nav class="quarto-secondary-nav">
-    <div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
-        <i class="bi bi-layout-text-sidebar-reverse"></i>
-      </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./vectors_matrices_tensors.html">Vectors, matrices, arrays, tensors</a></li></ol></nav>
-        <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
-        </a>
-      <button type="button" class="btn quarto-search-button" aria-label="" onclick="window.quartoOpenSearch();">
-        <i class="bi bi-search"></i>
-      </button>
-    </div>
-  </nav>
+<header class="headroom fixed-top" id="quarto-header">
+<nav class="quarto-secondary-nav">
+<div class="container-fluid d-flex">
+<button aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" class="quarto-btn-toggle btn" data-bs-target=".quarto-sidebar-collapse-item" data-bs-toggle="collapse" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }" type="button">
+<i class="bi bi-layout-text-sidebar-reverse"></i>
+</button>
+<nav aria-label="breadcrumb" class="quarto-page-breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./vectors_matrices_tensors.html">Week 2: Tensors and PyTorch</a></li></ol></nav>
+<a aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" class="flex-grow-1" data-bs-target=".quarto-sidebar-collapse-item" data-bs-toggle="collapse" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }" role="button">
+</a>
+<button aria-label="" class="btn quarto-search-button" onclick="window.quartoOpenSearch();" type="button">
+<i class="bi bi-search"></i>
+</button>
+</div>
+</nav>
 </header>
 <!-- content -->
-<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<div class="quarto-container page-columns page-rows-contents page-layout-article" id="quarto-content">
 <!-- sidebar -->
-  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
-    <div class="pt-lg-2 mt-2 text-left sidebar-header">
-    <div class="sidebar-title mb-0 py-0">
-      <a href="./">EngSci 205: Engineering-Centric Machine Learning</a> 
-    </div>
-      </div>
-        <div class="mt-2 flex-shrink-0 align-items-center">
-        <div class="sidebar-search">
-        <div id="quarto-search" class="" title="Search"></div>
-        </div>
-        </div>
-    <div class="sidebar-menu-container"> 
-    <ul class="list-unstyled mt-1">
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Preface</span></a>
-  </div>
+<nav class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto" id="quarto-sidebar">
+<div class="pt-lg-2 mt-2 text-left sidebar-header">
+<div class="sidebar-title mb-0 py-0">
+<a href="./">ENGSCI 205: Engineering-Centric Machine Learning</a>
+</div>
+</div>
+<div class="mt-2 flex-shrink-0 align-items-center">
+<div class="sidebar-search">
+<div class="" id="quarto-search" title="Search"></div>
+</div>
+</div>
+<div class="sidebar-menu-container">
+<ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./index.html">
+<span class="menu-text">Preface</span></a>
+</div>
 </li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./intro.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Introduction</span></a>
-  </div>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./intro.html">
+<span class="menu-text">Week 1: Key ideas</span></a>
+</div>
 </li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./vectors_matrices_tensors.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">Vectors, matrices, arrays, tensors</span></a>
-  </div>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link active" href="./vectors_matrices_tensors.html">
+<span class="menu-text">Week 2: Tensors and PyTorch</span></a>
+</div>
 </li>
-    </ul>
-    </div>
+</ul>
+</div>
 </nav>
-<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<div class="quarto-sidebar-collapse-item" data-bs-target=".quarto-sidebar-collapse-item" data-bs-toggle="collapse" id="quarto-sidebar-glass"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
-    <h2 id="toc-title">Table of contents</h2>
-   
-  <ul>
-  <li><a href="#tensors" id="toc-tensors" class="nav-link active" data-scroll-target="#tensors">Tensors</a></li>
-  <li><a href="#arraystensors" id="toc-arraystensors" class="nav-link" data-scroll-target="#arraystensors">Arrays/tensors</a></li>
-  <li><a href="#arrays-in-numpy" id="toc-arrays-in-numpy" class="nav-link" data-scroll-target="#arrays-in-numpy">Arrays in NumPy</a></li>
-  <li><a href="#tensors-in-pytorch" id="toc-tensors-in-pytorch" class="nav-link" data-scroll-target="#tensors-in-pytorch">Tensors in PyTorch</a></li>
-  <li><a href="#why-gpus-derivatives" id="toc-why-gpus-derivatives" class="nav-link" data-scroll-target="#why-gpus-derivatives">Why? GPUs! Derivatives!</a></li>
-  <li><a href="#but-first-basic-tensor-usage-in-pytorch" id="toc-but-first-basic-tensor-usage-in-pytorch" class="nav-link" data-scroll-target="#but-first-basic-tensor-usage-in-pytorch">But first: basic tensor usage in PyTorch</a></li>
-  <li><a href="#loading-data" id="toc-loading-data" class="nav-link" data-scroll-target="#loading-data">Loading data</a></li>
-  <li><a href="#converting-to-a-tensor" id="toc-converting-to-a-tensor" class="nav-link" data-scroll-target="#converting-to-a-tensor">Converting to a tensor</a></li>
-  <li><a href="#arraystensors-storage-vs-access" id="toc-arraystensors-storage-vs-access" class="nav-link" data-scroll-target="#arraystensors-storage-vs-access">Arrays/tensors: storage vs access</a></li>
-  <li><a href="#arraystensors-storage-vs-access-views" id="toc-arraystensors-storage-vs-access-views" class="nav-link" data-scroll-target="#arraystensors-storage-vs-access-views">Arrays/tensors: storage vs access (views)</a></li>
-  <li><a href="#common-shapes" id="toc-common-shapes" class="nav-link" data-scroll-target="#common-shapes">Common shapes</a></li>
-  <li><a href="#using-unfold-to-generate-sliding-window-views-along-a-dimension" id="toc-using-unfold-to-generate-sliding-window-views-along-a-dimension" class="nav-link" data-scroll-target="#using-unfold-to-generate-sliding-window-views-along-a-dimension">Using ‘unfold’ to generate ‘sliding window views’ along a dimension</a></li>
-  <li><a href="#using-unfold-to-generate-sliding-window-views-along-a-dimension-1" id="toc-using-unfold-to-generate-sliding-window-views-along-a-dimension-1" class="nav-link" data-scroll-target="#using-unfold-to-generate-sliding-window-views-along-a-dimension-1">Using ‘unfold’ to generate ‘sliding window views’ along a dimension</a></li>
-  <li><a href="#example" id="toc-example" class="nav-link" data-scroll-target="#example">Example</a></li>
-  <li><a href="#example-1" id="toc-example-1" class="nav-link" data-scroll-target="#example-1">Example</a></li>
-  <li><a href="#example-2" id="toc-example-2" class="nav-link" data-scroll-target="#example-2">Example</a></li>
-  <li><a href="#using-unfold-to-generate-non-overlapping-patches-of-an-image" id="toc-using-unfold-to-generate-non-overlapping-patches-of-an-image" class="nav-link" data-scroll-target="#using-unfold-to-generate-non-overlapping-patches-of-an-image">Using unfold to generate non-overlapping patches of an image</a></li>
-  <li><a href="#cat-split-into-patches" id="toc-cat-split-into-patches" class="nav-link" data-scroll-target="#cat-split-into-patches">Cat split into patches</a></li>
-  <li><a href="#zero-padding" id="toc-zero-padding" class="nav-link" data-scroll-target="#zero-padding">Zero padding</a></li>
-  <li><a href="#cat-split-into-patches-zero-padding" id="toc-cat-split-into-patches-zero-padding" class="nav-link" data-scroll-target="#cat-split-into-patches-zero-padding">Cat split into patches: zero padding</a></li>
-  <li><a href="#why-patches" id="toc-why-patches" class="nav-link" data-scroll-target="#why-patches">Why patches?</a></li>
-  <li><a href="#cat-edges" id="toc-cat-edges" class="nav-link" data-scroll-target="#cat-edges">Cat edges</a></li>
-  <li><a href="#back-to-derivatives" id="toc-back-to-derivatives" class="nav-link" data-scroll-target="#back-to-derivatives">Back to derivatives</a></li>
-  <li><a href="#computation-graphs" id="toc-computation-graphs" class="nav-link" data-scroll-target="#computation-graphs">Computation graphs</a></li>
-  <li><a href="#computation-graphs-1" id="toc-computation-graphs-1" class="nav-link" data-scroll-target="#computation-graphs-1">Computation graphs</a></li>
-  <li><a href="#example-3" id="toc-example-3" class="nav-link" data-scroll-target="#example-3">Example</a></li>
-  <li><a href="#notes" id="toc-notes" class="nav-link" data-scroll-target="#notes">Notes</a></li>
-  </ul>
-</nav>
-    </div>
+<div class="sidebar margin-sidebar" id="quarto-margin-sidebar">
+<nav class="engsci205-toc" id="TOC" role="doc-toc"><h2 id="toc-title">Table of contents</h2><ul class="toc-groups"><li class="toc-group-item"><details data-sections="title-block-header tensors arraystensors arrays-in-numpy tensors-in-pytorch"><summary>Arrays and tensors</summary><ul class="toc-group-links"><li><a data-section="title-block-header" href="#title-block-header">Overview</a></li><li><a data-section="tensors" href="#tensors">Tensors</a></li><li><a data-section="arraystensors" href="#arraystensors">Arrays/tensors</a></li><li><a data-section="arrays-in-numpy" href="#arrays-in-numpy">Arrays in NumPy</a></li><li><a data-section="tensors-in-pytorch" href="#tensors-in-pytorch">Tensors in PyTorch</a></li></ul></details></li><li class="toc-group-item"><details data-sections="why-gpus-derivatives but-first-basic-tensor-usage-in-pytorch loading-data converting-to-a-tensor"><summary>Working with tensors in PyTorch</summary><ul class="toc-group-links"><li><a data-section="why-gpus-derivatives" href="#why-gpus-derivatives">GPUs and derivatives</a></li><li><a data-section="but-first-basic-tensor-usage-in-pytorch" href="#but-first-basic-tensor-usage-in-pytorch">Basic tensor operations</a></li><li><a data-section="loading-data" href="#loading-data">Loading data</a></li><li><a data-section="converting-to-a-tensor" href="#converting-to-a-tensor">Converting to a tensor</a></li></ul></details></li><li class="toc-group-item"><details data-sections="arraystensors-storage-vs-access arraystensors-storage-vs-access-views common-shapes"><summary>Storage, views and indexing</summary><ul class="toc-group-links"><li><a data-section="arraystensors-storage-vs-access" href="#arraystensors-storage-vs-access">Storage and views</a></li><li><a data-section="arraystensors-storage-vs-access-views" href="#arraystensors-storage-vs-access-views">Size, offset and stride</a></li><li><a data-section="common-shapes" href="#common-shapes">Common shapes</a></li></ul></details></li><li class="toc-group-item"><details data-sections="using-unfold-to-generate-sliding-window-views-along-a-dimension using-unfold-to-generate-sliding-window-views-along-a-dimension-1 example example-1 example-2 using-unfold-to-generate-non-overlapping-patches-of-an-image cat-split-into-patches zero-padding cat-split-into-patches-zero-padding why-patches cat-edges"><summary>Sliding windows and image patches</summary><ul class="toc-group-links"><li><a data-section="using-unfold-to-generate-sliding-window-views-along-a-dimension" href="#using-unfold-to-generate-sliding-window-views-along-a-dimension">Sliding window views</a></li><li><a data-section="using-unfold-to-generate-non-overlapping-patches-of-an-image" href="#using-unfold-to-generate-non-overlapping-patches-of-an-image">Non-overlapping patches</a></li><li><a data-section="cat-split-into-patches" href="#cat-split-into-patches">Cat split into patches</a></li><li><a data-section="zero-padding" href="#zero-padding">Zero padding</a></li><li><a data-section="cat-split-into-patches-zero-padding" href="#cat-split-into-patches-zero-padding">Patches with zero padding</a></li><li><a data-section="why-patches" href="#why-patches">Why patches?</a></li><li><a data-section="cat-edges" href="#cat-edges">Cat edges</a></li></ul></details></li><li class="toc-group-item"><details data-sections="back-to-derivatives computation-graphs computation-graphs-1 example-3 notes"><summary>Derivatives and computation graphs</summary><ul class="toc-group-links"><li><a data-section="back-to-derivatives" href="#back-to-derivatives">Back to derivatives</a></li><li><a data-section="computation-graphs" href="#computation-graphs">Computation graphs</a></li><li><a data-section="example-3" href="#example-3">A simple optimisation example</a></li><li><a data-section="notes" href="#notes">Notes</a></li></ul></details></li></ul></nav>
+</div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
@@ -1260,30 +1218,26 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 });
 </script>
 <nav class="page-navigation">
-  <div class="nav-page nav-page-previous">
-      <a href="./intro.html" class="pagination-link  aria-label=" introduction"="">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Introduction</span>
-      </a>          
-  </div>
-  <div class="nav-page nav-page-next">
-  </div>
+<div class="nav-page nav-page-previous">
+<a class="pagination-link aria-label=" href="./intro.html" introduction"="">
+<i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Week 1: Key ideas</span>
+</a>
+</div>
+<div class="nav-page nav-page-next">
+</div>
 </nav>
 </div> <!-- /content -->
 <footer class="footer">
-  <div class="nav-footer">
-    <div class="nav-footer-left">
+<div class="nav-footer">
+<div class="nav-footer-left">
 <p>ENGSCI 205 — Weeks 1–2 notes.</p>
-</div>   
-    <div class="nav-footer-center">
-      &nbsp;
+</div>
+<div class="nav-footer-center">
+       
     </div>
-    <div class="nav-footer-right">
+<div class="nav-footer-right">
 <p><a href="downloads/EML-Week-01.pdf">Week 1 PDF</a> · <a href="downloads/EML-Week-02.pdf">Week 2 PDF</a></p>
 </div>
-  </div>
+</div>
 </footer>
-
-
-
-
 </body></html>

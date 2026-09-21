@@ -1,12 +1,9 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
 
-<meta charset="utf-8">
-<meta name="generator" content="quarto-1.4.549">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-
-
+<html lang="en" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml"><head>
+<meta charset="utf-8"/>
+<meta content="quarto-1.4.549" name="generator"/>
+<meta content="width=device-width, initial-scale=1.0, user-scalable=yes" name="viewport"/>
 <title>EngSci 205: Engineering-Centric Machine Learning - Introduction</title>
 <style>
 code{white-space: pre-wrap;}
@@ -55,26 +52,24 @@ div.sourceCode
 pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
 }
 </style>
-
-
 <script src="site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="site_libs/quarto-nav/headroom.min.js"></script>
 <script src="site_libs/clipboard/clipboard.min.js"></script>
 <script src="site_libs/quarto-search/autocomplete.umd.js"></script>
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
-<meta name="quarto:offset" content="./">
-<link href="./vectors_matrices_tensors.html" rel="next">
-<link href="./index.html" rel="prev">
+<meta content="./" name="quarto:offset"/>
+<link href="./vectors_matrices_tensors.html" rel="next"/>
+<link href="./index.html" rel="prev"/>
 <script src="site_libs/quarto-html/quarto.js"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
 <script src="site_libs/quarto-html/tippy.umd.min.js"></script>
 <script src="site_libs/quarto-html/anchor.min.js"></script>
-<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
-<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet"/>
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" id="quarto-text-highlighting-styles" rel="stylesheet"/>
 <script src="site_libs/bootstrap/bootstrap.min.js"></script>
-<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
-<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet"/>
+<link data-mode="light" href="site_libs/bootstrap/bootstrap.min.css" id="quarto-bootstrap" rel="stylesheet"/>
 <script id="quarto-search-options" type="application/json">{
   "location": "sidebar",
   "copy-button": false,
@@ -102,9 +97,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
-
-  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
 <script type="text/javascript">
 const typesetMath = (el) => {
   if (window.MathJax) {
@@ -131,102 +124,67 @@ window.Quarto = {
   typesetMath
 };
 </script>
-
-<link rel="stylesheet" href="html-preview.css">
-</head>
-
+<link href="html-preview.css" rel="stylesheet"/>
+<link href="navigation-preview.css" rel="stylesheet"/><script defer="" src="navigation-preview.js"></script></head>
 <body class="nav-sidebar floating">
-
 <div id="quarto-search-results"></div>
-  <header id="quarto-header" class="headroom fixed-top">
-  <nav class="quarto-secondary-nav">
-    <div class="container-fluid d-flex">
-      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
-        <i class="bi bi-layout-text-sidebar-reverse"></i>
-      </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./intro.html">Introduction</a></li></ol></nav>
-        <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
-        </a>
-      <button type="button" class="btn quarto-search-button" aria-label="" onclick="window.quartoOpenSearch();">
-        <i class="bi bi-search"></i>
-      </button>
-    </div>
-  </nav>
+<header class="headroom fixed-top" id="quarto-header">
+<nav class="quarto-secondary-nav">
+<div class="container-fluid d-flex">
+<button aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" class="quarto-btn-toggle btn" data-bs-target=".quarto-sidebar-collapse-item" data-bs-toggle="collapse" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }" type="button">
+<i class="bi bi-layout-text-sidebar-reverse"></i>
+</button>
+<nav aria-label="breadcrumb" class="quarto-page-breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./intro.html">Week 1: Key ideas</a></li></ol></nav>
+<a aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" class="flex-grow-1" data-bs-target=".quarto-sidebar-collapse-item" data-bs-toggle="collapse" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }" role="button">
+</a>
+<button aria-label="" class="btn quarto-search-button" onclick="window.quartoOpenSearch();" type="button">
+<i class="bi bi-search"></i>
+</button>
+</div>
+</nav>
 </header>
 <!-- content -->
-<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<div class="quarto-container page-columns page-rows-contents page-layout-article" id="quarto-content">
 <!-- sidebar -->
-  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
-    <div class="pt-lg-2 mt-2 text-left sidebar-header">
-    <div class="sidebar-title mb-0 py-0">
-      <a href="./">EngSci 205: Engineering-Centric Machine Learning</a> 
-    </div>
-      </div>
-        <div class="mt-2 flex-shrink-0 align-items-center">
-        <div class="sidebar-search">
-        <div id="quarto-search" class="" title="Search"></div>
-        </div>
-        </div>
-    <div class="sidebar-menu-container"> 
-    <ul class="list-unstyled mt-1">
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./index.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Preface</span></a>
-  </div>
+<nav class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto" id="quarto-sidebar">
+<div class="pt-lg-2 mt-2 text-left sidebar-header">
+<div class="sidebar-title mb-0 py-0">
+<a href="./">ENGSCI 205: Engineering-Centric Machine Learning</a>
+</div>
+</div>
+<div class="mt-2 flex-shrink-0 align-items-center">
+<div class="sidebar-search">
+<div class="" id="quarto-search" title="Search"></div>
+</div>
+</div>
+<div class="sidebar-menu-container">
+<ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./index.html">
+<span class="menu-text">Preface</span></a>
+</div>
 </li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./intro.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text">Introduction</span></a>
-  </div>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link active" href="./intro.html">
+<span class="menu-text">Week 1: Key ideas</span></a>
+</div>
 </li>
-        <li class="sidebar-item">
-  <div class="sidebar-item-container"> 
-  <a href="./vectors_matrices_tensors.html" class="sidebar-item-text sidebar-link">
- <span class="menu-text">Vectors, matrices, arrays, tensors</span></a>
-  </div>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./vectors_matrices_tensors.html">
+<span class="menu-text">Week 2: Tensors and PyTorch</span></a>
+</div>
 </li>
-    </ul>
-    </div>
+</ul>
+</div>
 </nav>
-<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<div class="quarto-sidebar-collapse-item" data-bs-target=".quarto-sidebar-collapse-item" data-bs-toggle="collapse" id="quarto-sidebar-glass"></div>
 <!-- margin-sidebar -->
-    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
-        <nav id="TOC" role="doc-toc" class="toc-active">
-    <h2 id="toc-title">Table of contents</h2>
-   
-  <ul>
-  <li><a href="#the-bitter-lesson" id="toc-the-bitter-lesson" class="nav-link active" data-scroll-target="#the-bitter-lesson">The Bitter Lesson</a></li>
-  <li><a href="#is-data-enough" id="toc-is-data-enough" class="nav-link" data-scroll-target="#is-data-enough">Is data enough?</a></li>
-  <li><a href="#where-to" id="toc-where-to" class="nav-link" data-scroll-target="#where-to">Where to?</a></li>
-  <li><a href="#basic-setting" id="toc-basic-setting" class="nav-link" data-scroll-target="#basic-setting">Basic setting</a></li>
-  <li><a href="#basic-types-of-assumptions" id="toc-basic-types-of-assumptions" class="nav-link" data-scroll-target="#basic-types-of-assumptions">Basic types of assumptions</a></li>
-  <li><a href="#stochastic-process-models" id="toc-stochastic-process-models" class="nav-link" data-scroll-target="#stochastic-process-models">Stochastic process models</a></li>
-  <li><a href="#state-space-models" id="toc-state-space-models" class="nav-link" data-scroll-target="#state-space-models">State space models</a></li>
-  <li><a href="#stepping-back-conceptual-picture" id="toc-stepping-back-conceptual-picture" class="nav-link" data-scroll-target="#stepping-back-conceptual-picture">Stepping back: conceptual picture</a></li>
-  <li><a href="#the-nonlinear-pendulum" id="toc-the-nonlinear-pendulum" class="nav-link" data-scroll-target="#the-nonlinear-pendulum">The nonlinear pendulum</a></li>
-  <li><a href="#the-linear-pendulum" id="toc-the-linear-pendulum" class="nav-link" data-scroll-target="#the-linear-pendulum">The linear pendulum</a></li>
-  <li><a href="#predicting-the-pendulum" id="toc-predicting-the-pendulum" class="nav-link" data-scroll-target="#predicting-the-pendulum">Predicting the pendulum</a></li>
-  <li><a href="#predicting-the-pendulum-empirical-approach" id="toc-predicting-the-pendulum-empirical-approach" class="nav-link" data-scroll-target="#predicting-the-pendulum-empirical-approach">Predicting the pendulum: empirical approach</a></li>
-  <li><a href="#predicting-the-pendulum-interpolation-problem" id="toc-predicting-the-pendulum-interpolation-problem" class="nav-link" data-scroll-target="#predicting-the-pendulum-interpolation-problem">Predicting the pendulum: interpolation problem</a></li>
-  <li><a href="#predicting-the-pendulum-interpolation-problem-1" id="toc-predicting-the-pendulum-interpolation-problem-1" class="nav-link" data-scroll-target="#predicting-the-pendulum-interpolation-problem-1">Predicting the pendulum: interpolation problem</a></li>
-  <li><a href="#predicting-the-pendulum-extrapolation-problem" id="toc-predicting-the-pendulum-extrapolation-problem" class="nav-link" data-scroll-target="#predicting-the-pendulum-extrapolation-problem">Predicting the pendulum: extrapolation problem</a></li>
-  <li><a href="#predicting-the-pendulum-extrapolation-problem-1" id="toc-predicting-the-pendulum-extrapolation-problem-1" class="nav-link" data-scroll-target="#predicting-the-pendulum-extrapolation-problem-1">Predicting the pendulum: extrapolation problem</a></li>
-  <li><a href="#extrapolation-problem-simple-period-based-method" id="toc-extrapolation-problem-simple-period-based-method" class="nav-link" data-scroll-target="#extrapolation-problem-simple-period-based-method">Extrapolation problem: simple period-based method</a></li>
-  <li><a href="#extrapolation-problem-basis-functions-and-features-method" id="toc-extrapolation-problem-basis-functions-and-features-method" class="nav-link" data-scroll-target="#extrapolation-problem-basis-functions-and-features-method">Extrapolation problem: basis functions and features method</a></li>
-  <li><a href="#overfitting-instability-etc." id="toc-overfitting-instability-etc." class="nav-link" data-scroll-target="#overfitting-instability-etc.">Overfitting, instability etc.</a></li>
-  <li><a href="#extrapolation-problem-simple-autoregressive-model" id="toc-extrapolation-problem-simple-autoregressive-model" class="nav-link" data-scroll-target="#extrapolation-problem-simple-autoregressive-model">Extrapolation problem: simple autoregressive model</a></li>
-  <li><a href="#extrapolation-problem-simple-autoregressive-model-1" id="toc-extrapolation-problem-simple-autoregressive-model-1" class="nav-link" data-scroll-target="#extrapolation-problem-simple-autoregressive-model-1">Extrapolation problem: simple autoregressive model</a></li>
-  <li><a href="#manual-lagged-features" id="toc-manual-lagged-features" class="nav-link" data-scroll-target="#manual-lagged-features">Manual lagged features</a></li>
-  <li><a href="#extrapolation-problem-simple-autoregressive-model-2" id="toc-extrapolation-problem-simple-autoregressive-model-2" class="nav-link" data-scroll-target="#extrapolation-problem-simple-autoregressive-model-2">Extrapolation problem: simple autoregressive model</a></li>
-  <li><a href="#extrapolation-problem-simple-autoregressive-model-3" id="toc-extrapolation-problem-simple-autoregressive-model-3" class="nav-link" data-scroll-target="#extrapolation-problem-simple-autoregressive-model-3">Extrapolation problem: simple autoregressive model</a></li>
-  <li><a href="#assumptions-make-data-representative" id="toc-assumptions-make-data-representative" class="nav-link" data-scroll-target="#assumptions-make-data-representative">Assumptions make data representative!</a></li>
-  <li><a href="#features-vs-architecture-vs-regularisation" id="toc-features-vs-architecture-vs-regularisation" class="nav-link" data-scroll-target="#features-vs-architecture-vs-regularisation">Features vs architecture vs regularisation</a></li>
-  <li><a href="#regularisation-and-hybrid-models" id="toc-regularisation-and-hybrid-models" class="nav-link" data-scroll-target="#regularisation-and-hybrid-models">Regularisation and hybrid models</a></li>
-  </ul>
-</nav>
-    </div>
+<div class="sidebar margin-sidebar" id="quarto-margin-sidebar">
+<nav class="engsci205-toc" id="TOC" role="doc-toc"><h2 id="toc-title">Table of contents</h2><ul class="toc-groups"><li class="toc-group-item"><details data-sections="title-block-header the-bitter-lesson is-data-enough where-to"><summary>Machine learning and engineering</summary><ul class="toc-group-links"><li><a data-section="title-block-header" href="#title-block-header">Overview</a></li><li><a data-section="the-bitter-lesson" href="#the-bitter-lesson">The Bitter Lesson</a></li><li><a data-section="is-data-enough" href="#is-data-enough">Is data enough?</a></li><li><a data-section="where-to" href="#where-to">Where to?</a></li></ul></details></li><li class="toc-group-item"><details data-sections="basic-setting basic-types-of-assumptions stochastic-process-models state-space-models stepping-back-conceptual-picture"><summary>Data and modelling assumptions</summary><ul class="toc-group-links"><li><a data-section="basic-setting" href="#basic-setting">Basic setting</a></li><li><a data-section="basic-types-of-assumptions" href="#basic-types-of-assumptions">Types of assumptions</a></li><li><a data-section="stochastic-process-models" href="#stochastic-process-models">Stochastic process models</a></li><li><a data-section="state-space-models" href="#state-space-models">State space models</a></li><li><a data-section="stepping-back-conceptual-picture" href="#stepping-back-conceptual-picture">Conceptual picture</a></li></ul></details></li><li class="toc-group-item"><details data-sections="the-nonlinear-pendulum the-linear-pendulum"><summary>Pendulum models</summary><ul class="toc-group-links"><li><a data-section="the-nonlinear-pendulum" href="#the-nonlinear-pendulum">The nonlinear pendulum</a></li><li><a data-section="the-linear-pendulum" href="#the-linear-pendulum">The linear pendulum</a></li></ul></details></li><li class="toc-group-item"><details data-sections="predicting-the-pendulum predicting-the-pendulum-empirical-approach predicting-the-pendulum-interpolation-problem predicting-the-pendulum-interpolation-problem-1 predicting-the-pendulum-extrapolation-problem predicting-the-pendulum-extrapolation-problem-1"><summary>Interpolation and extrapolation</summary><ul class="toc-group-links"><li><a data-section="predicting-the-pendulum" href="#predicting-the-pendulum">Prediction task</a></li><li><a data-section="predicting-the-pendulum-empirical-approach" href="#predicting-the-pendulum-empirical-approach">Empirical approaches</a></li><li><a data-section="predicting-the-pendulum-interpolation-problem" href="#predicting-the-pendulum-interpolation-problem">Interpolation</a></li><li><a data-section="predicting-the-pendulum-extrapolation-problem" href="#predicting-the-pendulum-extrapolation-problem">Extrapolation</a></li></ul></details></li><li class="toc-group-item"><details data-sections="extrapolation-problem-simple-period-based-method extrapolation-problem-basis-functions-and-features-method overfitting-instability-etc. extrapolation-problem-simple-autoregressive-model extrapolation-problem-simple-autoregressive-model-1 manual-lagged-features extrapolation-problem-simple-autoregressive-model-2 extrapolation-problem-simple-autoregressive-model-3"><summary>Improving extrapolation</summary><ul class="toc-group-links"><li><a data-section="extrapolation-problem-simple-period-based-method" href="#extrapolation-problem-simple-period-based-method">Period-based prediction</a></li><li><a data-section="extrapolation-problem-basis-functions-and-features-method" href="#extrapolation-problem-basis-functions-and-features-method">Basis functions and features</a></li><li><a data-section="overfitting-instability-etc." href="#overfitting-instability-etc.">Overfitting and instability</a></li><li><a data-section="extrapolation-problem-simple-autoregressive-model" href="#extrapolation-problem-simple-autoregressive-model">Autoregression</a></li><li><a data-section="manual-lagged-features" href="#manual-lagged-features">Manual lagged features</a></li></ul></details></li><li class="toc-group-item"><details data-sections="assumptions-make-data-representative features-vs-architecture-vs-regularisation regularisation-and-hybrid-models"><summary>Assumptions and hybrid models</summary><ul class="toc-group-links"><li><a data-section="assumptions-make-data-representative" href="#assumptions-make-data-representative">Assumptions and prediction</a></li><li><a data-section="features-vs-architecture-vs-regularisation" href="#features-vs-architecture-vs-regularisation">Features, architecture and regularisation</a></li><li><a data-section="regularisation-and-hybrid-models" href="#regularisation-and-hybrid-models">Regularisation and hybrid models</a></li></ul></details></li></ul></nav>
+</div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
@@ -1014,33 +972,29 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 });
 </script>
 <nav class="page-navigation">
-  <div class="nav-page nav-page-previous">
-      <a href="./index.html" class="pagination-link  aria-label=" preface"="">
-        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Preface</span>
-      </a>          
-  </div>
-  <div class="nav-page nav-page-next">
-      <a href="./vectors_matrices_tensors.html" class="pagination-link" aria-label="Vectors, matrices, arrays, tensors">
-        <span class="nav-page-text">Vectors, matrices, arrays, tensors</span> <i class="bi bi-arrow-right-short"></i>
-      </a>
-  </div>
+<div class="nav-page nav-page-previous">
+<a class="pagination-link aria-label=" href="./index.html" preface"="">
+<i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Preface</span>
+</a>
+</div>
+<div class="nav-page nav-page-next">
+<a aria-label="Week 2: Tensors and PyTorch" class="pagination-link" href="./vectors_matrices_tensors.html">
+<span class="nav-page-text">Week 2: Tensors and PyTorch</span> <i class="bi bi-arrow-right-short"></i>
+</a>
+</div>
 </nav>
 </div> <!-- /content -->
 <footer class="footer">
-  <div class="nav-footer">
-    <div class="nav-footer-left">
+<div class="nav-footer">
+<div class="nav-footer-left">
 <p>ENGSCI 205 — Weeks 1–2 notes.</p>
-</div>   
-    <div class="nav-footer-center">
-      &nbsp;
+</div>
+<div class="nav-footer-center">
+       
     </div>
-    <div class="nav-footer-right">
+<div class="nav-footer-right">
 <p><a href="downloads/EML-Week-01.pdf">Week 1 PDF</a> · <a href="downloads/EML-Week-02.pdf">Week 2 PDF</a></p>
 </div>
-  </div>
+</div>
 </footer>
-
-
-
-
 </body></html>
