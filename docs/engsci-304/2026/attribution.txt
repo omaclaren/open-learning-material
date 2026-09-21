@@ -7,21 +7,25 @@ additional credits.
 
 TRACKID3X3 BASKETBALL DATA AND DERIVATIVES
 
-Source: TrackID3x3, Indoor subset, basket_S1T4_pre, frame 50 and supplied court
-landmarks. Creators: Kazuhiro Yamada, Li Yin, Qingrui Hu, Ning Ding, Shunsuke
-Iwashita, Jun Ichikawa, Kiwamu Kotani, Calvin Yeung and Keisuke Fujii (2025).
+Source: TrackID3x3, Indoor subset, basket_S1T4_pre, selected frames and supplied
+court landmarks. Creators: Kazuhiro Yamada, Li Yin, Qingrui Hu, Ning Ding,
+Shunsuke Iwashita, Jun Ichikawa, Kiwamu Kotani, Calvin Yeung and Keisuke Fujii
+(2025).
 Dataset paper: https://doi.org/10.1145/3728423.3759400
 Public archive: https://drive.google.com/drive/folders/1aWqMwQKr5xKMjqms7-raYluSlxPsGvwX
 Dataset licence: Creative Commons Attribution 4.0 International (CC BY 4.0).
 https://creativecommons.org/licenses/by/4.0/
 
-Course modifications include still extraction, crops, annotation/prediction
-box overlays, labels, colour-channel views, geometric overlays and explanatory
-layouts. The court helper converts landmark coordinates from centimetres to
-metres and supplies a calculated image-to-court transformation. Detector
-outputs and the explanatory figure styling were created for the course, not
-provided as official results by the dataset authors. No endorsement is implied.
-This website does not distribute the video or the practical-notebook package.
+Course modifications include still extraction, crops, annotation/detection
+box overlays, track labels, segmentation-mask overlays, colour-channel views,
+geometric overlays and explanatory layouts. The website also includes a short
+processed clip of frames 50–100 with SAM3 masks and labels, played in slow
+motion. The court helper converts landmark coordinates from centimetres to
+metres and supplies a calculated image-to-court transformation. Model outputs
+and the explanatory figure styling were created for the course, not provided
+as official results by the dataset authors. No endorsement is implied.
+The original full video and the practical-notebook package are not distributed
+through this website.
 
 FOUNDATIONS OF COMPUTER VISION: PINHOLE IMAGE-FORMATION FIGURE
 

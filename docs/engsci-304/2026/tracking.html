@@ -1,0 +1,1488 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.549">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>ENGSCI 304: Engineering Machine Learning II - 10&nbsp; Basic tracking</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./tracking_motion.html" rel="next">
+<link href="./evaluation.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles/print.css">
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./visual.html">Visual data</a></li><li class="breadcrumb-item"><a href="./tracking.html"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Basic tracking</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">ENGSCI 304: Engineering Machine Learning II</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">About these notes</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./recommended_reading.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Recommended reading</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Overview</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./visual.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Visual data</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./basketball_application.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Application: From amateur basketball video footage to player trajectories</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dataset.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Obtaining and visualising the dataset</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./camera_models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Camera models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./image_tasks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Image analysis tasks</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./image_modelling.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Image modelling: From pixels to learned features</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./training.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Training and inference</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./object_detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Object detection</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Evaluation of detection models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tracking.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Basic tracking</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tracking_motion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Motion-based tracking and beyond</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#linking-detections-across-frames" id="toc-linking-detections-across-frames" class="nav-link active" data-scroll-target="#linking-detections-across-frames"><span class="header-section-number">10.1</span> Linking detections across frames</a></li>
+  <li><a href="#our-approach-to-tracking" id="toc-our-approach-to-tracking" class="nav-link" data-scroll-target="#our-approach-to-tracking"><span class="header-section-number">10.2</span> Our approach to tracking</a></li>
+  <li><a href="#comparing-detections-using-iou" id="toc-comparing-detections-using-iou" class="nav-link" data-scroll-target="#comparing-detections-using-iou"><span class="header-section-number">10.3</span> Comparing detections using IoU</a></li>
+  <li><a href="#choosing-one-to-one-links" id="toc-choosing-one-to-one-links" class="nav-link" data-scroll-target="#choosing-one-to-one-links"><span class="header-section-number">10.4</span> Choosing one-to-one links</a></li>
+  <li><a href="#accepting-candidate-links" id="toc-accepting-candidate-links" class="nav-link" data-scroll-target="#accepting-candidate-links"><span class="header-section-number">10.5</span> Accepting candidate links</a></li>
+  <li><a href="#carrying-track-ids-forward" id="toc-carrying-track-ids-forward" class="nav-link" data-scroll-target="#carrying-track-ids-forward"><span class="header-section-number">10.6</span> Carrying track IDs forward</a></li>
+  <li><a href="#unmatched-tracks-and-new-detections" id="toc-unmatched-tracks-and-new-detections" class="nav-link" data-scroll-target="#unmatched-tracks-and-new-detections"><span class="header-section-number">10.7</span> Unmatched tracks and new detections</a></li>
+  <li><a href="#a-simple-tracking-loop" id="toc-a-simple-tracking-loop" class="nav-link" data-scroll-target="#a-simple-tracking-loop"><span class="header-section-number">10.8</span> A simple tracking loop</a></li>
+  <li><a href="#inspecting-the-tracks" id="toc-inspecting-the-tracks" class="nav-link" data-scroll-target="#inspecting-the-tracks"><span class="header-section-number">10.9</span> Inspecting the tracks</a>
+  <ul class="collapse">
+  <li><a href="#checking-the-confidence-cutoff" id="toc-checking-the-confidence-cutoff" class="nav-link" data-scroll-target="#checking-the-confidence-cutoff"><span class="header-section-number">10.9.1</span> Checking the confidence cutoff</a></li>
+  <li><a href="#using-0.20-throughout" id="toc-using-0.20-throughout" class="nav-link" data-scroll-target="#using-0.20-throughout"><span class="header-section-number">10.9.2</span> Using 0.20 throughout</a></li>
+  </ul></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./visual.html">Visual data</a></li><li class="breadcrumb-item"><a href="./tracking.html"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Basic tracking</span></a></li></ol></nav>
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Basic tracking</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<section id="linking-detections-across-frames" class="level2" data-number="10.1">
+<h2 data-number="10.1" class="anchored" data-anchor-id="linking-detections-across-frames"><span class="header-section-number">10.1</span> Linking detections across frames</h2>
+<p>A detector gives us a set of boxes in each frame. Our next task is to determine which detections belong to the same player over time.</p>
+<p>The two frames below are consecutive, about 0.05 seconds apart. As before, we keep the saved YOLO11n <code>person</code> detections with confidence at least 0.50 and apply the <a href="./camera_models.html#checking-the-court-positions">court filter</a>. We map each box’s bottom-centre to court coordinates and retain it if <span class="math inline">\(0\leq X\leq9.50\)</span> and <span class="math inline">\(0\leq Y\leq15.05\)</span> metres. We use this court filter throughout the tracking examples below.</p>
+<p>We label the confidence-selected boxes in descending confidence order before court filtering, using A for frame 50 and B for frame 51. The retained boxes are A2–A7 and B2–B6; the gaps in the numbering correspond to boxes removed by the court filter.</p>
+<p>Which box in frame 51 corresponds to A5 in frame 50?</p>
+<div id="fig-tracking-two-frames" class="quarto-figure quarto-figure-center quarto-float anchored" alt="Two consecutive basketball frames with cyan predicted boxes: six detections labelled A2–A7 in frame 50 and five labelled B2–B6 in frame 51, 0.05 seconds later. A5 and B4 surround the same player. The player in A7 remains visible in frame 51 without a retained box around them.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tracking-two-frames-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="attachments/tracking/two-frame-detections.png" class="img-fluid figure-img" style="width:95.0%" alt="Two consecutive basketball frames with cyan predicted boxes: six detections labelled A2–A7 in frame 50 and five labelled B2–B6 in frame 51, 0.05 seconds later. A5 and B4 surround the same player. The player in A7 remains visible in frame 51 without a retained box around them.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tracking-two-frames-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;10.1: Cached YOLO11n person detections retained after confidence and court filtering in consecutive frames 50 and 51. The A/B labels name boxes within each frame, rather than track identities. Frames from <a href="https://doi.org/10.1145/3728423.3759400">TrackID3x3</a>, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>; box overlays, labels and layout added for the course.
+</figcaption>
+</figure>
+</div>
+<p>A5 and B4 surround the same player. We want to link these detections under a common <strong>track ID</strong> and keep that ID as we follow the player through later frames. The linked detections form a <strong>track</strong>, from which we can estimate the player’s trajectory.</p>
+<p>The player in A7 is still visible in frame 51, but none of the saved boxes around them passes our confidence threshold of 0.50. Tracking must therefore also allow for gaps in the observations, so that a player can retain the same track ID when a detection reappears.</p>
+</section>
+<section id="our-approach-to-tracking" class="level2" data-number="10.2">
+<h2 data-number="10.2" class="anchored" data-anchor-id="our-approach-to-tracking"><span class="header-section-number">10.2</span> Our approach to tracking</h2>
+<p>We want to follow the six on-court players through the video from our fixed camera, keeping a consistent ID for each player. This is a <strong>multi-object tracking (MOT)</strong> problem. The goal is to construct ‘object tracks’ that estimate consistent trajectories of objects (here, people) over time rather than just detect the objects in separate frames.</p>
+<p>Some terminology:</p>
+<table class="table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Term</th>
+<th style="text-align: left;">Meaning here</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Object or target</strong></td>
+<td style="text-align: left;">A physical player we want to follow.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Detection</strong></td>
+<td style="text-align: left;">A detector’s output for one frame: a proposed box, class and confidence.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>Track</strong></td>
+<td style="text-align: left;">A record maintained by the algorithm to follow what it treats as the same object over time, including an ID, assigned detections, and other properties associated to the object.</td>
+</tr>
+</tbody>
+</table>
+<p>When a player detection is missed, a track can still persist by allowing a certain number of ‘miss’ records in a row before dropping it from active matching. If a detection is made in a subsequent frame after a miss in a preceding frame, and the track is still considered active and is assigned that detection, the track incorporates the new detection and continues. Of course, a track can include accidental identity swaps, in which different players are associated with the same track at different times. In general, however, the goal is to associate a consistent object identity with each track.</p>
+<p>Here we use <strong>tracking-by-detection</strong>. A detector supplies observations for each frame, and the tracker links them over time. Our tracker here is <strong>online</strong>: it processes frames in order using only current and past information, without looking ahead to later frames. Here we generate the detections in advance, as in our supplied CSV, but in principle only need those at the present and past, not future.</p>
+<div id="fig-tracking-overview" class="quarto-figure quarto-figure-center quarto-float anchored" alt="Active track records provide predicted object-location boxes for the current frame based on past frames. Current detections are obtained using confidence, NMS IoU and court-position filtering. Association compares predictions with detections. Accepted matches update tracks, unmatched tracks accumulate misses, and unmatched detections start new tracks. Updated records carry forward to the next frame.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tracking-overview-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="attachments/tracking/tracking-overview.png" class="img-fluid figure-img" style="width:95.0%" alt="Active track records provide predicted object-location boxes for the current frame based on past frames. Current detections are obtained using confidence, NMS IoU and court-position filtering. Association compares predictions with detections. Accepted matches update tracks, unmatched tracks accumulate misses, and unmatched detections start new tracks. Updated records carry forward to the next frame.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tracking-overview-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;10.2: Our tracking-by-detection approach.
+</figcaption>
+</figure>
+</div>
+<p>For each new frame, we predict object location boxes for the object tracks still eligible for matching. We compare these boxes with the current detections. <strong>Association</strong> chooses which detections to assign to which object location predictions and hence which object tracks. Accepted detections update the track records. We also need rules for retaining or inactivating unmatched tracks and starting new tracks from unmatched detections. Together, these are the track-management rules.</p>
+<p>We can represent a player’s current state simply in a frame using box position and size. Later we can add motion information like velocity to improve next-frame predictions. A <strong>motion model</strong> describes how the state of the objects changes between frames. The simplest prediction rule we consider is to simply reuse the last observed box for an object unchanged for the new frame. We then consider a constant-velocity prediction while keeping the rest of the tracking loop the same.</p>
+<p>Trackers can be made more sophisticated in various ways. For example, detector boxes provide imperfect observations of the state (e.g.&nbsp;player locations), while we estimate velocities from observations across frames. We can introduce an explicit <strong>observation model</strong> to account for the difference between what we observe and the true system state, leading to ideas like (Kalman) filtering. Some approaches also incorporate <strong>appearance models</strong> that describe what an object looks like (potentially learned online), which can provide additional information for the association step when positions alone are not enough. Tracking can also be performed offline, using later frames to revise earlier associations.</p>
+<p>Finally, some systems aim to learn detection and tracking jointly rather than keeping these components separate. Here we stick to this modular, online approach for simplicity and efficiency.</p>
+</section>
+<section id="comparing-detections-using-iou" class="level2" data-number="10.3">
+<h2 data-number="10.3" class="anchored" data-anchor-id="comparing-detections-using-iou"><span class="header-section-number">10.3</span> Comparing detections using IoU</h2>
+<p>We can reuse the <a href="./evaluation.html#calculating-the-union-and-iou"><code>box_iou</code> function</a> to compare boxes across frames. Here, both inputs are detection boxes: one from frame 50 and one from frame 51, rather than an annotation box and a detection box.</p>
+<p>We compare the boxes using the same image coordinates. With a fixed camera and a short interval between frames, boxes around the same player will often cover much of the same image region.</p>
+<p>Comparing A5 in frame 50 with each of the five retained boxes in frame 51 gives:</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Box in frame 51</th>
+<th style="text-align: right;">B2</th>
+<th style="text-align: right;">B3</th>
+<th style="text-align: right;">B4</th>
+<th style="text-align: right;">B5</th>
+<th style="text-align: right;">B6</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>IoU with A5 (frame 50)</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.76</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+</tbody>
+</table>
+<p>Values are rounded to two decimal places. B4 has the largest IoU with A5; none of the other boxes overlaps A5. This supports linking A5 with B4, consistent with our visual comparison.</p>
+<p>However, IoU is clearly just a simple geometric overlap measure. Fast movement, changes in object orientation/bounding box size, etc., can reduce overlap for the same player, while boxes around different players can also overlap (occlusion).</p>
+</section>
+<section id="choosing-one-to-one-links" class="level2" data-number="10.4">
+<h2 data-number="10.4" class="anchored" data-anchor-id="choosing-one-to-one-links"><span class="header-section-number">10.4</span> Choosing one-to-one links</h2>
+<p>We now compare each of the six retained boxes in frame 50 with each of the five retained boxes in frame 51. This gives a <span class="math inline">\(6\times5\)</span> IoU matrix, with A2–A7 as rows and B2–B6 as columns.</p>
+<p>We want one-to-one links: each A-box can be paired with at most one B-box, and vice versa. We can reuse <a href="./evaluation.html#selecting-candidate-matches-in-python">the assignment calculation</a> to choose candidate pairs with the largest total IoU.</p>
+<p>With the cross-frame matrix stored as <code>ious</code>, the call <code>linear_sum_assignment(-ious)</code> selects the bold entries below. The calculation uses unrounded values; the table shows two decimal places.</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Box in frame 50</th>
+<th style="text-align: right;">B2</th>
+<th style="text-align: right;">B3</th>
+<th style="text-align: right;">B4</th>
+<th style="text-align: right;">B5</th>
+<th style="text-align: right;">B6</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>A2</td>
+<td style="text-align: right;"><strong>0.90</strong></td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td>A3</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;"><strong>0.80</strong></td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td>A4</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;"><strong>0.91</strong></td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
+<td>A5</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;"><strong>0.76</strong></td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td>A6</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;"><strong>0.86</strong></td>
+</tr>
+<tr class="even">
+<td>A7</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+</tbody>
+</table>
+<p>The selected candidate links are A2–B2, A3–B3, A4–B5, A5–B4 and A6–B6. Their total IoU is approximately 4.23. A7 is unpaired.</p>
+<p>These are candidate links, selected without a minimum-IoU acceptance test. We next need rules for accepting links and handling unpaired boxes such as A7.</p>
+</section>
+<section id="accepting-candidate-links" class="level2" data-number="10.5">
+<h2 data-number="10.5" class="anchored" data-anchor-id="accepting-candidate-links"><span class="header-section-number">10.5</span> Accepting candidate links</h2>
+<p>The SciPy assignment solver pairs each box in the smaller set with a distinct box in the larger set, even if some of those pairs have little or no overlap.</p>
+<p>For a small hypothetical example, suppose one frame contains a single detection box A and the next frame contains a single detection box B. If the IoU between A and B is 0.10, the solver still selects A–B: it is the only possible pair.</p>
+<p>We can then apply the same <a href="./evaluation.html#applying-the-minimum-iou-in-python">minimum-IoU check</a> used in detection evaluation. For this tracking example, suppose we accept a selected pair only if its IoU is at least <strong>0.30</strong>. The pair with IoU 0.10 is rejected, leaving both boxes without an accepted link.</p>
+<p>Here we maximise total IoU first, then reject selected pairs below the tracking threshold, without reconsidering the assignment. This is the basic approach taken in the <a href="https://doi.org/10.1109/ICIP.2016.7533003">original SORT algorithm</a>. Alternatively, we could exclude low-IoU track–detection pairs before assignment and choose among the remaining pairs, allowing tracks and detections to remain unmatched.</p>
+<p>These thresholds have different roles:</p>
+<table class="table">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Use</th>
+<th style="text-align: left;">What is compared or tested?</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;"><strong>Detection evaluation</strong></td>
+<td style="text-align: left;">A detection box and an annotation box in the <strong>same frame</strong>.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Tracking association (IoU ≥ 0.30 here)</strong></td>
+<td style="text-align: left;">A current detection box and a <strong>reference box for an existing track</strong>.</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;"><strong>NMS (IoU threshold 0.70)</strong></td>
+<td style="text-align: left;">Two detection boxes within the same frame, to suppress duplicates.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;"><strong>Confidence filtering (cutoff 0.50 here)</strong></td>
+<td style="text-align: left;">The score of an individual detection—not overlap between boxes.</td>
+</tr>
+</tbody>
+</table>
+<p>For tracking, the reference box is currently the last observed box; later it becomes a motion-predicted box.</p>
+<p>In our frames 50 and 51, the five selected pairs have IoUs between approximately 0.76 and 0.91, so all five pass this acceptance check. A7 does not have a selected candidate link to test so remains unpaired.</p>
+</section>
+<section id="carrying-track-ids-forward" class="level2" data-number="10.6">
+<h2 data-number="10.6" class="anchored" data-anchor-id="carrying-track-ids-forward"><span class="header-section-number">10.6</span> Carrying track IDs forward</h2>
+<p>For this worked example, we start tracking at frame 50. We will use new IDs for tracking, separate from the supplied annotations, assigning IDs T1–T6 to the six displayed detections A2–A7, respectively.</p>
+<p>For each accepted link, the box in frame 51 inherits the track ID of its partner in frame 50. For example, A5 starts track T4 and B4 inherits T4. Hence the box label changes from A5 to B4, while the track ID stays the same.</p>
+<p>This gives the following two-frame record:</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Track ID</th>
+<th style="text-align: left;">Box in frame 50</th>
+<th style="text-align: left;">Box in frame 51</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">T1</td>
+<td style="text-align: left;">A2</td>
+<td style="text-align: left;">B2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">T2</td>
+<td style="text-align: left;">A3</td>
+<td style="text-align: left;">B3</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">T3</td>
+<td style="text-align: left;">A4</td>
+<td style="text-align: left;">B5</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">T4</td>
+<td style="text-align: left;">A5</td>
+<td style="text-align: left;">B4</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">T5</td>
+<td style="text-align: left;">A6</td>
+<td style="text-align: left;">B6</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">T6</td>
+<td style="text-align: left;">A7</td>
+<td style="text-align: left;">No assigned box</td>
+</tr>
+</tbody>
+</table>
+<p>For each accepted link, we add the frame-51 box to the corresponding track record. For T6, we leave the frame-51 entry empty.</p>
+</section>
+<section id="unmatched-tracks-and-new-detections" class="level2" style="break-inside: avoid;" data-number="10.7">
+<h2 style="break-inside: avoid;" data-number="10.7" class="anchored" data-anchor-id="unmatched-tracks-and-new-detections"><span class="header-section-number">10.7</span> Unmatched tracks and new detections</h2>
+<p>We call a track <strong>active</strong> while it is still eligible for matching. In the current simple approach, we compare the detections in a new frame with the last observed box of each active track. For T6 in frame 52, this means using A7 from frame 50, despite its empty frame-51 entry.</p>
+<p>After the assignment and minimum-IoU check, we apply three rules:</p>
+<ol type="1">
+<li><strong>Accepted link:</strong> add the current box to the existing track record and reset its count of consecutive missed frames to zero.</li>
+<li><strong>Track with no accepted match:</strong> leave the current-frame entry empty and increase its missed-frame count by one.</li>
+<li><strong>Detection with no accepted match:</strong> start a new track with the next unused ID and a missed-frame count of zero. The next new ID in our example would be T7.</li>
+</ol>
+<p>For illustration, we make a track inactive after <strong>three consecutive frames without an accepted match</strong>. Its recorded history remains, but it is excluded from subsequent assignments. A match before that point resets the missed-frame count, so the track remains active.</p>
+<p>Frame 52 illustrates why we use the last observed boxes. After confidence and court filtering, it contains six retained detections, labelled C2–C7 using the same convention. Comparing T6’s last box A7 with C7 gives an IoU of approximately 0.88. The assignment selects this link, and it passes the tracking IoU threshold of 0.30:</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Track ID</th>
+<th style="text-align: left;">Box in frame 50</th>
+<th style="text-align: left;">Box in frame 51</th>
+<th style="text-align: left;">Box in frame 52</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">T6</td>
+<td style="text-align: left;">A7</td>
+<td style="text-align: left;">No assigned box</td>
+<td style="text-align: left;">C7</td>
+</tr>
+</tbody>
+</table>
+<p>T6’s missed-frame count therefore returns from one to zero. Its frame-51 entry stays empty. All six retained detections in frame 52 are linked to existing tracks, so this frame requires no new track ID.</p>
+</section>
+<section id="a-simple-tracking-loop" class="level2" data-number="10.8">
+<h2 data-number="10.8" class="anchored" data-anchor-id="a-simple-tracking-loop"><span class="header-section-number">10.8</span> A simple tracking loop</h2>
+<p>We can now process the frames in order. The file <a href="attachments/tracking/last_box_tracker.py" download="last_box_tracker.py">last_box_tracker.py</a> contains the box calculations and track-update rules above, written as plain functions. Place this file, the supplied <a href="attachments/camera-models/court_mapping.py" download="court_mapping.py">court_mapping.py</a> and <code>yolo11n_person_conf001.csv</code> in the notebook’s working directory. The code uses NumPy and SciPy; it reads the saved detections rather than rerunning YOLO.</p>
+<p>First, load the confidence-selected detections, apply the court filter and create an empty tracker:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> court_mapping <span class="im">import</span> H, transform_points</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> last_box_tracker <span class="im">import</span> load_detections, new_tracker, update_tracks</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>detections_by_frame <span class="op">=</span> load_detections(</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"yolo11n_person_conf001.csv"</span>, minimum_confidence<span class="op">=</span><span class="fl">0.50</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> frame, detections <span class="kw">in</span> detections_by_frame.items():</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    court_detections <span class="op">=</span> []</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> detection <span class="kw">in</span> detections:</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>        left, top, right, bottom <span class="op">=</span> detection[<span class="st">"box_xyxy_px"</span>]</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        footpoint <span class="op">=</span> [[(left <span class="op">+</span> right) <span class="op">/</span> <span class="dv">2</span>, bottom]]</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>        X, Y <span class="op">=</span> transform_points(footpoint, H)[<span class="dv">0</span>]</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="dv">0</span> <span class="op">&lt;=</span> X <span class="op">&lt;=</span> <span class="fl">9.50</span> <span class="kw">and</span> <span class="dv">0</span> <span class="op">&lt;=</span> Y <span class="op">&lt;=</span> <span class="fl">15.05</span>:</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>            court_detections.append(detection)</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    detections_by_frame[frame] <span class="op">=</span> court_detections</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>tracker <span class="op">=</span> new_tracker(first_frame<span class="op">=</span><span class="dv">50</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><code>load_detections</code> applies the confidence cutoff and groups detections by frame. The following loop keeps only those whose estimated court positions lie within the supplied court bounds. It preserves their box coordinates and frame-local labels. <code>tracker</code> is a dictionary containing the current frame number, the next unused ID and a dictionary of track records. Initially there are no tracks, and the next ID is T1.</p>
+<p>We then process frames 50, 51 and 52, using the same matching and inactivity settings as before:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> frame <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">50</span>, <span class="dv">53</span>):</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>    current_detections <span class="op">=</span> detections_by_frame.get(frame, [])</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>    tracker, trace <span class="op">=</span> update_tracks(</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>        tracker, current_detections, frame,</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>        minimum_iou<span class="op">=</span><span class="fl">0.30</span>, inactive_after<span class="op">=</span><span class="dv">3</span>,</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    t6 <span class="op">=</span> tracker[<span class="st">"tracks"</span>][<span class="st">"T6"</span>]</span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>    observation <span class="op">=</span> t6[<span class="st">"observations"</span>][frame]</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> observation <span class="kw">is</span> <span class="va">None</span>:</span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        label <span class="op">=</span> <span class="st">"No assigned box"</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>        label <span class="op">=</span> observation[<span class="st">"label"</span>]</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(frame, label, t6[<span class="st">"missed_frames"</span>], sep<span class="op">=</span><span class="st">" | "</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><code>range(50, 53)</code> stops before 53. The <code>.get(frame, [])</code> call supplies an empty list if that frame has no retained detections. We must still process such frames so that the missed-frame counts increase.</p>
+<p><code>update_tracks</code> returns the updated tracker and a record of the matching decisions, called <code>trace</code>. Assigning the updated dictionary to <code>tracker</code> makes its records available to the next iteration. The remaining lines select the T6 record and print the frame number, its assigned box label and its consecutive missed-frame count:</p>
+<pre class="text"><code>50 | A7 | 0
+51 | No assigned box | 1
+52 | C7 | 0</code></pre>
+<p>On frame 50, all six retained detections start new tracks because the collection is empty. The next two iterations reproduce the gap and return for T6. After the loop, <code>tracker</code> holds the recorded histories through frame 52, while <code>trace</code> describes the frame-52 assignment.</p>
+<div id="tracking-results-bridge" style="break-inside: avoid;">
+<p>We can continue through frame 100 from the frame-52 state above, using the same settings:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> frame <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">53</span>, <span class="dv">101</span>):</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    current_detections <span class="op">=</span> detections_by_frame.get(frame, [])</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    tracker, trace <span class="op">=</span> update_tracks(</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>        tracker, current_detections, frame,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        minimum_iou<span class="op">=</span><span class="fl">0.30</span>, inactive_after<span class="op">=</span><span class="dv">3</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> track_id <span class="kw">in</span> trace[<span class="st">"newly_inactive"</span>]:</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>        track <span class="op">=</span> tracker[<span class="st">"tracks"</span>][track_id]</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(track_id, track[<span class="st">"last_observed_frame"</span>], frame, sep<span class="op">=</span><span class="st">" | "</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><code>trace["newly_inactive"]</code> lists the tracks made inactive by each update. The output gives the track ID, its last observed frame and the frame in which it becomes inactive:</p>
+<pre class="text"><code>T2 | 64 | 67
+T4 | 71 | 74</code></pre>
+<p>By frame 100, the tracker holds 8 track records, 6 of which are still active.</p>
+</div>
+</section>
+<section id="inspecting-the-tracks" class="level2" data-number="10.9">
+<h2 data-number="10.9" class="anchored" data-anchor-id="inspecting-the-tracks"><span class="header-section-number">10.9</span> Inspecting the tracks</h2>
+<p>We saw in the previous results that T4 becomes inactive at frame 74. Its last assigned box is in frame 71. Here we examine the tracker results from frame 50 to frame 74 to see what happened.</p>
+<p>In frame 71, T4 labels the player in red and T7 labels the player in black.</p>
+<div id="fig-tracking-identity-switch" class="quarto-figure quarto-figure-center quarto-float anchored" alt="Four equal crops show two overlapping players. Frame 71 has T4 around the player in red and T7 around the player in black. Frame 72 has one T7 box overlapping both players. Frame 73 again has one T7 box. By frame 74, T7 labels the player in red and T8 labels the player in black.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tracking-identity-switch-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="attachments/tracking/frames71-74-track-labels.png" class="img-fluid figure-img" style="width:100.0%" alt="Four equal crops show two overlapping players. Frame 71 has T4 around the player in red and T7 around the player in black. Frame 72 has one T7 box overlapping both players. Frame 73 again has one T7 box. By frame 74, T7 labels the player in red and T8 labels the player in black.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tracking-identity-switch-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;10.3: Tracker results in frames 71–74. Each panel shows the same enlarged crop. Source: <a href="https://doi.org/10.1145/3728423.3759400">TrackID3x3</a>, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>; course tracking labels, crop and layout.
+</figcaption>
+</figure>
+</div>
+<p>In frame 72, there is one retained detection box around the two players. It is assigned to T7, while T4 receives no observation. There is also one retained box around these players in frame 73, again assigned to T7. By frame 74, T7 labels the player in red.</p>
+<p>At frame 74, the last observed box for T4 is still from frame 71, while T7’s is from frame 73. The relevant IoUs, rounded to two decimal places, are:</p>
+<table class="table">
+<colgroup>
+<col style="width: 23%">
+<col style="width: 37%">
+<col style="width: 39%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Last observed track box</th>
+<th style="text-align: right;">Frame-74 box around the player in red</th>
+<th style="text-align: right;">Frame-74 box around the player in black</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">T4, from frame 71</td>
+<td style="text-align: right;">0.43</td>
+<td style="text-align: right;"><strong>0.00</strong></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">T7, from frame 73</td>
+<td style="text-align: right;"><strong>0.74</strong></td>
+<td style="text-align: right;">0.21</td>
+</tr>
+</tbody>
+</table>
+<p>The assignment selects the bold entries: their total IoU is approximately 0.74, compared with 0.64 for the other pairing. The T7 link passes the acceptance check, while the zero-IoU link for T4 is rejected. This is T4’s third consecutive missed frame, so it becomes inactive. The unassigned box around the player in black starts T8.</p>
+<p>T7 has switched from tracking the player in black to tracking the player in red. This is an <strong>identity switch</strong>. The player in black is now tracked as T8.</p>
+<section id="checking-the-confidence-cutoff" class="level3" data-number="10.9.1">
+<h3 data-number="10.9.1" class="anchored" data-anchor-id="checking-the-confidence-cutoff"><span class="header-section-number">10.9.1</span> Checking the confidence cutoff</h3>
+<p>The saved predictions for frame 72 also include a box around the player in black with confidence 0.21. It has already passed NMS. Our confidence cutoff of 0.50 discards it.</p>
+<p>For a quick check, we can lower the confidence cutoff to 0.20 in frame 72 and keep the other frames and tracking settings unchanged. With this change, by frame 74, T4 now continues to label the player in red (as in frame 71) and T7 continues to label the player in black, i.e.&nbsp;we now preserve their IDs from frame 71. T7 has an empty entry in frame 73 and reconnects in frame 74.</p>
+<p>The lower confidence cutoff in frame 72 also admits four other detections before court filtering. Two are boxes around seated people near the court. The other two are overlapping false person detections around a bag and equipment at the lower right of the image. All four map outside the court bounds and are removed before tracking. Thus, after court filtering, the lowered confidence cutoff only introduces the useful additional box around the player in black in frame 72, which is assigned to the existing track T7 and allows it to continue following that player.</p>
+</section>
+<section id="using-0.20-throughout" class="level3" style="break-inside: avoid;" data-number="10.9.2">
+<h3 style="break-inside: avoid;" data-number="10.9.2" class="anchored" data-anchor-id="using-0.20-throughout"><span class="header-section-number">10.9.2</span> Using 0.20 throughout</h3>
+<p>If we use 0.20 throughout frames 50–100, we also retain additional boxes in the earlier frames. In this run, an additional box around the player in black starts T9 in frame 70. At frame 71, T2 labels the player in red, while T4 and T9 both have boxes around the player in black.</p>
+<div id="fig-tracking-consistent-confidence" class="quarto-figure quarto-figure-center quarto-float anchored" alt="Two enlarged crops from the fixed-0.20 run. At frame 71, T2 labels the player in red and both T4 and T9 have boxes around the player in black. At frame 74, T4 labels the player in red and T9 labels the player in black.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tracking-consistent-confidence-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="attachments/tracking/consistent020-frames71-74.png" class="img-fluid figure-img" style="width:100.0%" alt="Two enlarged crops from the fixed-0.20 run. At frame 71, T2 labels the player in red and both T4 and T9 have boxes around the player in black. At frame 74, T4 labels the player in red and T9 labels the player in black.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tracking-consistent-confidence-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;10.4: Tracking with a confidence cutoff of 0.20 throughout frames 50–100. Source: <a href="https://doi.org/10.1145/3728423.3759400">TrackID3x3</a>, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>; course tracking labels, crop and layout.
+</figcaption>
+</figure>
+</div>
+<p>These three tracks compete for the two retained boxes around the players in frame 72. The assignment gives the broad box to T4 and the other box to T9. T2 receives no observation in frames 72–74 and becomes inactive. By frame 74, T4 has switched to the player in red, while T9 labels the player in black. We again have an identity switch.</p>
+<p>Over frames 50–100, using 0.20 creates 12 track records, compared with 8 at 0.50, with the same court filter in both runs.</p>
+<p>Issues such as these motivate further improvements to the tracking approach. So far, we have simply compared current detections with old box positions. A next step is to use past <strong>motion</strong> information to <strong>predict</strong> where each track’s box should be in the current frame, then match detections to those predicted boxes. This can help improve on some of the issues encountered so far, though identity switches and similar issues can still occur. We consider this in <a href="./tracking_motion.html">the next chapter</a>.</p>
+
+
+<!-- -->
+
+</section>
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./evaluation.html" class="pagination-link  aria-label=" &lt;span="" of="" detection="" models&lt;="" span&gt;"="">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Evaluation of detection models</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./tracking_motion.html" class="pagination-link" aria-label="<span class='chapter-number'>11</span>&nbsp; <span class='chapter-title'>Motion-based tracking and beyond</span>">
+        <span class="nav-page-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Motion-based tracking and beyond</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb6" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Basic tracking</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">## Linking detections across frames</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>A detector gives us a set of boxes in each frame. Our next task is to determine which detections belong to the same player over time.</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>The two frames below are consecutive, about 0.05 seconds apart. As before, we keep the saved YOLO11n <span class="in">`person`</span> detections with confidence at least 0.50 and apply the <span class="co">[</span><span class="ot">court filter</span><span class="co">](camera_models.qmd#checking-the-court-positions)</span>. We map each box's bottom-centre to court coordinates and retain it if $0\leq X\leq9.50$ and $0\leq Y\leq15.05$ metres. We use this court filter throughout the tracking examples below.</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>We label the confidence-selected boxes in descending confidence order before court filtering, using A for frame 50 and B for frame 51. The retained boxes are A2–A7 and B2–B6; the gaps in the numbering correspond to boxes removed by the court filter.</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>Which box in frame 51 corresponds to A5 in frame 50?</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>!<span class="co">[</span><span class="ot">Cached YOLO11n person detections retained after confidence and court filtering in consecutive frames 50 and 51. The A/B labels name boxes within each frame, rather than track identities. Frames from [TrackID3x3](https://doi.org/10.1145/3728423.3759400), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); box overlays, labels and layout added for the course.</span><span class="co">](&lt;attachments/tracking/two-frame-detections.png&gt;)</span>{#fig-tracking-two-frames width=95% fig-alt="Two consecutive basketball frames with cyan predicted boxes: six detections labelled A2–A7 in frame 50 and five labelled B2–B6 in frame 51, 0.05 seconds later. A5 and B4 surround the same player. The player in A7 remains visible in frame 51 without a retained box around them."}</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>A5 and B4 surround the same player. We want to link these detections under a common **track ID** and keep that ID as we follow the player through later frames. The linked detections form a **track**, from which we can estimate the player's trajectory.</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>The player in A7 is still visible in frame 51, but none of the saved boxes around them passes our confidence threshold of 0.50. Tracking must therefore also allow for gaps in the observations, so that a player can retain the same track ID when a detection reappears.</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a><span class="fu">## Our approach to tracking</span></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>We want to follow the six on-court players through the video from our fixed camera, keeping a consistent ID for each player. This is a **multi-object tracking (MOT)** problem. The goal is to construct 'object tracks' that estimate consistent trajectories of objects (here, people) over time rather than just detect the objects in separate frames.</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>Some terminology:</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>| Term | Meaning here |</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>|:---|:---|</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>| **Object or target** | A physical player we want to follow. |</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>| **Detection** | A detector's output for one frame: a proposed box, class and confidence. |</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>| **Track** | A record maintained by the algorithm to follow what it treats as the same object over time, including an ID, assigned detections, and other properties associated to the object. |</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>When a player detection is missed, a track can still persist by allowing a certain number of 'miss' records in a row before dropping it from active matching. If a detection is made in a subsequent frame after a miss in a preceding frame, and the track is still considered active and is assigned that detection, the track incorporates the new detection and continues. Of course, a track can include accidental identity swaps, in which different players are associated with the same track at different times. In general, however, the goal is to associate a consistent object identity with each track.</span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>Here we use **tracking-by-detection**. A detector supplies observations for each frame, and the tracker links them over time. Our tracker here is **online**: it processes frames in order using only current and past information, without looking ahead to later frames. Here we generate the detections in advance, as in our supplied CSV, but in principle only need those at the present and past, not future.</span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a><span class="al">![Our tracking-by-detection approach.](&lt;attachments/tracking/tracking-overview.png&gt;)</span>{#fig-tracking-overview width=95% fig-alt="Active track records provide predicted object-location boxes for the current frame based on past frames. Current detections are obtained using confidence, NMS IoU and court-position filtering. Association compares predictions with detections. Accepted matches update tracks, unmatched tracks accumulate misses, and unmatched detections start new tracks. Updated records carry forward to the next frame."}</span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>For each new frame, we predict object location boxes for the object tracks still eligible for matching. We compare these boxes with the current detections. **Association** chooses which detections to assign to which object location predictions and hence which object tracks. Accepted detections update the track records. We also need rules for retaining or inactivating unmatched tracks and starting new tracks from unmatched detections. Together, these are the track-management rules.</span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a>We can represent a player's current state simply in a frame using box position and size. Later we can add motion information like velocity to improve next-frame predictions. A **motion model** describes how the state of the objects changes between frames. The simplest prediction rule we consider is to simply reuse the last observed box for an object unchanged for the new frame. We then consider a constant-velocity prediction while keeping the rest of the tracking loop the same.</span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a>Trackers can be made more sophisticated in various ways. For example, detector boxes provide imperfect observations of the state (e.g. player locations), while we estimate velocities from observations across frames. We can introduce an explicit **observation model** to account for the difference between what we observe and the true system state, leading to ideas like (Kalman) filtering. Some approaches also incorporate **appearance models** that describe what an object looks like (potentially learned online), which can provide additional information for the association step when positions alone are not enough. Tracking can also be performed offline, using later frames to revise earlier associations.</span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-43"><a href="#cb6-43" aria-hidden="true" tabindex="-1"></a>Finally, some systems aim to learn detection and tracking jointly rather than keeping these components separate. Here we stick to this modular, online approach for simplicity and efficiency.</span>
+<span id="cb6-44"><a href="#cb6-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-45"><a href="#cb6-45" aria-hidden="true" tabindex="-1"></a><span class="fu">## Comparing detections using IoU</span></span>
+<span id="cb6-46"><a href="#cb6-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-47"><a href="#cb6-47" aria-hidden="true" tabindex="-1"></a>We can reuse the <span class="co">[</span><span class="ot">`box_iou` function</span><span class="co">](evaluation.qmd#calculating-the-union-and-iou)</span> to compare boxes across frames. Here, both inputs are detection boxes: one from frame 50 and one from frame 51, rather than an annotation box and a detection box.</span>
+<span id="cb6-48"><a href="#cb6-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-49"><a href="#cb6-49" aria-hidden="true" tabindex="-1"></a>We compare the boxes using the same image coordinates. With a fixed camera and a short interval between frames, boxes around the same player will often cover much of the same image region.</span>
+<span id="cb6-50"><a href="#cb6-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-51"><a href="#cb6-51" aria-hidden="true" tabindex="-1"></a>Comparing A5 in frame 50 with each of the five retained boxes in frame 51 gives:</span>
+<span id="cb6-52"><a href="#cb6-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-53"><a href="#cb6-53" aria-hidden="true" tabindex="-1"></a>| Box in frame 51 | B2 | B3 | B4 | B5 | B6 |</span>
+<span id="cb6-54"><a href="#cb6-54" aria-hidden="true" tabindex="-1"></a>|------------|---:|---:|---:|---:|---:|</span>
+<span id="cb6-55"><a href="#cb6-55" aria-hidden="true" tabindex="-1"></a>| IoU with A5 (frame 50) | 0.00 | 0.00 | 0.76 | 0.00 | 0.00 |</span>
+<span id="cb6-56"><a href="#cb6-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-57"><a href="#cb6-57" aria-hidden="true" tabindex="-1"></a>Values are rounded to two decimal places. B4 has the largest IoU with A5; none of the other boxes overlaps A5. This supports linking A5 with B4, consistent with our visual comparison.</span>
+<span id="cb6-58"><a href="#cb6-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-59"><a href="#cb6-59" aria-hidden="true" tabindex="-1"></a>However, IoU is clearly just a simple geometric overlap measure. Fast movement, changes in object orientation/bounding box size, etc., can reduce overlap for the same player, while boxes around different players can also overlap (occlusion).</span>
+<span id="cb6-60"><a href="#cb6-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-61"><a href="#cb6-61" aria-hidden="true" tabindex="-1"></a><span class="fu">## Choosing one-to-one links</span></span>
+<span id="cb6-62"><a href="#cb6-62" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-63"><a href="#cb6-63" aria-hidden="true" tabindex="-1"></a>We now compare each of the six retained boxes in frame 50 with each of the five retained boxes in frame 51. This gives a $6\times5$ IoU matrix, with A2–A7 as rows and B2–B6 as columns.</span>
+<span id="cb6-64"><a href="#cb6-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-65"><a href="#cb6-65" aria-hidden="true" tabindex="-1"></a>We want one-to-one links: each A-box can be paired with at most one B-box, and vice versa. We can reuse <span class="co">[</span><span class="ot">the assignment calculation</span><span class="co">](evaluation.qmd#selecting-candidate-matches-in-python)</span> to choose candidate pairs with the largest total IoU.</span>
+<span id="cb6-66"><a href="#cb6-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-67"><a href="#cb6-67" aria-hidden="true" tabindex="-1"></a>With the cross-frame matrix stored as <span class="in">`ious`</span>, the call <span class="in">`linear_sum_assignment(-ious)`</span> selects the bold entries below. The calculation uses unrounded values; the table shows two decimal places.</span>
+<span id="cb6-68"><a href="#cb6-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-69"><a href="#cb6-69" aria-hidden="true" tabindex="-1"></a>| Box in frame 50 | B2 | B3 | B4 | B5 | B6 |</span>
+<span id="cb6-70"><a href="#cb6-70" aria-hidden="true" tabindex="-1"></a>|------------|---:|---:|---:|---:|---:|</span>
+<span id="cb6-71"><a href="#cb6-71" aria-hidden="true" tabindex="-1"></a>| A2 | **0.90** | 0.00 | 0.00 | 0.00 | 0.00 |</span>
+<span id="cb6-72"><a href="#cb6-72" aria-hidden="true" tabindex="-1"></a>| A3 | 0.00 | **0.80** | 0.00 | 0.00 | 0.00 |</span>
+<span id="cb6-73"><a href="#cb6-73" aria-hidden="true" tabindex="-1"></a>| A4 | 0.00 | 0.00 | 0.00 | **0.91** | 0.00 |</span>
+<span id="cb6-74"><a href="#cb6-74" aria-hidden="true" tabindex="-1"></a>| A5 | 0.00 | 0.00 | **0.76** | 0.00 | 0.00 |</span>
+<span id="cb6-75"><a href="#cb6-75" aria-hidden="true" tabindex="-1"></a>| A6 | 0.00 | 0.00 | 0.00 | 0.00 | **0.86** |</span>
+<span id="cb6-76"><a href="#cb6-76" aria-hidden="true" tabindex="-1"></a>| A7 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 |</span>
+<span id="cb6-77"><a href="#cb6-77" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-78"><a href="#cb6-78" aria-hidden="true" tabindex="-1"></a>The selected candidate links are A2–B2, A3–B3, A4–B5, A5–B4 and A6–B6. Their total IoU is approximately 4.23. A7 is unpaired.</span>
+<span id="cb6-79"><a href="#cb6-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-80"><a href="#cb6-80" aria-hidden="true" tabindex="-1"></a>These are candidate links, selected without a minimum-IoU acceptance test. We next need rules for accepting links and handling unpaired boxes such as A7.</span>
+<span id="cb6-81"><a href="#cb6-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-82"><a href="#cb6-82" aria-hidden="true" tabindex="-1"></a><span class="fu">## Accepting candidate links</span></span>
+<span id="cb6-83"><a href="#cb6-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-84"><a href="#cb6-84" aria-hidden="true" tabindex="-1"></a>The SciPy assignment solver pairs each box in the smaller set with a distinct box in the larger set, even if some of those pairs have little or no overlap.</span>
+<span id="cb6-85"><a href="#cb6-85" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-86"><a href="#cb6-86" aria-hidden="true" tabindex="-1"></a>For a small hypothetical example, suppose one frame contains a single detection box A and the next frame contains a single detection box B. If the IoU between A and B is 0.10, the solver still selects A–B: it is the only possible pair.</span>
+<span id="cb6-87"><a href="#cb6-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-88"><a href="#cb6-88" aria-hidden="true" tabindex="-1"></a>We can then apply the same <span class="co">[</span><span class="ot">minimum-IoU check</span><span class="co">](evaluation.qmd#applying-the-minimum-iou-in-python)</span> used in detection evaluation. For this tracking example, suppose we accept a selected pair only if its IoU is at least **0.30**. The pair with IoU 0.10 is rejected, leaving both boxes without an accepted link.</span>
+<span id="cb6-89"><a href="#cb6-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-90"><a href="#cb6-90" aria-hidden="true" tabindex="-1"></a>Here we maximise total IoU first, then reject selected pairs below the tracking threshold, without reconsidering the assignment. This is the basic approach taken in the <span class="co">[</span><span class="ot">original SORT algorithm</span><span class="co">](https://doi.org/10.1109/ICIP.2016.7533003)</span>. Alternatively, we could exclude low-IoU track–detection pairs before assignment and choose among the remaining pairs, allowing tracks and detections to remain unmatched.</span>
+<span id="cb6-91"><a href="#cb6-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-92"><a href="#cb6-92" aria-hidden="true" tabindex="-1"></a>These thresholds have different roles:</span>
+<span id="cb6-93"><a href="#cb6-93" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-94"><a href="#cb6-94" aria-hidden="true" tabindex="-1"></a>| Use | What is compared or tested? |</span>
+<span id="cb6-95"><a href="#cb6-95" aria-hidden="true" tabindex="-1"></a>|:---|:---|</span>
+<span id="cb6-96"><a href="#cb6-96" aria-hidden="true" tabindex="-1"></a>| **Detection evaluation** | A detection box and an annotation box in the **same frame**. |</span>
+<span id="cb6-97"><a href="#cb6-97" aria-hidden="true" tabindex="-1"></a>| **Tracking association (IoU ≥ 0.30 here)** | A current detection box and a **reference box for an existing track**. |</span>
+<span id="cb6-98"><a href="#cb6-98" aria-hidden="true" tabindex="-1"></a>| **NMS (IoU threshold 0.70)** | Two detection boxes within the same frame, to suppress duplicates. |</span>
+<span id="cb6-99"><a href="#cb6-99" aria-hidden="true" tabindex="-1"></a>| **Confidence filtering (cutoff 0.50 here)** | The score of an individual detection—not overlap between boxes. |</span>
+<span id="cb6-100"><a href="#cb6-100" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-101"><a href="#cb6-101" aria-hidden="true" tabindex="-1"></a>For tracking, the reference box is currently the last observed box; later it becomes a motion-predicted box.</span>
+<span id="cb6-102"><a href="#cb6-102" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-103"><a href="#cb6-103" aria-hidden="true" tabindex="-1"></a>In our frames 50 and 51, the five selected pairs have IoUs between approximately 0.76 and 0.91, so all five pass this acceptance check. A7 does not have a selected candidate link to test so remains unpaired.</span>
+<span id="cb6-104"><a href="#cb6-104" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-105"><a href="#cb6-105" aria-hidden="true" tabindex="-1"></a><span class="fu">## Carrying track IDs forward</span></span>
+<span id="cb6-106"><a href="#cb6-106" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-107"><a href="#cb6-107" aria-hidden="true" tabindex="-1"></a>For this worked example, we start tracking at frame 50. We will use new IDs for tracking, separate from the supplied annotations, assigning IDs T1–T6 to the six displayed detections A2–A7, respectively.</span>
+<span id="cb6-108"><a href="#cb6-108" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-109"><a href="#cb6-109" aria-hidden="true" tabindex="-1"></a>For each accepted link, the box in frame 51 inherits the track ID of its partner in frame 50. For example, A5 starts track T4 and B4 inherits T4. Hence the box label changes from A5 to B4, while the track ID stays the same.</span>
+<span id="cb6-110"><a href="#cb6-110" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-111"><a href="#cb6-111" aria-hidden="true" tabindex="-1"></a>This gives the following two-frame record:</span>
+<span id="cb6-112"><a href="#cb6-112" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-113"><a href="#cb6-113" aria-hidden="true" tabindex="-1"></a>| Track ID | Box in frame 50 | Box in frame 51 |</span>
+<span id="cb6-114"><a href="#cb6-114" aria-hidden="true" tabindex="-1"></a>|:--------|:----------------|:----------------|</span>
+<span id="cb6-115"><a href="#cb6-115" aria-hidden="true" tabindex="-1"></a>| T1 | A2 | B2 |</span>
+<span id="cb6-116"><a href="#cb6-116" aria-hidden="true" tabindex="-1"></a>| T2 | A3 | B3 |</span>
+<span id="cb6-117"><a href="#cb6-117" aria-hidden="true" tabindex="-1"></a>| T3 | A4 | B5 |</span>
+<span id="cb6-118"><a href="#cb6-118" aria-hidden="true" tabindex="-1"></a>| T4 | A5 | B4 |</span>
+<span id="cb6-119"><a href="#cb6-119" aria-hidden="true" tabindex="-1"></a>| T5 | A6 | B6 |</span>
+<span id="cb6-120"><a href="#cb6-120" aria-hidden="true" tabindex="-1"></a>| T6 | A7 | No assigned box |</span>
+<span id="cb6-121"><a href="#cb6-121" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-122"><a href="#cb6-122" aria-hidden="true" tabindex="-1"></a>For each accepted link, we add the frame-51 box to the corresponding track record. For T6, we leave the frame-51 entry empty.</span>
+<span id="cb6-123"><a href="#cb6-123" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-124"><a href="#cb6-124" aria-hidden="true" tabindex="-1"></a><span class="fu">## Unmatched tracks and new detections {style="break-inside: avoid;"}</span></span>
+<span id="cb6-125"><a href="#cb6-125" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-126"><a href="#cb6-126" aria-hidden="true" tabindex="-1"></a>We call a track **active** while it is still eligible for matching. In the current simple approach, we compare the detections in a new frame with the last observed box of each active track. For T6 in frame 52, this means using A7 from frame 50, despite its empty frame-51 entry.</span>
+<span id="cb6-127"><a href="#cb6-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-128"><a href="#cb6-128" aria-hidden="true" tabindex="-1"></a>After the assignment and minimum-IoU check, we apply three rules:</span>
+<span id="cb6-129"><a href="#cb6-129" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-130"><a href="#cb6-130" aria-hidden="true" tabindex="-1"></a><span class="ss">1. </span>**Accepted link:** add the current box to the existing track record and reset its count of consecutive missed frames to zero.</span>
+<span id="cb6-131"><a href="#cb6-131" aria-hidden="true" tabindex="-1"></a><span class="ss">2. </span>**Track with no accepted match:** leave the current-frame entry empty and increase its missed-frame count by one.</span>
+<span id="cb6-132"><a href="#cb6-132" aria-hidden="true" tabindex="-1"></a><span class="ss">3. </span>**Detection with no accepted match:** start a new track with the next unused ID and a missed-frame count of zero. The next new ID in our example would be T7.</span>
+<span id="cb6-133"><a href="#cb6-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-134"><a href="#cb6-134" aria-hidden="true" tabindex="-1"></a>For illustration, we make a track inactive after **three consecutive frames without an accepted match**. Its recorded history remains, but it is excluded from subsequent assignments. A match before that point resets the missed-frame count, so the track remains active.</span>
+<span id="cb6-135"><a href="#cb6-135" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-136"><a href="#cb6-136" aria-hidden="true" tabindex="-1"></a>Frame 52 illustrates why we use the last observed boxes. After confidence and court filtering, it contains six retained detections, labelled C2–C7 using the same convention. Comparing T6's last box A7 with C7 gives an IoU of approximately 0.88. The assignment selects this link, and it passes the tracking IoU threshold of 0.30:</span>
+<span id="cb6-137"><a href="#cb6-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-138"><a href="#cb6-138" aria-hidden="true" tabindex="-1"></a>| Track ID | Box in frame 50 | Box in frame 51 | Box in frame 52 |</span>
+<span id="cb6-139"><a href="#cb6-139" aria-hidden="true" tabindex="-1"></a>|:--------|:----------------|:----------------|:----------------|</span>
+<span id="cb6-140"><a href="#cb6-140" aria-hidden="true" tabindex="-1"></a>| T6 | A7 | No assigned box | C7 |</span>
+<span id="cb6-141"><a href="#cb6-141" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-142"><a href="#cb6-142" aria-hidden="true" tabindex="-1"></a>T6's missed-frame count therefore returns from one to zero. Its frame-51 entry stays empty. All six retained detections in frame 52 are linked to existing tracks, so this frame requires no new track ID.</span>
+<span id="cb6-143"><a href="#cb6-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-144"><a href="#cb6-144" aria-hidden="true" tabindex="-1"></a><span class="fu">## A simple tracking loop</span></span>
+<span id="cb6-145"><a href="#cb6-145" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-146"><a href="#cb6-146" aria-hidden="true" tabindex="-1"></a>We can now process the frames in order. The file <span class="co">[</span><span class="ot">last_box_tracker.py</span><span class="co">](&lt;attachments/tracking/last_box_tracker.py&gt;)</span>{download="last_box_tracker.py"} contains the box calculations and track-update rules above, written as plain functions. Place this file, the supplied <span class="co">[</span><span class="ot">court_mapping.py</span><span class="co">](&lt;attachments/camera-models/court_mapping.py&gt;)</span>{download="court_mapping.py"} and <span class="in">`yolo11n_person_conf001.csv`</span> in the notebook's working directory. The code uses NumPy and SciPy; it reads the saved detections rather than rerunning YOLO.</span>
+<span id="cb6-147"><a href="#cb6-147" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-148"><a href="#cb6-148" aria-hidden="true" tabindex="-1"></a>First, load the confidence-selected detections, apply the court filter and create an empty tracker:</span>
+<span id="cb6-149"><a href="#cb6-149" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-150"><a href="#cb6-150" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb6-151"><a href="#cb6-151" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> court_mapping <span class="im">import</span> H, transform_points</span>
+<span id="cb6-152"><a href="#cb6-152" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> last_box_tracker <span class="im">import</span> load_detections, new_tracker, update_tracks</span>
+<span id="cb6-153"><a href="#cb6-153" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-154"><a href="#cb6-154" aria-hidden="true" tabindex="-1"></a>detections_by_frame <span class="op">=</span> load_detections(</span>
+<span id="cb6-155"><a href="#cb6-155" aria-hidden="true" tabindex="-1"></a>    <span class="st">"yolo11n_person_conf001.csv"</span>, minimum_confidence<span class="op">=</span><span class="fl">0.50</span></span>
+<span id="cb6-156"><a href="#cb6-156" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-157"><a href="#cb6-157" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-158"><a href="#cb6-158" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> frame, detections <span class="kw">in</span> detections_by_frame.items():</span>
+<span id="cb6-159"><a href="#cb6-159" aria-hidden="true" tabindex="-1"></a>    court_detections <span class="op">=</span> []</span>
+<span id="cb6-160"><a href="#cb6-160" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> detection <span class="kw">in</span> detections:</span>
+<span id="cb6-161"><a href="#cb6-161" aria-hidden="true" tabindex="-1"></a>        left, top, right, bottom <span class="op">=</span> detection[<span class="st">"box_xyxy_px"</span>]</span>
+<span id="cb6-162"><a href="#cb6-162" aria-hidden="true" tabindex="-1"></a>        footpoint <span class="op">=</span> [[(left <span class="op">+</span> right) <span class="op">/</span> <span class="dv">2</span>, bottom]]</span>
+<span id="cb6-163"><a href="#cb6-163" aria-hidden="true" tabindex="-1"></a>        X, Y <span class="op">=</span> transform_points(footpoint, H)[<span class="dv">0</span>]</span>
+<span id="cb6-164"><a href="#cb6-164" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="dv">0</span> <span class="op">&lt;=</span> X <span class="op">&lt;=</span> <span class="fl">9.50</span> <span class="kw">and</span> <span class="dv">0</span> <span class="op">&lt;=</span> Y <span class="op">&lt;=</span> <span class="fl">15.05</span>:</span>
+<span id="cb6-165"><a href="#cb6-165" aria-hidden="true" tabindex="-1"></a>            court_detections.append(detection)</span>
+<span id="cb6-166"><a href="#cb6-166" aria-hidden="true" tabindex="-1"></a>    detections_by_frame[frame] <span class="op">=</span> court_detections</span>
+<span id="cb6-167"><a href="#cb6-167" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-168"><a href="#cb6-168" aria-hidden="true" tabindex="-1"></a>tracker <span class="op">=</span> new_tracker(first_frame<span class="op">=</span><span class="dv">50</span>)</span>
+<span id="cb6-169"><a href="#cb6-169" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-170"><a href="#cb6-170" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-171"><a href="#cb6-171" aria-hidden="true" tabindex="-1"></a><span class="in">`load_detections`</span> applies the confidence cutoff and groups detections by frame. The following loop keeps only those whose estimated court positions lie within the supplied court bounds. It preserves their box coordinates and frame-local labels. <span class="in">`tracker`</span> is a dictionary containing the current frame number, the next unused ID and a dictionary of track records. Initially there are no tracks, and the next ID is T1.</span>
+<span id="cb6-172"><a href="#cb6-172" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-173"><a href="#cb6-173" aria-hidden="true" tabindex="-1"></a>We then process frames 50, 51 and 52, using the same matching and inactivity settings as before:</span>
+<span id="cb6-174"><a href="#cb6-174" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-175"><a href="#cb6-175" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb6-176"><a href="#cb6-176" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> frame <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">50</span>, <span class="dv">53</span>):</span>
+<span id="cb6-177"><a href="#cb6-177" aria-hidden="true" tabindex="-1"></a>    current_detections <span class="op">=</span> detections_by_frame.get(frame, [])</span>
+<span id="cb6-178"><a href="#cb6-178" aria-hidden="true" tabindex="-1"></a>    tracker, trace <span class="op">=</span> update_tracks(</span>
+<span id="cb6-179"><a href="#cb6-179" aria-hidden="true" tabindex="-1"></a>        tracker, current_detections, frame,</span>
+<span id="cb6-180"><a href="#cb6-180" aria-hidden="true" tabindex="-1"></a>        minimum_iou<span class="op">=</span><span class="fl">0.30</span>, inactive_after<span class="op">=</span><span class="dv">3</span>,</span>
+<span id="cb6-181"><a href="#cb6-181" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb6-182"><a href="#cb6-182" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-183"><a href="#cb6-183" aria-hidden="true" tabindex="-1"></a>    t6 <span class="op">=</span> tracker[<span class="st">"tracks"</span>][<span class="st">"T6"</span>]</span>
+<span id="cb6-184"><a href="#cb6-184" aria-hidden="true" tabindex="-1"></a>    observation <span class="op">=</span> t6[<span class="st">"observations"</span>][frame]</span>
+<span id="cb6-185"><a href="#cb6-185" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> observation <span class="kw">is</span> <span class="va">None</span>:</span>
+<span id="cb6-186"><a href="#cb6-186" aria-hidden="true" tabindex="-1"></a>        label <span class="op">=</span> <span class="st">"No assigned box"</span></span>
+<span id="cb6-187"><a href="#cb6-187" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb6-188"><a href="#cb6-188" aria-hidden="true" tabindex="-1"></a>        label <span class="op">=</span> observation[<span class="st">"label"</span>]</span>
+<span id="cb6-189"><a href="#cb6-189" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(frame, label, t6[<span class="st">"missed_frames"</span>], sep<span class="op">=</span><span class="st">" | "</span>)</span>
+<span id="cb6-190"><a href="#cb6-190" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-191"><a href="#cb6-191" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-192"><a href="#cb6-192" aria-hidden="true" tabindex="-1"></a><span class="in">`range(50, 53)`</span> stops before 53. The <span class="in">`.get(frame, [])`</span> call supplies an empty list if that frame has no retained detections. We must still process such frames so that the missed-frame counts increase.</span>
+<span id="cb6-193"><a href="#cb6-193" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-194"><a href="#cb6-194" aria-hidden="true" tabindex="-1"></a><span class="in">`update_tracks`</span> returns the updated tracker and a record of the matching decisions, called <span class="in">`trace`</span>. Assigning the updated dictionary to <span class="in">`tracker`</span> makes its records available to the next iteration. The remaining lines select the T6 record and print the frame number, its assigned box label and its consecutive missed-frame count:</span>
+<span id="cb6-195"><a href="#cb6-195" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-196"><a href="#cb6-196" aria-hidden="true" tabindex="-1"></a><span class="in">```text</span></span>
+<span id="cb6-197"><a href="#cb6-197" aria-hidden="true" tabindex="-1"></a><span class="in">50 | A7 | 0</span></span>
+<span id="cb6-198"><a href="#cb6-198" aria-hidden="true" tabindex="-1"></a><span class="in">51 | No assigned box | 1</span></span>
+<span id="cb6-199"><a href="#cb6-199" aria-hidden="true" tabindex="-1"></a><span class="in">52 | C7 | 0</span></span>
+<span id="cb6-200"><a href="#cb6-200" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-201"><a href="#cb6-201" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-202"><a href="#cb6-202" aria-hidden="true" tabindex="-1"></a>On frame 50, all six retained detections start new tracks because the collection is empty. The next two iterations reproduce the gap and return for T6. After the loop, <span class="in">`tracker`</span> holds the recorded histories through frame 52, while <span class="in">`trace`</span> describes the frame-52 assignment.</span>
+<span id="cb6-203"><a href="#cb6-203" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-204"><a href="#cb6-204" aria-hidden="true" tabindex="-1"></a>::: {#tracking-results-bridge style="break-inside: avoid;"}</span>
+<span id="cb6-205"><a href="#cb6-205" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-206"><a href="#cb6-206" aria-hidden="true" tabindex="-1"></a>We can continue through frame 100 from the frame-52 state above, using the same settings:</span>
+<span id="cb6-207"><a href="#cb6-207" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-208"><a href="#cb6-208" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb6-209"><a href="#cb6-209" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> frame <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">53</span>, <span class="dv">101</span>):</span>
+<span id="cb6-210"><a href="#cb6-210" aria-hidden="true" tabindex="-1"></a>    current_detections <span class="op">=</span> detections_by_frame.get(frame, [])</span>
+<span id="cb6-211"><a href="#cb6-211" aria-hidden="true" tabindex="-1"></a>    tracker, trace <span class="op">=</span> update_tracks(</span>
+<span id="cb6-212"><a href="#cb6-212" aria-hidden="true" tabindex="-1"></a>        tracker, current_detections, frame,</span>
+<span id="cb6-213"><a href="#cb6-213" aria-hidden="true" tabindex="-1"></a>        minimum_iou<span class="op">=</span><span class="fl">0.30</span>, inactive_after<span class="op">=</span><span class="dv">3</span>,</span>
+<span id="cb6-214"><a href="#cb6-214" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb6-215"><a href="#cb6-215" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-216"><a href="#cb6-216" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> track_id <span class="kw">in</span> trace[<span class="st">"newly_inactive"</span>]:</span>
+<span id="cb6-217"><a href="#cb6-217" aria-hidden="true" tabindex="-1"></a>        track <span class="op">=</span> tracker[<span class="st">"tracks"</span>][track_id]</span>
+<span id="cb6-218"><a href="#cb6-218" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(track_id, track[<span class="st">"last_observed_frame"</span>], frame, sep<span class="op">=</span><span class="st">" | "</span>)</span>
+<span id="cb6-219"><a href="#cb6-219" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-220"><a href="#cb6-220" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-221"><a href="#cb6-221" aria-hidden="true" tabindex="-1"></a><span class="in">`trace["newly_inactive"]`</span> lists the tracks made inactive by each update. The output gives the track ID, its last observed frame and the frame in which it becomes inactive:</span>
+<span id="cb6-222"><a href="#cb6-222" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-223"><a href="#cb6-223" aria-hidden="true" tabindex="-1"></a><span class="in">```text</span></span>
+<span id="cb6-224"><a href="#cb6-224" aria-hidden="true" tabindex="-1"></a><span class="in">T2 | 64 | 67</span></span>
+<span id="cb6-225"><a href="#cb6-225" aria-hidden="true" tabindex="-1"></a><span class="in">T4 | 71 | 74</span></span>
+<span id="cb6-226"><a href="#cb6-226" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb6-227"><a href="#cb6-227" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-228"><a href="#cb6-228" aria-hidden="true" tabindex="-1"></a>By frame 100, the tracker holds 8 track records, 6 of which are still active.</span>
+<span id="cb6-229"><a href="#cb6-229" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-230"><a href="#cb6-230" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb6-231"><a href="#cb6-231" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-232"><a href="#cb6-232" aria-hidden="true" tabindex="-1"></a><span class="fu">## Inspecting the tracks</span></span>
+<span id="cb6-233"><a href="#cb6-233" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-234"><a href="#cb6-234" aria-hidden="true" tabindex="-1"></a>We saw in the previous results that T4 becomes inactive at frame 74. Its last assigned box is in frame 71. Here we examine the tracker results from frame 50 to frame 74 to see what happened.</span>
+<span id="cb6-235"><a href="#cb6-235" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-236"><a href="#cb6-236" aria-hidden="true" tabindex="-1"></a>In frame 71, T4 labels the player in red and T7 labels the player in black.</span>
+<span id="cb6-237"><a href="#cb6-237" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-238"><a href="#cb6-238" aria-hidden="true" tabindex="-1"></a>!<span class="co">[</span><span class="ot">Tracker results in frames 71–74. Each panel shows the same enlarged crop. Source: [TrackID3x3](https://doi.org/10.1145/3728423.3759400), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); course tracking labels, crop and layout.</span><span class="co">](&lt;attachments/tracking/frames71-74-track-labels.png&gt;)</span>{#fig-tracking-identity-switch width=100% fig-alt="Four equal crops show two overlapping players. Frame 71 has T4 around the player in red and T7 around the player in black. Frame 72 has one T7 box overlapping both players. Frame 73 again has one T7 box. By frame 74, T7 labels the player in red and T8 labels the player in black."}</span>
+<span id="cb6-239"><a href="#cb6-239" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-240"><a href="#cb6-240" aria-hidden="true" tabindex="-1"></a>In frame 72, there is one retained detection box around the two players. It is assigned to T7, while T4 receives no observation. There is also one retained box around these players in frame 73, again assigned to T7. By frame 74, T7 labels the player in red.</span>
+<span id="cb6-241"><a href="#cb6-241" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-242"><a href="#cb6-242" aria-hidden="true" tabindex="-1"></a>At frame 74, the last observed box for T4 is still from frame 71, while T7's is from frame 73. The relevant IoUs, rounded to two decimal places, are:</span>
+<span id="cb6-243"><a href="#cb6-243" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-244"><a href="#cb6-244" aria-hidden="true" tabindex="-1"></a>| Last observed track box | Frame-74 box around the player in red | Frame-74 box around the player in black |</span>
+<span id="cb6-245"><a href="#cb6-245" aria-hidden="true" tabindex="-1"></a>|:------------------------|--------------------------------------:|----------------------------------------:|</span>
+<span id="cb6-246"><a href="#cb6-246" aria-hidden="true" tabindex="-1"></a>| T4, from frame 71 | 0.43 | **0.00** |</span>
+<span id="cb6-247"><a href="#cb6-247" aria-hidden="true" tabindex="-1"></a>| T7, from frame 73 | **0.74** | 0.21 |</span>
+<span id="cb6-248"><a href="#cb6-248" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-249"><a href="#cb6-249" aria-hidden="true" tabindex="-1"></a>The assignment selects the bold entries: their total IoU is approximately 0.74, compared with 0.64 for the other pairing. The T7 link passes the acceptance check, while the zero-IoU link for T4 is rejected. This is T4's third consecutive missed frame, so it becomes inactive. The unassigned box around the player in black starts T8.</span>
+<span id="cb6-250"><a href="#cb6-250" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-251"><a href="#cb6-251" aria-hidden="true" tabindex="-1"></a>T7 has switched from tracking the player in black to tracking the player in red. This is an **identity switch**. The player in black is now tracked as T8.</span>
+<span id="cb6-252"><a href="#cb6-252" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-253"><a href="#cb6-253" aria-hidden="true" tabindex="-1"></a><span class="fu">### Checking the confidence cutoff</span></span>
+<span id="cb6-254"><a href="#cb6-254" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-255"><a href="#cb6-255" aria-hidden="true" tabindex="-1"></a>The saved predictions for frame 72 also include a box around the player in black with confidence 0.21. It has already passed NMS. Our confidence cutoff of 0.50 discards it.</span>
+<span id="cb6-256"><a href="#cb6-256" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-257"><a href="#cb6-257" aria-hidden="true" tabindex="-1"></a>For a quick check, we can lower the confidence cutoff to 0.20 in frame 72 and keep the other frames and tracking settings unchanged. With this change, by frame 74, T4 now continues to label the player in red (as in frame 71) and T7 continues to label the player in black, i.e. we now preserve their IDs from frame 71. T7 has an empty entry in frame 73 and reconnects in frame 74.</span>
+<span id="cb6-258"><a href="#cb6-258" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-259"><a href="#cb6-259" aria-hidden="true" tabindex="-1"></a>The lower confidence cutoff in frame 72 also admits four other detections before court filtering. Two are boxes around seated people near the court. The other two are overlapping false person detections around a bag and equipment at the lower right of the image. All four map outside the court bounds and are removed before tracking. Thus, after court filtering, the lowered confidence cutoff only introduces the useful additional box around the player in black in frame 72, which is assigned to the existing track T7 and allows it to continue following that player.</span>
+<span id="cb6-260"><a href="#cb6-260" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-261"><a href="#cb6-261" aria-hidden="true" tabindex="-1"></a><span class="fu">### Using 0.20 throughout {style="break-inside: avoid;"}</span></span>
+<span id="cb6-262"><a href="#cb6-262" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-263"><a href="#cb6-263" aria-hidden="true" tabindex="-1"></a>If we use 0.20 throughout frames 50–100, we also retain additional boxes in the earlier frames. In this run, an additional box around the player in black starts T9 in frame 70. At frame 71, T2 labels the player in red, while T4 and T9 both have boxes around the player in black.</span>
+<span id="cb6-264"><a href="#cb6-264" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-265"><a href="#cb6-265" aria-hidden="true" tabindex="-1"></a>!<span class="co">[</span><span class="ot">Tracking with a confidence cutoff of 0.20 throughout frames 50–100. Source: [TrackID3x3](https://doi.org/10.1145/3728423.3759400), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); course tracking labels, crop and layout.</span><span class="co">](&lt;attachments/tracking/consistent020-frames71-74.png&gt;)</span>{#fig-tracking-consistent-confidence width=100% fig-alt="Two enlarged crops from the fixed-0.20 run. At frame 71, T2 labels the player in red and both T4 and T9 have boxes around the player in black. At frame 74, T4 labels the player in red and T9 labels the player in black."}</span>
+<span id="cb6-266"><a href="#cb6-266" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-267"><a href="#cb6-267" aria-hidden="true" tabindex="-1"></a>These three tracks compete for the two retained boxes around the players in frame 72. The assignment gives the broad box to T4 and the other box to T9. T2 receives no observation in frames 72–74 and becomes inactive. By frame 74, T4 has switched to the player in red, while T9 labels the player in black. We again have an identity switch.</span>
+<span id="cb6-268"><a href="#cb6-268" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-269"><a href="#cb6-269" aria-hidden="true" tabindex="-1"></a>Over frames 50–100, using 0.20 creates 12 track records, compared with 8 at 0.50, with the same court filter in both runs.</span>
+<span id="cb6-270"><a href="#cb6-270" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-271"><a href="#cb6-271" aria-hidden="true" tabindex="-1"></a>Issues such as these motivate further improvements to the tracking approach. So far, we have simply compared current detections with old box positions. A next step is to use past **motion** information to **predict** where each track’s box should be in the current frame, then match detections to those predicted boxes. This can help improve on some of the issues encountered so far, though identity switches and similar issues can still occur. We consider this in <span class="co">[</span><span class="ot">the next chapter</span><span class="co">](tracking_motion.qmd)</span>.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p><a href="attribution.txt">Third-party sources and licences</a></p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>
