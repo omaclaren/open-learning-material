@@ -398,8 +398,8 @@ torch.Size([256, 256])</code></pre>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(cat_red.untyped_storage().data_ptr())</span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(cat.untyped_storage().data_ptr())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>4968120320
-4968120320</code></pre>
+<pre><code>5639372800
+5639372800</code></pre>
 </div>
 </div>
 </section>
@@ -767,43 +767,43 @@ tensor([[[[ 0,  1],
 <span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a>    optimizer.zero_grad() <span class="co"># Clear gradients from the last step.</span></span>
 <span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a>    loss <span class="op">=</span> func(x)        <span class="co"># Compute the loss (objective function)</span></span>
 <span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a>    loss.backward()       <span class="co"># Backpropagate to compute gradients</span></span>
-<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a>    optimizer.step()      <span class="co"># Adjust x based on gradients</span></span>
+<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f'Step </span><span class="sc">{</span>i<span class="sc">}</span><span class="ss">: x = </span><span class="sc">{</span>x<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">, loss = </span><span class="sc">{</span>loss<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">'</span>)</span>
 <span id="cb32-19"><a href="#cb32-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-20"><a href="#cb32-20" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f'Step </span><span class="sc">{</span>i<span class="sc">}</span><span class="ss">: x = </span><span class="sc">{</span>x<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">, loss = </span><span class="sc">{</span>loss<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb32-20"><a href="#cb32-20" aria-hidden="true" tabindex="-1"></a>    optimizer.step()      <span class="co"># Adjust x based on gradients</span></span>
 <span id="cb32-21"><a href="#cb32-21" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb32-22"><a href="#cb32-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Final result</span></span>
 <span id="cb32-23"><a href="#cb32-23" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'Optimized x: </span><span class="sc">{</span>x<span class="sc">.</span>item()<span class="sc">}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Step 0: x = 2.0, loss = 100.0
-Step 1: x = 3.5999999046325684, loss = 64.0
-Step 2: x = 4.880000114440918, loss = 40.96000289916992
-Step 3: x = 5.904000282287598, loss = 26.214399337768555
-Step 4: x = 6.72320032119751, loss = 16.77721405029297
-Step 5: x = 7.3785600662231445, loss = 10.73741626739502
-Step 6: x = 7.902848243713379, loss = 6.871947288513184
-Step 7: x = 8.32227897644043, loss = 4.398045539855957
-Step 8: x = 8.65782356262207, loss = 2.8147478103637695
-Step 9: x = 8.92625904083252, loss = 1.8014376163482666
-Step 10: x = 9.141007423400879, loss = 1.1529196500778198
-Step 11: x = 9.312806129455566, loss = 0.7378682494163513
-Step 12: x = 9.450244903564453, loss = 0.47223541140556335
-Step 13: x = 9.560195922851562, loss = 0.3022306561470032
-Step 14: x = 9.648157119750977, loss = 0.19342762231826782
-Step 15: x = 9.718525886535645, loss = 0.12379341572523117
-Step 16: x = 9.774820327758789, loss = 0.07922767847776413
-Step 17: x = 9.819856643676758, loss = 0.05070588365197182
-Step 18: x = 9.85588550567627, loss = 0.032451629638671875
-Step 19: x = 9.884708404541016, loss = 0.020768987014889717
-Step 20: x = 9.907766342163086, loss = 0.013292152434587479
-Step 21: x = 9.926213264465332, loss = 0.008507047779858112
-Step 22: x = 9.940970420837402, loss = 0.005444482434540987
-Step 23: x = 9.952775955200195, loss = 0.0034844912588596344
-Step 24: x = 9.962221145629883, loss = 0.0022301103454083204
-Step 25: x = 9.96977710723877, loss = 0.0014272418338805437
-Step 26: x = 9.975821495056152, loss = 0.0009134232532233
-Step 27: x = 9.980657577514648, loss = 0.0005846000858582556
-Step 28: x = 9.984525680541992, loss = 0.0003741293039638549
-Step 29: x = 9.98762035369873, loss = 0.0002394545590505004
+<pre><code>Step 0: x = 0.0, loss = 100.0
+Step 1: x = 2.0, loss = 64.0
+Step 2: x = 3.5999999046325684, loss = 40.96000289916992
+Step 3: x = 4.880000114440918, loss = 26.214399337768555
+Step 4: x = 5.904000282287598, loss = 16.77721405029297
+Step 5: x = 6.72320032119751, loss = 10.73741626739502
+Step 6: x = 7.3785600662231445, loss = 6.871947288513184
+Step 7: x = 7.902848243713379, loss = 4.398045539855957
+Step 8: x = 8.32227897644043, loss = 2.8147478103637695
+Step 9: x = 8.65782356262207, loss = 1.8014376163482666
+Step 10: x = 8.92625904083252, loss = 1.1529196500778198
+Step 11: x = 9.141007423400879, loss = 0.7378682494163513
+Step 12: x = 9.312806129455566, loss = 0.47223541140556335
+Step 13: x = 9.450244903564453, loss = 0.3022306561470032
+Step 14: x = 9.560195922851562, loss = 0.19342762231826782
+Step 15: x = 9.648157119750977, loss = 0.12379341572523117
+Step 16: x = 9.718525886535645, loss = 0.07922767847776413
+Step 17: x = 9.774820327758789, loss = 0.05070588365197182
+Step 18: x = 9.819856643676758, loss = 0.032451629638671875
+Step 19: x = 9.85588550567627, loss = 0.020768987014889717
+Step 20: x = 9.884708404541016, loss = 0.013292152434587479
+Step 21: x = 9.907766342163086, loss = 0.008507047779858112
+Step 22: x = 9.926213264465332, loss = 0.005444482434540987
+Step 23: x = 9.940970420837402, loss = 0.0034844912588596344
+Step 24: x = 9.952775955200195, loss = 0.0022301103454083204
+Step 25: x = 9.962221145629883, loss = 0.0014272418338805437
+Step 26: x = 9.96977710723877, loss = 0.0009134232532233
+Step 27: x = 9.975821495056152, loss = 0.0005846000858582556
+Step 28: x = 9.980657577514648, loss = 0.0003741293039638549
+Step 29: x = 9.984525680541992, loss = 0.0002394545590505004
 Optimized x: 9.98762035369873</code></pre>
 </div>
 </div>
