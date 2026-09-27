@@ -1,0 +1,1849 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.549">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>ENGSCI 304: Engineering Machine Learning II - 12&nbsp; Evaluating tracks</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="./">
+<link href="./tracking_filtering.html" rel="next">
+<link href="./tracking_motion.html" rel="prev">
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+<link rel="stylesheet" href="styles/print.css">
+</head>
+
+<body class="nav-sidebar floating">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./visual.html">Visual data</a></li><li class="breadcrumb-item"><a href="./tracking_evaluation.html"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Evaluating tracks</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="./">ENGSCI 304: Engineering Machine Learning II</a> 
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Search"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">About these notes</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./recommended_reading.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Recommended reading</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./overview.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Overview</span></span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a href="./visual.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Visual data</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" aria-expanded="true" aria-label="Toggle section">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./basketball_application.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">Application: From amateur basketball video footage to player trajectories</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./dataset.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">Obtaining and visualising the dataset</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./camera_models.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">Camera models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./image_tasks.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">Image analysis tasks</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./image_modelling.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">Image modelling: From pixels to learned features</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./training.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">Training and inference</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./object_detection.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">Object detection</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">Evaluation of detection models</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tracking.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">Basic tracking</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tracking_motion.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Motion-based tracking</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tracking_evaluation.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Evaluating tracks</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tracking_filtering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Filtering and practical trackers</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#annotation-ids-and-track-ids" id="toc-annotation-ids-and-track-ids" class="nav-link active" data-scroll-target="#annotation-ids-and-track-ids"><span class="header-section-number">12.1</span> Annotation IDs and track IDs: toy example</a></li>
+  <li><a href="#choosing-the-identity-pairing" id="toc-choosing-the-identity-pairing" class="nav-link" data-scroll-target="#choosing-the-identity-pairing"><span class="header-section-number">12.2</span> Choosing the identity pairing across the toy sequence</a></li>
+  <li><a href="#identity-precision-and-recall" id="toc-identity-precision-and-recall" class="nav-link" data-scroll-target="#identity-precision-and-recall"><span class="header-section-number">12.3</span> Identity precision and recall</a></li>
+  <li><a href="#evaluating-the-basketball-tracks" id="toc-evaluating-the-basketball-tracks" class="nav-link" data-scroll-target="#evaluating-the-basketball-tracks"><span class="header-section-number">12.4</span> Evaluating the basketball tracks</a></li>
+  <li><a href="#hota-and-other-tracking-measures" id="toc-hota-and-other-tracking-measures" class="nav-link" data-scroll-target="#hota-and-other-tracking-measures"><span class="header-section-number">12.5</span> MOTA and HOTA</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./visual.html">Visual data</a></li><li class="breadcrumb-item"><a href="./tracking_evaluation.html"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Evaluating tracks</span></a></li></ol></nav>
+<div class="quarto-title">
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Evaluating tracks</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<style>
+/* Reviewed L5 visual cues, scoped to these notes tables. */
+.tracking-metric-visual { break-inside: avoid; margin: 1.2em 0; }
+.tracking-metric-visual table { width: 100%; margin-bottom: .5em; }
+.tracking-metric-visual.timeline table { table-layout: fixed; }
+.tracking-metric-visual.timeline th:first-child { width: 23%; }
+.tracking-metric-visual.timeline th, .tracking-metric-visual.timeline td { text-align: center !important; vertical-align: middle; padding: .4em .25em; }
+.tracking-metric-visual.timeline th:first-child, .tracking-metric-visual.timeline td:first-child { text-align: left !important; font-weight: 600; }
+.tracking-metric-visual td:has(.id-good), .tracking-metric-visual td:has(.improved) { color: #176846; background: #e8f4ed; }
+.tracking-metric-visual td:has(.id-error), .tracking-metric-visual td:has(.no-match) { color: #a42b36; background: #faecee; }
+.tracking-metric-visual td:has(.history-miss) { color: #8b5b0b; background: #fff1d8; }
+.tracking-metric-visual td:has(.absent) { color: #586875; background: #f0f2f4; }
+.tracking-metric-visual td:has(.chosen) { background: #e4eff7; box-shadow: inset 0 0 0 2px #286789; }
+.tracking-metric-visual .switch-arrow { color: #a42b36; font-weight: 700; }
+.tracking-metric-visual td:has(.switch-arrow) { white-space: nowrap; }
+.tracking-metric-visual td:has(.history-score) { position: relative; }
+.tracking-metric-visual td:has(.history-score)::before { content: ""; position: absolute; height: 100%; width: 2px; background: #176846; left: 50%; top: 0; }
+.tracking-metric-visual .history-score { position: relative; display: inline-block; background: white; color: #176846; border: 1px solid #176846; border-radius: 4px; padding: 0 .3em; }
+.tracking-metric-visual .metric-key { font-size: .9em; color: #586875; margin: .5em 0 0; }
+.tracking-metric-visual.detection-identities tbody tr:nth-child(3) td,
+.tracking-metric-visual.filtered-identities tbody tr:nth-child(4) td { border-top: 2px solid #586875; }
+.tracking-metric-visual.filtered-identities tbody tr:nth-child(3) td,
+.tracking-metric-visual.filtered-identities tbody tr:nth-child(6) td { background: #e4eff7; }
+@media print {
+  .tracking-metric-visual, .tracking-metric-visual * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  #tracking-basketball-pairing-note { break-inside: avoid; page-break-inside: avoid; }
+}
+</style>
+<p>So far, we have compared tracking methods by inspecting particular frames. For an overall comparison, we need to check which players are detected and whether their identities remain consistent across the sequence.</p>
+<section id="annotation-ids-and-track-ids" class="level2" data-number="12.1">
+<h2 data-number="12.1" class="anchored" data-anchor-id="annotation-ids-and-track-ids"><span class="header-section-number">12.1</span> Annotation IDs and track IDs: toy example</h2>
+<p>For evaluation, we use annotations that give a box and an object ID for each labelled object in each frame. We assume that these object IDs are consistent: annotations with the same ID belong to the same object throughout the sequence.</p>
+<p>Consider a small hypothetical example with two players visible in each of eight frames. The annotations use <strong>G1</strong> for the red player and <strong>G2</strong> for the black player. Each frame therefore has a box labelled G1 and a box labelled G2. The boxes may move between frames, but G1 always identifies the red player and G2 always identifies the black player.</p>
+<p>Our tracker produces its own IDs, T1 and T2, without access to these annotation IDs. We use the annotations afterwards to evaluate its output. Because the two sets of IDs were assigned independently, we first need to establish which predicted track ID corresponds to which annotation object ID.</p>
+<p>For this eight-frame toy example, suppose the players’ annotated boxes do not overlap. Each predicted box either agrees exactly with one annotation or is a spurious box away from both players. Each entry in a track row below names the annotation matched by that predicted box. A × means a prediction with no annotation match; a — means there is no prediction in that track’s row.</p>
+<div id="tracking-toy-inputs" class="tracking-metric-visual timeline">
+<table class="table">
+<colgroup>
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Frame</th>
+<th style="text-align: left;">1</th>
+<th style="text-align: left;">2</th>
+<th style="text-align: left;">3</th>
+<th style="text-align: left;">4</th>
+<th style="text-align: left;">5</th>
+<th style="text-align: left;">6</th>
+<th style="text-align: left;">7</th>
+<th style="text-align: left;">8</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">T1 predictions</td>
+<td style="text-align: left;">G1</td>
+<td style="text-align: left;">G2</td>
+<td style="text-align: left;">G1</td>
+<td style="text-align: left;">G1</td>
+<td style="text-align: left;"><span class="absent">—</span></td>
+<td style="text-align: left;">G1</td>
+<td style="text-align: left;">G2</td>
+<td style="text-align: left;">G1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">T2 predictions</td>
+<td style="text-align: left;">G2</td>
+<td style="text-align: left;">G1</td>
+<td style="text-align: left;">G2</td>
+<td style="text-align: left;"><span class="no-match">×</span></td>
+<td style="text-align: left;">G2</td>
+<td style="text-align: left;">G2</td>
+<td style="text-align: left;">G1</td>
+<td style="text-align: left;">G2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Unmatched annotations</td>
+<td style="text-align: left;"><span class="absent">—</span></td>
+<td style="text-align: left;"><span class="absent">—</span></td>
+<td style="text-align: left;"><span class="absent">—</span></td>
+<td style="text-align: left;"><span class="no-match">G2</span></td>
+<td style="text-align: left;"><span class="no-match">G1</span></td>
+<td style="text-align: left;"><span class="absent">—</span></td>
+<td style="text-align: left;"><span class="absent">—</span></td>
+<td style="text-align: left;"><span class="absent">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>There are 15 predicted boxes and 16 annotated boxes: 14 box matches, one unmatched prediction and two unmatched annotations. Detection precision is therefore <span class="math inline">\(14/15\approx0.933\)</span> and detection recall is <span class="math inline">\(14/16=0.875\)</span>. These counts do not check whether T1 and T2 consistently follow the same players.</p>
+</section>
+<section id="choosing-the-identity-pairing" class="level2" data-number="12.2">
+<h2 data-number="12.2" class="anchored" data-anchor-id="choosing-the-identity-pairing"><span class="header-section-number">12.2</span> Choosing the identity pairing across the toy sequence</h2>
+<p>To calculate the <a href="https://doi.org/10.1007/978-3-319-48881-3_2">identity precision and recall introduced by Ristani and colleagues</a>, we choose a one-to-one pairing between predicted track IDs and annotation object IDs using the whole sequence. Each predicted ID can be paired with at most one annotation ID, and vice versa. We choose the pairing that gives the largest number of box matches over all frames.</p>
+<p>For this example, we accept a box match if its IoU is at least 0.50. Start by comparing T1’s box with the G1 annotation in each frame. Their boxes agree exactly in frames 1, 3, 4, 6 and 8, giving IoU 1 in each of these frames. In frames 2 and 7, T1’s box is around the black player while G1’s annotation is around the red player, so their IoU is 0. T1 has no prediction in frame 5. This gives five accepted matches between T1 and G1.</p>
+<p>We repeat this calculation for the other combinations of predicted and annotation IDs:</p>
+<div id="tracking-toy-pairing" class="tracking-metric-visual">
+<table class="table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Predicted track ID</th>
+<th style="text-align: right;">Matches with G1 annotations</th>
+<th style="text-align: right;">Matches with G2 annotations</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">T1</td>
+<td style="text-align: right;"><span class="chosen"><strong>5</strong></span></td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">T2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;"><span class="chosen"><strong>5</strong></span></td>
+</tr>
+</tbody>
+</table>
+<p><span class="metric-key">Outlined cells show the selected ID pairing.</span></p>
+</div>
+<p>The two possible complete one-to-one pairings give:</p>
+<ul>
+<li><strong>T1 → G1 and T2 → G2:</strong> <span class="math inline">\(5+5=10\)</span> accepted matches.</li>
+<li><strong>T1 → G2 and T2 → G1:</strong> <span class="math inline">\(2+2=4\)</span> accepted matches.</li>
+</ul>
+<p>We therefore choose T1 → G1 and T2 → G2. This means that we evaluate T1’s boxes against the G1 annotations and T2’s boxes against the G2 annotations throughout all eight frames, including frames where the tracks follow the other player.</p>
+</section>
+<section id="identity-precision-and-recall" class="level2" data-number="12.3">
+<h2 data-number="12.3" class="anchored" data-anchor-id="identity-precision-and-recall"><span class="header-section-number">12.3</span> Identity precision and recall</h2>
+<p>Once we have selected the ID pairing, we can form identity-based versions of TP, FP and FN:</p>
+<ul>
+<li><strong>IDTP:</strong> identity true positives — predicted boxes that match an annotation with the ID chosen for that track.</li>
+<li><strong>IDFP:</strong> identity false positives — predicted boxes without such a match.</li>
+<li><strong>IDFN:</strong> identity false negatives — annotated boxes without such a match.</li>
+</ul>
+<p>With our selected pairing in the toy example, T1 gives five accepted identity matches with G1 and T2 gives five with G2. These ten matches are the identity true positives.</p>
+<div id="tracking-toy-identity-errors" class="tracking-metric-visual timeline">
+<table class="table">
+<colgroup>
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Frame</th>
+<th style="text-align: left;">1</th>
+<th style="text-align: left;">2</th>
+<th style="text-align: left;">3</th>
+<th style="text-align: left;">4</th>
+<th style="text-align: left;">5</th>
+<th style="text-align: left;">6</th>
+<th style="text-align: left;">7</th>
+<th style="text-align: left;">8</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">T1 → G1</td>
+<td style="text-align: left;"><span class="id-good">G1</span></td>
+<td style="text-align: left;"><span class="id-error">G2</span></td>
+<td style="text-align: left;"><span class="id-good">G1</span></td>
+<td style="text-align: left;"><span class="id-good">G1</span></td>
+<td style="text-align: left;"><span class="absent">—</span></td>
+<td style="text-align: left;"><span class="id-good">G1</span></td>
+<td style="text-align: left;"><span class="id-error">G2</span></td>
+<td style="text-align: left;"><span class="id-good">G1</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">T2 → G2</td>
+<td style="text-align: left;"><span class="id-good">G2</span></td>
+<td style="text-align: left;"><span class="id-error">G1</span></td>
+<td style="text-align: left;"><span class="id-good">G2</span></td>
+<td style="text-align: left;"><span class="id-error">×</span></td>
+<td style="text-align: left;"><span class="id-good">G2</span></td>
+<td style="text-align: left;"><span class="id-good">G2</span></td>
+<td style="text-align: left;"><span class="id-error">G1</span></td>
+<td style="text-align: left;"><span class="id-good">G2</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Annotations with no matching detection</td>
+<td style="text-align: left;"><span class="absent">—</span></td>
+<td style="text-align: left;"><span class="absent">—</span></td>
+<td style="text-align: left;"><span class="absent">—</span></td>
+<td style="text-align: left;"><span class="no-match">G2</span></td>
+<td style="text-align: left;"><span class="no-match">G1</span></td>
+<td style="text-align: left;"><span class="absent">—</span></td>
+<td style="text-align: left;"><span class="absent">—</span></td>
+<td style="text-align: left;"><span class="absent">—</span></td>
+</tr>
+</tbody>
+</table>
+<p>This row shows the two missed annotation boxes. The other four IDFN come from the wrong-ID matches shown in the track rows above.</p>
+<p><span class="metric-key">Green marks accepted identity matches; red marks identity errors. The chosen pairing is T1 → G1 and T2 → G2.</span></p>
+</div>
+<p>In each of frames 2 and 7, T1’s box fails to match the G1 annotation, and T2’s box fails to match the G2 annotation. Although each predicted box is correctly located around a player, its track ID is paired with the other player’s annotation ID. Each of these four wrong-ID box matches contributes one IDFP and one IDFN.</p>
+<p>The spurious T2 prediction in frame 4 adds one IDFP. G2’s unmatched annotation in frame 4 and G1’s unmatched annotation in frame 5 each add one IDFN. The absent T1 prediction in frame 5 does not add an IDFP, because there is no predicted box to count. Our totals are therefore <strong>IDTP = 10, IDFP = 5 and IDFN = 6</strong>.</p>
+<p>We calculate these scores using the totals over all tracks and frames in the sequence. <strong>Identity precision (IDP)</strong> is the number of accepted identity matches divided by the total number of predicted boxes. <strong>Identity recall (IDR)</strong> uses the same numerator, but divides by the total number of annotated boxes. These totals include boxes without an accepted match.</p>
+<p>For our two-player, eight-frame toy example, there are 15 predicted boxes and 16 annotated boxes. Using these totals,</p>
+<p><span class="math display">\[
+\mathrm{IDP}
+=\frac{\mathrm{IDTP}}{\mathrm{IDTP}+\mathrm{IDFP}}
+=\frac{10}{10+5}
+=\frac{10}{15}\approx0.667,
+\]</span></p>
+<p><span class="math display">\[
+\mathrm{IDR}
+=\frac{\mathrm{IDTP}}{\mathrm{IDTP}+\mathrm{IDFN}}
+=\frac{10}{10+6}
+=\frac{10}{16}=0.625.
+\]</span></p>
+<p>F1 combines precision and recall using their <strong>harmonic mean</strong>. <strong>IDF1</strong> applies the same calculation to identity precision and recall:</p>
+<p><span class="math display">\[
+\mathrm{IDF1}
+=\frac{2\,\mathrm{IDP}\,\mathrm{IDR}}{\mathrm{IDP}+\mathrm{IDR}}
+=\frac{20}{31}\approx0.645.
+\]</span></p>
+</section>
+<section id="evaluating-the-basketball-tracks" class="level2" data-number="12.4">
+<h2 data-number="12.4" class="anchored" data-anchor-id="evaluating-the-basketball-tracks"><span class="header-section-number">12.4</span> Evaluating the basketball tracks</h2>
+<p>We can now evaluate the last-box and two-observation motion trackers over frames 50–100 of the basketball video. This gives 51 frames, with six annotated players in every frame, so there are <span class="math inline">\(6\times51=306\)</span> annotated boxes. Each run creates eight predicted track IDs over this window. We include the detections stored under all eight IDs, including tracks that become inactive before frame 100.</p>
+<p>The confidence cutoff of 0.50 gives 297 predicted boxes, while the cutoff of 0.40 gives 304. At each cutoff, both tracking methods use the same detections. We keep the court filter, tracking IoU threshold of 0.30 and three-miss inactivity rule unchanged.</p>
+<p>For evaluation, we accept box overlaps with IoU at least 0.50. Detection precision and recall use the per-frame matching rule developed in the detection-evaluation chapter: maximise total IoU, then reject selected pairs below the threshold. For identity precision and recall, we instead choose the track-to-annotation ID pairing over all 51 frames, as in the worked example above.</p>
+<div id="tracking-detection-identity-scores" class="tracking-metric-visual detection-identities">
+<table class="table">
+<colgroup>
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Tracking method</th>
+<th style="text-align: right;">Confidence cutoff</th>
+<th style="text-align: right;">Detection precision</th>
+<th style="text-align: right;">Detection recall</th>
+<th style="text-align: right;">Identity precision</th>
+<th style="text-align: right;">Identity recall</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Last-box</td>
+<td style="text-align: right;">0.50</td>
+<td style="text-align: right;"><strong>0.976</strong></td>
+<td style="text-align: right;">0.948</td>
+<td style="text-align: right;">0.852</td>
+<td style="text-align: right;">0.827</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Two-observation motion</td>
+<td style="text-align: right;">0.50</td>
+<td style="text-align: right;"><strong>0.976</strong></td>
+<td style="text-align: right;">0.948</td>
+<td style="text-align: right;">0.852</td>
+<td style="text-align: right;">0.827</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Last-box</td>
+<td style="text-align: right;">0.40</td>
+<td style="text-align: right;">0.970</td>
+<td style="text-align: right;"><strong>0.964</strong></td>
+<td style="text-align: right;"><strong>0.914</strong></td>
+<td style="text-align: right;"><strong>0.908</strong></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Two-observation motion</td>
+<td style="text-align: right;">0.40</td>
+<td style="text-align: right;">0.970</td>
+<td style="text-align: right;"><strong>0.964</strong></td>
+<td style="text-align: right;">0.862</td>
+<td style="text-align: right;">0.856</td>
+</tr>
+</tbody>
+</table>
+<p><span class="metric-key">Bold marks the best value in each score column, including ties.</span></p>
+</div>
+<p>For example, last-box tracking at confidence cutoff 0.40 gives 278 accepted identity matches. The remaining 26 predicted boxes contribute to IDFP, and the remaining 28 annotated boxes contribute to IDFN. Thus,</p>
+<p><span class="math display">\[
+\mathrm{IDP}=\frac{278}{304}\approx0.914,
+\qquad
+\mathrm{IDR}=\frac{278}{306}\approx0.908.
+\]</span></p>
+<p>Detection precision and recall assess matches between detections and annotations within each frame, not the tracking links between frames. At each confidence cutoff, these scores are identical for the two tracking methods because their boxes are unchanged. Lowering the cutoff recovers five additional detection matches, but also adds two unmatched predicted boxes. Detection recall therefore increases, while detection precision falls slightly. Last-box tracking at cutoff 0.40 has the highest identity precision and recall among these four runs.</p>
+<div id="tracking-basketball-pairing-note">
+<p>At cutoff 0.50, the identity scores are also identical, despite the motion predictor avoiding the frame-66 switch. For evaluation, each annotated player is paired with one predicted track ID over the whole sequence.</p>
+</div>
+<p>Consider the red player’s annotations. T2 has 14 acceptable box overlaps with these annotations under last-box tracking and 18 under motion-based tracking. However, T7 has 29 in both runs, so the joint sequence-wide identity pairing still selects T7 for the red player in both cases.</p>
+<div id="tracking-red-identity-history" class="tracking-metric-visual">
+<table class="table">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Method</th>
+<th style="text-align: right;">Matches under T2</th>
+<th style="text-align: right;">Matches under T7</th>
+<th style="text-align: left;">ID paired with red</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Last-box</td>
+<td style="text-align: right;">14</td>
+<td style="text-align: right;">29</td>
+<td style="text-align: left;">T7</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Two-observation motion</td>
+<td style="text-align: right;"><span class="improved"><strong>18 (+4)</strong></span></td>
+<td style="text-align: right;">29</td>
+<td style="text-align: left;">T7</td>
+</tr>
+</tbody>
+</table>
+<p><span class="metric-key">Frames 50–100: box matches with the red player’s annotations. Green marks the additional matches under T2, not a change in the selected pairing.</span></p>
+</div>
+<p>Motion increases T2’s overlaps with the red player, but we cannot also count these as identity matches for red, because red is already paired with T7. The other chosen ID pairings and the total numbers of predicted and annotated boxes are unchanged too, so identity precision and recall remain unchanged.</p>
+</section>
+<section id="hota-and-other-tracking-measures" class="level2" data-number="12.5">
+<h2 data-number="12.5" class="anchored" data-anchor-id="hota-and-other-tracking-measures"><span class="header-section-number">12.5</span> MOTA and HOTA</h2>
+<p>IDF1 combines identity precision and recall into a single score. MOTA and HOTA use information about tracking errors that these two numbers do not retain, so they can distinguish tracking outputs with identical identity precision and recall.</p>
+<p><a href="https://link.springer.com/article/10.1155/2008/246309"><strong>MOTA</strong>, or <em>Multiple Object Tracking Accuracy</em></a>, starts with <strong>detection false positives and false negatives</strong>: predicted boxes without matching annotations, and annotations without matching predicted boxes. It then adds a penalty whenever the track ID assigned to a player changes. This is an <strong>identity switch</strong>.</p>
+<p>Returning to the eight-frame toy example, we now put the annotated players in the rows. Each entry names the predicted track whose box matches that player’s annotation. Each arrow marks an identity switch; changing back also counts.</p>
+<div id="tracking-toy-mota" class="tracking-metric-visual timeline">
+<table class="table">
+<colgroup>
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Frame</th>
+<th style="text-align: left;">1</th>
+<th style="text-align: left;">2</th>
+<th style="text-align: left;">3</th>
+<th style="text-align: left;">4</th>
+<th style="text-align: left;">5</th>
+<th style="text-align: left;">6</th>
+<th style="text-align: left;">7</th>
+<th style="text-align: left;">8</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">G1 annotations</td>
+<td style="text-align: left;">T1</td>
+<td style="text-align: left;"><span class="switch-arrow">→</span> T2</td>
+<td style="text-align: left;"><span class="switch-arrow">→</span> T1</td>
+<td style="text-align: left;">T1</td>
+<td style="text-align: left;"><span class="no-match">—</span></td>
+<td style="text-align: left;">T1</td>
+<td style="text-align: left;"><span class="switch-arrow">→</span> T2</td>
+<td style="text-align: left;"><span class="switch-arrow">→</span> T1</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">G2 annotations</td>
+<td style="text-align: left;">T2</td>
+<td style="text-align: left;"><span class="switch-arrow">→</span> T1</td>
+<td style="text-align: left;"><span class="switch-arrow">→</span> T2</td>
+<td style="text-align: left;"><span class="no-match">—</span></td>
+<td style="text-align: left;">T2</td>
+<td style="text-align: left;">T2</td>
+<td style="text-align: left;"><span class="switch-arrow">→</span> T1</td>
+<td style="text-align: left;"><span class="switch-arrow">→</span> T2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Unmatched predictions</td>
+<td style="text-align: left;"><span class="absent">—</span></td>
+<td style="text-align: left;"><span class="absent">—</span></td>
+<td style="text-align: left;"><span class="absent">—</span></td>
+<td style="text-align: left;"><span class="no-match">T2</span></td>
+<td style="text-align: left;"><span class="absent">—</span></td>
+<td style="text-align: left;"><span class="absent">—</span></td>
+<td style="text-align: left;"><span class="absent">—</span></td>
+<td style="text-align: left;"><span class="absent">—</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The eight arrows give eight identity switches, four for each player. G1 returns after its frame-5 gap with the same ID as before the gap, and G2 does the same after its frame-4 gap, so these returns add no switches. There is one detection false positive and two detection false negatives. These differ from the identity counts IDFP = 5 and IDFN = 6 calculated using a fixed ID pairing.</p>
+<p>MOTA adds the detection errors and identity switches, divides by the total number of annotated boxes, and subtracts the result from 1. Writing <strong>IDSW</strong> for the number of identity switches, our toy example gives</p>
+<p><span class="math display">\[
+\mathrm{MOTA}
+=1-\frac{\mathrm{FP}+\mathrm{FN}+\mathrm{IDSW}}{\text{number of annotated boxes}}
+=1-\frac{1+2+8}{16}
+=0.3125.
+\]</span></p>
+<p>MOTA is at most 1, but can be negative if the total error count exceeds the number of annotated boxes.</p>
+<p><a href="https://doi.org/10.1007/s11263-020-01375-2"><strong>HOTA</strong>, or <em>Higher Order Tracking Accuracy</em></a>, combines a detection score and an association score. We first compare its detection score with precision and recall, using the same eight-frame toy example.</p>
+<table class="table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Measure</th>
+<th style="text-align: left;">Formula</th>
+<th style="text-align: left;">Detection example</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Binary classification accuracy</td>
+<td style="text-align: left;"><span class="math inline">\(\frac{\mathrm{TP}+\mathrm{TN}}{\mathrm{TP}+\mathrm{TN}+\mathrm{FP}+\mathrm{FN}}\)</span></td>
+<td style="text-align: left;">Not used here: there is no natural count of true-negative boxes.</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Precision</td>
+<td style="text-align: left;"><span class="math inline">\(\frac{\mathrm{TP}}{\mathrm{TP}+\mathrm{FP}}\)</span></td>
+<td style="text-align: left;"><span class="math inline">\(14/15\approx0.933\)</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Recall</td>
+<td style="text-align: left;"><span class="math inline">\(\frac{\mathrm{TP}}{\mathrm{TP}+\mathrm{FN}}\)</span></td>
+<td style="text-align: left;"><span class="math inline">\(14/16=0.875\)</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">HOTA’s detection score</td>
+<td style="text-align: left;"><span class="math inline">\(\frac{\mathrm{TP}}{\mathrm{TP}+\mathrm{FP}+\mathrm{FN}}\)</span></td>
+<td style="text-align: left;"><span class="math inline">\(14/17\approx0.824\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>We used box IoU to compare two boxes by dividing their shared area by the area covered by either box. This intersection-over-union measure is also called the <strong>Jaccard index</strong>, and we can apply it to detection counts once we have matched the boxes.</p>
+<p>For the Jaccard detection score, each matched prediction–annotation pair counts as one shared item. The 14 matches form the intersection, and adding the one unmatched prediction and two unmatched annotations gives a union of 17 items, so the score is 14/17. HOTA calls this component <strong>detection accuracy</strong>.</p>
+<p>To see how HOTA’s association score works, start with a box match between G1 and T1. HOTA compares <strong>all G1 annotation boxes with all T1 prediction boxes across the sequence</strong>, including frames where they do not match. In our eight-frame toy example:</p>
+<ul>
+<li>Frames 1, 3, 4, 6 and 8 give five correct box matches.</li>
+<li>G1’s annotations in frames 2, 5 and 7 have no matching T1 prediction: three false negatives for this comparison.</li>
+<li>T1’s predictions in frames 2 and 7 are around the black player, so they have no matching G1 annotation: two false positives for this comparison.</li>
+</ul>
+<p>We divide the number of matches by the matches plus both kinds of unmatched box. This gives the association score</p>
+<p><span class="math display">\[
+\text{G1–T1 association score}=\frac{5}{5+3+2}=0.5.
+\]</span></p>
+<div id="tracking-hota-g1-t1" class="tracking-metric-visual timeline">
+<table class="table">
+<colgroup>
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Frame</th>
+<th style="text-align: left;">1</th>
+<th style="text-align: left;">2</th>
+<th style="text-align: left;">3</th>
+<th style="text-align: left;">4</th>
+<th style="text-align: left;">5</th>
+<th style="text-align: left;">6</th>
+<th style="text-align: left;">7</th>
+<th style="text-align: left;">8</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">G1 annotations</td>
+<td style="text-align: left;"><span class="id-good">G1</span></td>
+<td style="text-align: left;"><span class="history-miss">G1</span></td>
+<td style="text-align: left;"><span class="id-good">G1</span></td>
+<td style="text-align: left;"><span class="id-good">G1</span></td>
+<td style="text-align: left;"><span class="history-miss">G1</span></td>
+<td style="text-align: left;"><span class="id-good">G1</span></td>
+<td style="text-align: left;"><span class="history-miss">G1</span></td>
+<td style="text-align: left;"><span class="id-good">G1</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Association score</td>
+<td style="text-align: left;"><span class="history-score">0.5</span></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"><span class="history-score">0.5</span></td>
+<td style="text-align: left;"><span class="history-score">0.5</span></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"><span class="history-score">0.5</span></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"><span class="history-score">0.5</span></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">T1 predictions</td>
+<td style="text-align: left;"><span class="id-good">G1</span></td>
+<td style="text-align: left;"><span class="id-error">G2</span></td>
+<td style="text-align: left;"><span class="id-good">G1</span></td>
+<td style="text-align: left;"><span class="id-good">G1</span></td>
+<td style="text-align: left;"><span class="absent">—</span></td>
+<td style="text-align: left;"><span class="id-good">G1</span></td>
+<td style="text-align: left;"><span class="id-error">G2</span></td>
+<td style="text-align: left;"><span class="id-good">G1</span></td>
+</tr>
+</tbody>
+</table>
+<p><span class="metric-key">Green links the five matches. Amber marks G1 annotations not matched by T1; red marks T1 predictions not matched to G1.</span></p>
+</div>
+<p>Each of the five G1–T1 box matches receives this score, because each uses the same complete histories of G1 and T1.</p>
+<p>HOTA also compares G1 with T2, because those IDs have box matches in frames 2 and 7. Their complete histories give two correct matches, six false negatives and six false positives. The false positives for this comparison include T2’s five boxes around G2 and its spurious frame-4 box. Thus,</p>
+<p><span class="math display">\[
+\text{G1–T2 association score}=\frac{2}{2+6+6}=\frac17\approx0.143.
+\]</span></p>
+<div id="tracking-hota-g1-t2" class="tracking-metric-visual timeline">
+<table class="table">
+<colgroup>
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+<col style="width: 11%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Frame</th>
+<th style="text-align: left;">1</th>
+<th style="text-align: left;">2</th>
+<th style="text-align: left;">3</th>
+<th style="text-align: left;">4</th>
+<th style="text-align: left;">5</th>
+<th style="text-align: left;">6</th>
+<th style="text-align: left;">7</th>
+<th style="text-align: left;">8</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">G1 annotations</td>
+<td style="text-align: left;"><span class="history-miss">G1</span></td>
+<td style="text-align: left;"><span class="id-good">G1</span></td>
+<td style="text-align: left;"><span class="history-miss">G1</span></td>
+<td style="text-align: left;"><span class="history-miss">G1</span></td>
+<td style="text-align: left;"><span class="history-miss">G1</span></td>
+<td style="text-align: left;"><span class="history-miss">G1</span></td>
+<td style="text-align: left;"><span class="id-good">G1</span></td>
+<td style="text-align: left;"><span class="history-miss">G1</span></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Association score</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"><span class="history-score">1/7</span></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;"><span class="history-score">1/7</span></td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">T2 predictions</td>
+<td style="text-align: left;"><span class="id-error">G2</span></td>
+<td style="text-align: left;"><span class="id-good">G1</span></td>
+<td style="text-align: left;"><span class="id-error">G2</span></td>
+<td style="text-align: left;"><span class="id-error">×</span></td>
+<td style="text-align: left;"><span class="id-error">G2</span></td>
+<td style="text-align: left;"><span class="id-error">G2</span></td>
+<td style="text-align: left;"><span class="id-good">G1</span></td>
+<td style="text-align: left;"><span class="id-error">G2</span></td>
+</tr>
+</tbody>
+</table>
+<p><span class="metric-key">Green links the two matches. Amber marks G1 annotations not matched by T2; red marks T2 predictions not matched to G1.</span></p>
+</div>
+<p>Both G1–T2 matches receive this score. Repeating the comparison for G2 gives two more scores:</p>
+<table class="table">
+<colgroup>
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+<col style="width: 20%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Player–track pair</th>
+<th style="text-align: right;">Box matches</th>
+<th style="text-align: right;">Unmatched annotations</th>
+<th style="text-align: right;">Unmatched predictions</th>
+<th style="text-align: right;">Association score</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">G1–T1</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1/2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">G1–T2</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">1/7</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">G2–T1</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">2/13</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">G2–T2</td>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">5/11</td>
+</tr>
+</tbody>
+</table>
+<p>Each unmatched count in this table refers to the player–track pair in that row. To average over all 14 box matches, multiply each row’s score by its number of matches and divide the sum of those contributions by 14:</p>
+<p><span class="math display">\[
+\text{Association accuracy}
+=\frac{5(1/2)+2(1/7)+2(2/13)+5(5/11)}{14}
+\approx0.383.
+\]</span></p>
+<p>For IDP and IDR, we selected one fixed ID pairing for the whole sequence. <strong>HOTA instead checks the complete histories behind every box match</strong>, including matches involving the player’s other predicted IDs.</p>
+<p>For our fixed set of box matches, detection accuracy is about 0.824 and association accuracy is about 0.383. HOTA combines them using a <strong>geometric mean</strong>, which means multiplying the two components and taking the square root:</p>
+<p><span class="math display">\[
+\mathrm{HOTA}=\sqrt{\text{detection accuracy}\times\text{association accuracy}}
+\approx\sqrt{0.824\times0.383}\approx0.562.
+\]</span></p>
+<p>This is the calculation at one evaluation IoU threshold. The full HOTA metric repeats it over several thresholds and averages the resulting HOTA values. The geometric mean is calculated at each threshold before averaging; it is not generally the geometric mean of the two separately averaged components.</p>
+<p>For numerical comparisons, a standard evaluator such as <a href="https://github.com/JonathonLuiten/TrackEval">TrackEval</a> implements these measures, including their matching and scoring rules. This evaluation compares tracker outputs with annotations; it is separate from the track–detection assignment inside our tracker. In particular, the evaluation IoU threshold has a different role from our tracking acceptance threshold of 0.30.</p>
+<p>We can now return to the basketball tracks. The table below uses the saved, independently started frames 50–100 runs, with the same 306 annotated boxes in each run. IDF1 and MOTA use evaluation IoU 0.50; HOTA is averaged over the standard 19 thresholds from 0.05 to 0.95. The ID-switch column gives the switches counted by TrackEval’s CLEAR evaluation, as used in MOTA.</p>
+<table class="table">
+<colgroup>
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+<col style="width: 16%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">Confidence cutoff</th>
+<th style="text-align: left;">Tracking method</th>
+<th style="text-align: right;">IDF1</th>
+<th style="text-align: right;">MOTA</th>
+<th style="text-align: right;">HOTA</th>
+<th style="text-align: right;">ID switches</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">0.50</td>
+<td style="text-align: left;">Last-box</td>
+<td style="text-align: right;"><strong>0.8391</strong></td>
+<td style="text-align: right;">0.9118</td>
+<td style="text-align: right;">0.6758</td>
+<td style="text-align: right;">4</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">0.50</td>
+<td style="text-align: left;">Two-observation motion</td>
+<td style="text-align: right;"><strong>0.8391</strong></td>
+<td style="text-align: right;"><strong>0.9150</strong></td>
+<td style="text-align: right;"><strong>0.6793</strong></td>
+<td style="text-align: right;"><strong>3</strong></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">0.40</td>
+<td style="text-align: left;">Last-box</td>
+<td style="text-align: right;"><strong>0.9115</strong></td>
+<td style="text-align: right;"><strong>0.9314</strong></td>
+<td style="text-align: right;"><strong>0.7153</strong></td>
+<td style="text-align: right;"><strong>1</strong></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">0.40</td>
+<td style="text-align: left;">Two-observation motion</td>
+<td style="text-align: right;">0.8590</td>
+<td style="text-align: right;">0.9248</td>
+<td style="text-align: right;">0.6703</td>
+<td style="text-align: right;">3</td>
+</tr>
+</tbody>
+</table>
+<p>Bold marks the best values within each confidence group, including ties. Higher scores and fewer switches are better.</p>
+<p>At confidence cutoff 0.50, motion removes the frame-66 identity switch, reducing the count from four to three. MOTA increases by <span class="math inline">\(1/306\)</span>, while IDF1 stays unchanged. HOTA also increases slightly. At 0.40, two-observation motion scores below last-box tracking on all three measures.</p>
+<p>HOTA uses sequence-wide identity information to help choose its within-frame box matches. Its accepted matches can therefore change when track IDs change, even with identical supplied boxes. Its detection component need not use the same box matches as our earlier detection precision and recall. At cutoff 0.50, HOTA’s detection component increases while its association component falls slightly when averaged over the thresholds, so the small HOTA increase should not be described as an improvement in the association component.</p>
+<p>We should compare methods on the same annotated sequences and state which inputs and settings change. Holding the detector outputs fixed, as in our motion comparison, helps isolate the effect of the tracking method.</p>
+
+
+<!-- -->
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  const viewSource = window.document.getElementById('quarto-view-source') ||
+                     window.document.getElementById('quarto-code-tools-source');
+  if (viewSource) {
+    const sourceUrl = viewSource.getAttribute("data-quarto-source-url");
+    viewSource.addEventListener("click", function(e) {
+      if (sourceUrl) {
+        // rstudio viewer pane
+        if (/\bcapabilities=\b/.test(window.location)) {
+          window.open(sourceUrl);
+        } else {
+          window.location.href = sourceUrl;
+        }
+      } else {
+        const modal = new bootstrap.Modal(document.getElementById('quarto-embedded-source-code-modal'));
+        modal.show();
+      }
+      return false;
+    });
+  }
+  function toggleCodeHandler(show) {
+    return function(e) {
+      const detailsSrc = window.document.querySelectorAll(".cell > details > .sourceCode");
+      for (let i=0; i<detailsSrc.length; i++) {
+        const details = detailsSrc[i].parentElement;
+        if (show) {
+          details.open = true;
+        } else {
+          details.removeAttribute("open");
+        }
+      }
+      const cellCodeDivs = window.document.querySelectorAll(".cell > .sourceCode");
+      const fromCls = show ? "hidden" : "unhidden";
+      const toCls = show ? "unhidden" : "hidden";
+      for (let i=0; i<cellCodeDivs.length; i++) {
+        const codeDiv = cellCodeDivs[i];
+        if (codeDiv.classList.contains(fromCls)) {
+          codeDiv.classList.remove(fromCls);
+          codeDiv.classList.add(toCls);
+        } 
+      }
+      return false;
+    }
+  }
+  const hideAllCode = window.document.getElementById("quarto-hide-all-code");
+  if (hideAllCode) {
+    hideAllCode.addEventListener("click", toggleCodeHandler(false));
+  }
+  const showAllCode = window.document.getElementById("quarto-show-all-code");
+  if (showAllCode) {
+    showAllCode.addEventListener("click", toggleCodeHandler(true));
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+          // target, if specified
+          link.setAttribute("target", "_blank");
+          if (link.getAttribute("rel") === null) {
+            link.setAttribute("rel", "noopener");
+          }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="./tracking_motion.html" class="pagination-link  aria-label=" &lt;span="" tracking&lt;="" span&gt;"="">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Motion-based tracking</span></span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="./tracking_filtering.html" class="pagination-link" aria-label="<span class='chapter-number'>13</span>&nbsp; <span class='chapter-title'>Filtering and practical trackers</span>">
+        <span class="nav-page-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Filtering and practical trackers</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
+<div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Evaluating tracks</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>&lt;style&gt;</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co">/* Reviewed L5 visual cues, scoped to these notes tables. */</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">.tracking-metric-visual</span> { <span class="kw">break-inside</span><span class="ch">:</span> <span class="dv">avoid</span><span class="op">;</span> <span class="kw">margin</span><span class="ch">:</span> <span class="dv">1.2</span><span class="dt">em</span> <span class="dv">0</span><span class="op">;</span> }</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="fu">.tracking-metric-visual</span> table { <span class="kw">width</span><span class="ch">:</span> <span class="dv">100</span><span class="dt">%</span><span class="op">;</span> <span class="kw">margin-bottom</span><span class="ch">:</span> <span class="dv">.5</span><span class="dt">em</span><span class="op">;</span> }</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="fu">.tracking-metric-visual.timeline</span> table { <span class="kw">table-layout</span><span class="ch">:</span> <span class="dv">fixed</span><span class="op">;</span> }</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="fu">.tracking-metric-visual.timeline</span> th<span class="in">:first-child</span> { <span class="kw">width</span><span class="ch">:</span> <span class="dv">23</span><span class="dt">%</span><span class="op">;</span> }</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="fu">.tracking-metric-visual.timeline</span> th<span class="op">,</span> <span class="fu">.tracking-metric-visual.timeline</span> td { <span class="kw">text-align</span><span class="ch">:</span> <span class="dv">center</span> <span class="at">!important</span><span class="op">;</span> <span class="kw">vertical-align</span><span class="ch">:</span> <span class="dv">middle</span><span class="op">;</span> <span class="kw">padding</span><span class="ch">:</span> <span class="dv">.4</span><span class="dt">em</span> <span class="dv">.25</span><span class="dt">em</span><span class="op">;</span> }</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="fu">.tracking-metric-visual.timeline</span> th<span class="in">:first-child</span><span class="op">,</span> <span class="fu">.tracking-metric-visual.timeline</span> td<span class="in">:first-child</span> { <span class="kw">text-align</span><span class="ch">:</span> <span class="dv">left</span> <span class="at">!important</span><span class="op">;</span> <span class="kw">font-weight</span><span class="ch">:</span> <span class="dv">600</span><span class="op">;</span> }</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="fu">.tracking-metric-visual</span> td<span class="in">:has(</span><span class="fu">.id-good</span><span class="in">)</span><span class="op">,</span> <span class="fu">.tracking-metric-visual</span> td<span class="in">:has(</span><span class="fu">.improved</span><span class="in">)</span> { <span class="kw">color</span><span class="ch">:</span> <span class="cn">#176846</span><span class="op">;</span> <span class="kw">background</span><span class="ch">:</span> <span class="cn">#e8f4ed</span><span class="op">;</span> }</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="fu">.tracking-metric-visual</span> td<span class="in">:has(</span><span class="fu">.id-error</span><span class="in">)</span><span class="op">,</span> <span class="fu">.tracking-metric-visual</span> td<span class="in">:has(</span><span class="fu">.no-match</span><span class="in">)</span> { <span class="kw">color</span><span class="ch">:</span> <span class="cn">#a42b36</span><span class="op">;</span> <span class="kw">background</span><span class="ch">:</span> <span class="cn">#faecee</span><span class="op">;</span> }</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="fu">.tracking-metric-visual</span> td<span class="in">:has(</span><span class="fu">.history-miss</span><span class="in">)</span> { <span class="kw">color</span><span class="ch">:</span> <span class="cn">#8b5b0b</span><span class="op">;</span> <span class="kw">background</span><span class="ch">:</span> <span class="cn">#fff1d8</span><span class="op">;</span> }</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="fu">.tracking-metric-visual</span> td<span class="in">:has(</span><span class="fu">.absent</span><span class="in">)</span> { <span class="kw">color</span><span class="ch">:</span> <span class="cn">#586875</span><span class="op">;</span> <span class="kw">background</span><span class="ch">:</span> <span class="cn">#f0f2f4</span><span class="op">;</span> }</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="fu">.tracking-metric-visual</span> td<span class="in">:has(</span><span class="fu">.chosen</span><span class="in">)</span> { <span class="kw">background</span><span class="ch">:</span> <span class="cn">#e4eff7</span><span class="op">;</span> <span class="kw">box-shadow</span><span class="ch">:</span> <span class="dv">inset</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">0</span> <span class="dv">2</span><span class="dt">px</span> <span class="cn">#286789</span><span class="op">;</span> }</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="fu">.tracking-metric-visual</span> <span class="fu">.switch-arrow</span> { <span class="kw">color</span><span class="ch">:</span> <span class="cn">#a42b36</span><span class="op">;</span> <span class="kw">font-weight</span><span class="ch">:</span> <span class="dv">700</span><span class="op">;</span> }</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="fu">.tracking-metric-visual</span> td<span class="in">:has(</span><span class="fu">.switch-arrow</span><span class="in">)</span> { <span class="kw">white-space</span><span class="ch">:</span> <span class="dv">nowrap</span><span class="op">;</span> }</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="fu">.tracking-metric-visual</span> td<span class="in">:has(</span><span class="fu">.history-score</span><span class="in">)</span> { <span class="kw">position</span><span class="ch">:</span> <span class="dv">relative</span><span class="op">;</span> }</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a><span class="fu">.tracking-metric-visual</span> td<span class="in">:has(</span><span class="fu">.history-score</span><span class="in">)::before</span> { <span class="kw">content</span><span class="ch">:</span> <span class="st">""</span><span class="op">;</span> <span class="kw">position</span><span class="ch">:</span> <span class="dv">absolute</span><span class="op">;</span> <span class="kw">height</span><span class="ch">:</span> <span class="dv">100</span><span class="dt">%</span><span class="op">;</span> <span class="kw">width</span><span class="ch">:</span> <span class="dv">2</span><span class="dt">px</span><span class="op">;</span> <span class="kw">background</span><span class="ch">:</span> <span class="cn">#176846</span><span class="op">;</span> <span class="kw">left</span><span class="ch">:</span> <span class="dv">50</span><span class="dt">%</span><span class="op">;</span> <span class="kw">top</span><span class="ch">:</span> <span class="dv">0</span><span class="op">;</span> }</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a><span class="fu">.tracking-metric-visual</span> <span class="fu">.history-score</span> { <span class="kw">position</span><span class="ch">:</span> <span class="dv">relative</span><span class="op">;</span> <span class="kw">display</span><span class="ch">:</span> <span class="dv">inline-block</span><span class="op">;</span> <span class="kw">background</span><span class="ch">:</span> <span class="cn">white</span><span class="op">;</span> <span class="kw">color</span><span class="ch">:</span> <span class="cn">#176846</span><span class="op">;</span> <span class="kw">border</span><span class="ch">:</span> <span class="dv">1</span><span class="dt">px</span> <span class="dv">solid</span> <span class="cn">#176846</span><span class="op">;</span> <span class="kw">border-radius</span><span class="ch">:</span> <span class="dv">4</span><span class="dt">px</span><span class="op">;</span> <span class="kw">padding</span><span class="ch">:</span> <span class="dv">0</span> <span class="dv">.3</span><span class="dt">em</span><span class="op">;</span> }</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a><span class="fu">.tracking-metric-visual</span> <span class="fu">.metric-key</span> { <span class="kw">font-size</span><span class="ch">:</span> <span class="dv">.9</span><span class="dt">em</span><span class="op">;</span> <span class="kw">color</span><span class="ch">:</span> <span class="cn">#586875</span><span class="op">;</span> <span class="kw">margin</span><span class="ch">:</span> <span class="dv">.5</span><span class="dt">em</span> <span class="dv">0</span> <span class="dv">0</span><span class="op">;</span> }</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a><span class="fu">.tracking-metric-visual.detection-identities</span> tbody tr<span class="in">:nth-child(</span><span class="dv">3</span><span class="in">)</span> td<span class="op">,</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="fu">.tracking-metric-visual.filtered-identities</span> tbody tr<span class="in">:nth-child(</span><span class="dv">4</span><span class="in">)</span> td { <span class="kw">border-top</span><span class="ch">:</span> <span class="dv">2</span><span class="dt">px</span> <span class="dv">solid</span> <span class="cn">#586875</span><span class="op">;</span> }</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a><span class="fu">.tracking-metric-visual.filtered-identities</span> tbody tr<span class="in">:nth-child(</span><span class="dv">3</span><span class="in">)</span> td<span class="op">,</span></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="fu">.tracking-metric-visual.filtered-identities</span> tbody tr<span class="in">:nth-child(</span><span class="dv">6</span><span class="in">)</span> td { <span class="kw">background</span><span class="ch">:</span> <span class="cn">#e4eff7</span><span class="op">;</span> }</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a><span class="im">@media</span> <span class="an">print</span> {</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">.tracking-metric-visual</span><span class="op">,</span> <span class="fu">.tracking-metric-visual</span> <span class="op">*</span> { <span class="kw">-webkit-print-color-adjust</span><span class="ch">:</span> <span class="dv">exact</span><span class="op">;</span> <span class="kw">print-color-adjust</span><span class="ch">:</span> <span class="dv">exact</span><span class="op">;</span> }</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>  <span class="pp">#tracking-basketball-pairing-note</span> { <span class="kw">break-inside</span><span class="ch">:</span> <span class="dv">avoid</span><span class="op">;</span> <span class="kw">page-break-inside</span><span class="ch">:</span> <span class="dv">avoid</span><span class="op">;</span> }</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>&lt;/style&gt;</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>So far, we have compared tracking methods by inspecting particular frames. For an overall comparison, we need to check which players are detected and whether their identities remain consistent across the sequence.</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="fu">## Annotation IDs and track IDs: toy example {#annotation-ids-and-track-ids}</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>For evaluation, we use annotations that give a box and an object ID for each labelled object in each frame. We assume that these object IDs are consistent: annotations with the same ID belong to the same object throughout the sequence.</span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>Consider a small hypothetical example with two players visible in each of eight frames. The annotations use **G1** for the red player and **G2** for the black player. Each frame therefore has a box labelled G1 and a box labelled G2. The boxes may move between frames, but G1 always identifies the red player and G2 always identifies the black player.</span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a>Our tracker produces its own IDs, T1 and T2, without access to these annotation IDs. We use the annotations afterwards to evaluate its output. Because the two sets of IDs were assigned independently, we first need to establish which predicted track ID corresponds to which annotation object ID.</span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>For this eight-frame toy example, suppose the players' annotated boxes do not overlap. Each predicted box either agrees exactly with one annotation or is a spurious box away from both players. Each entry in a track row below names the annotation matched by that predicted box. A × means a prediction with no annotation match; a — means there is no prediction in that track's row.</span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>::: {#tracking-toy-inputs .tracking-metric-visual .timeline}</span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>| Frame | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |</span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>|:---|:---|:---|:---|:---|:---|:---|:---|:---|</span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a>| T1 predictions | G1 | G2 | G1 | G1 | <span class="co">[</span><span class="ot">—</span><span class="co">]</span>{.absent} | G1 | G2 | G1 |</span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a>| T2 predictions | G2 | G1 | G2 | <span class="co">[</span><span class="ot">×</span><span class="co">]</span>{.no-match} | G2 | G2 | G1 | G2 |</span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>| Unmatched annotations | <span class="co">[</span><span class="ot">—</span><span class="co">]</span>{.absent} | <span class="co">[</span><span class="ot">—</span><span class="co">]</span>{.absent} | <span class="co">[</span><span class="ot">—</span><span class="co">]</span>{.absent} | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.no-match} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.no-match} | <span class="co">[</span><span class="ot">—</span><span class="co">]</span>{.absent} | <span class="co">[</span><span class="ot">—</span><span class="co">]</span>{.absent} | <span class="co">[</span><span class="ot">—</span><span class="co">]</span>{.absent} |</span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a>There are 15 predicted boxes and 16 annotated boxes: 14 box matches, one unmatched prediction and two unmatched annotations. Detection precision is therefore $14/15\approx0.933$ and detection recall is $14/16=0.875$. These counts do not check whether T1 and T2 consistently follow the same players.</span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a><span class="fu">## Choosing the identity pairing across the toy sequence {#choosing-the-identity-pairing}</span></span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a>To calculate the <span class="co">[</span><span class="ot">identity precision and recall introduced by Ristani and colleagues</span><span class="co">](https://doi.org/10.1007/978-3-319-48881-3_2)</span>, we choose a one-to-one pairing between predicted track IDs and annotation object IDs using the whole sequence. Each predicted ID can be paired with at most one annotation ID, and vice versa. We choose the pairing that gives the largest number of box matches over all frames.</span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a>For this example, we accept a box match if its IoU is at least 0.50. Start by comparing T1's box with the G1 annotation in each frame. Their boxes agree exactly in frames 1, 3, 4, 6 and 8, giving IoU 1 in each of these frames. In frames 2 and 7, T1's box is around the black player while G1's annotation is around the red player, so their IoU is 0. T1 has no prediction in frame 5. This gives five accepted matches between T1 and G1.</span>
+<span id="cb1-61"><a href="#cb1-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-62"><a href="#cb1-62" aria-hidden="true" tabindex="-1"></a>We repeat this calculation for the other combinations of predicted and annotation IDs:</span>
+<span id="cb1-63"><a href="#cb1-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-64"><a href="#cb1-64" aria-hidden="true" tabindex="-1"></a>::: {#tracking-toy-pairing .tracking-metric-visual}</span>
+<span id="cb1-65"><a href="#cb1-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-66"><a href="#cb1-66" aria-hidden="true" tabindex="-1"></a>| Predicted track ID | Matches with G1 annotations | Matches with G2 annotations |</span>
+<span id="cb1-67"><a href="#cb1-67" aria-hidden="true" tabindex="-1"></a>|:---|---:|---:|</span>
+<span id="cb1-68"><a href="#cb1-68" aria-hidden="true" tabindex="-1"></a>| T1 | <span class="co">[</span><span class="ot">**5**</span><span class="co">]</span>{.chosen} | 2 |</span>
+<span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a>| T2 | 2 | <span class="co">[</span><span class="ot">**5**</span><span class="co">]</span>{.chosen} |</span>
+<span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">Outlined cells show the selected ID pairing.</span><span class="co">]</span>{.metric-key}</span>
+<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a>The two possible complete one-to-one pairings give:</span>
+<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**T1 → G1 and T2 → G2:** $5+5=10$ accepted matches.</span>
+<span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**T1 → G2 and T2 → G1:** $2+2=4$ accepted matches.</span>
+<span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a>We therefore choose T1 → G1 and T2 → G2. This means that we evaluate T1's boxes against the G1 annotations and T2's boxes against the G2 annotations throughout all eight frames, including frames where the tracks follow the other player.</span>
+<span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-82"><a href="#cb1-82" aria-hidden="true" tabindex="-1"></a><span class="fu">## Identity precision and recall</span></span>
+<span id="cb1-83"><a href="#cb1-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-84"><a href="#cb1-84" aria-hidden="true" tabindex="-1"></a>Once we have selected the ID pairing, we can form identity-based versions of TP, FP and FN:</span>
+<span id="cb1-85"><a href="#cb1-85" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-86"><a href="#cb1-86" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**IDTP:** identity true positives — predicted boxes that match an annotation with the ID chosen for that track.</span>
+<span id="cb1-87"><a href="#cb1-87" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**IDFP:** identity false positives — predicted boxes without such a match.</span>
+<span id="cb1-88"><a href="#cb1-88" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>**IDFN:** identity false negatives — annotated boxes without such a match.</span>
+<span id="cb1-89"><a href="#cb1-89" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-90"><a href="#cb1-90" aria-hidden="true" tabindex="-1"></a>With our selected pairing in the toy example, T1 gives five accepted identity matches with G1 and T2 gives five with G2. These ten matches are the identity true positives.</span>
+<span id="cb1-91"><a href="#cb1-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-92"><a href="#cb1-92" aria-hidden="true" tabindex="-1"></a>::: {#tracking-toy-identity-errors .tracking-metric-visual .timeline}</span>
+<span id="cb1-93"><a href="#cb1-93" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-94"><a href="#cb1-94" aria-hidden="true" tabindex="-1"></a>| Frame | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |</span>
+<span id="cb1-95"><a href="#cb1-95" aria-hidden="true" tabindex="-1"></a>|:---|:---|:---|:---|:---|:---|:---|:---|:---|</span>
+<span id="cb1-96"><a href="#cb1-96" aria-hidden="true" tabindex="-1"></a>| T1 → G1 | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-error} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">—</span><span class="co">]</span>{.absent} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-error} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} |</span>
+<span id="cb1-97"><a href="#cb1-97" aria-hidden="true" tabindex="-1"></a>| T2 → G2 | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-error} | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">×</span><span class="co">]</span>{.id-error} | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-error} | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-good} |</span>
+<span id="cb1-98"><a href="#cb1-98" aria-hidden="true" tabindex="-1"></a>| Annotations with no matching detection | <span class="co">[</span><span class="ot">—</span><span class="co">]</span>{.absent} | <span class="co">[</span><span class="ot">—</span><span class="co">]</span>{.absent} | <span class="co">[</span><span class="ot">—</span><span class="co">]</span>{.absent} | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.no-match} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.no-match} | <span class="co">[</span><span class="ot">—</span><span class="co">]</span>{.absent} | <span class="co">[</span><span class="ot">—</span><span class="co">]</span>{.absent} | <span class="co">[</span><span class="ot">—</span><span class="co">]</span>{.absent} |</span>
+<span id="cb1-99"><a href="#cb1-99" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-100"><a href="#cb1-100" aria-hidden="true" tabindex="-1"></a>This row shows the two missed annotation boxes. The other four IDFN come from the wrong-ID matches shown in the track rows above.</span>
+<span id="cb1-101"><a href="#cb1-101" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-102"><a href="#cb1-102" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">Green marks accepted identity matches; red marks identity errors. The chosen pairing is T1 → G1 and T2 → G2.</span><span class="co">]</span>{.metric-key}</span>
+<span id="cb1-103"><a href="#cb1-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-104"><a href="#cb1-104" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-105"><a href="#cb1-105" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-106"><a href="#cb1-106" aria-hidden="true" tabindex="-1"></a>In each of frames 2 and 7, T1's box fails to match the G1 annotation, and T2's box fails to match the G2 annotation. Although each predicted box is correctly located around a player, its track ID is paired with the other player's annotation ID. Each of these four wrong-ID box matches contributes one IDFP and one IDFN.</span>
+<span id="cb1-107"><a href="#cb1-107" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-108"><a href="#cb1-108" aria-hidden="true" tabindex="-1"></a>The spurious T2 prediction in frame 4 adds one IDFP. G2's unmatched annotation in frame 4 and G1's unmatched annotation in frame 5 each add one IDFN. The absent T1 prediction in frame 5 does not add an IDFP, because there is no predicted box to count. Our totals are therefore **IDTP = 10, IDFP = 5 and IDFN = 6**.</span>
+<span id="cb1-109"><a href="#cb1-109" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-110"><a href="#cb1-110" aria-hidden="true" tabindex="-1"></a>We calculate these scores using the totals over all tracks and frames in the sequence. **Identity precision (IDP)** is the number of accepted identity matches divided by the total number of predicted boxes. **Identity recall (IDR)** uses the same numerator, but divides by the total number of annotated boxes. These totals include boxes without an accepted match.</span>
+<span id="cb1-111"><a href="#cb1-111" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-112"><a href="#cb1-112" aria-hidden="true" tabindex="-1"></a>For our two-player, eight-frame toy example, there are 15 predicted boxes and 16 annotated boxes. Using these totals,</span>
+<span id="cb1-113"><a href="#cb1-113" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-114"><a href="#cb1-114" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-115"><a href="#cb1-115" aria-hidden="true" tabindex="-1"></a>\mathrm{IDP}</span>
+<span id="cb1-116"><a href="#cb1-116" aria-hidden="true" tabindex="-1"></a>=\frac{\mathrm{IDTP}}{\mathrm{IDTP}+\mathrm{IDFP}}</span>
+<span id="cb1-117"><a href="#cb1-117" aria-hidden="true" tabindex="-1"></a>=\frac{10}{10+5}</span>
+<span id="cb1-118"><a href="#cb1-118" aria-hidden="true" tabindex="-1"></a>=\frac{10}{15}\approx0.667,</span>
+<span id="cb1-119"><a href="#cb1-119" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-120"><a href="#cb1-120" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-121"><a href="#cb1-121" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-122"><a href="#cb1-122" aria-hidden="true" tabindex="-1"></a>\mathrm{IDR}</span>
+<span id="cb1-123"><a href="#cb1-123" aria-hidden="true" tabindex="-1"></a>=\frac{\mathrm{IDTP}}{\mathrm{IDTP}+\mathrm{IDFN}}</span>
+<span id="cb1-124"><a href="#cb1-124" aria-hidden="true" tabindex="-1"></a>=\frac{10}{10+6}</span>
+<span id="cb1-125"><a href="#cb1-125" aria-hidden="true" tabindex="-1"></a>=\frac{10}{16}=0.625.</span>
+<span id="cb1-126"><a href="#cb1-126" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-127"><a href="#cb1-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-128"><a href="#cb1-128" aria-hidden="true" tabindex="-1"></a>F1 combines precision and recall using their **harmonic mean**. **IDF1** applies the same calculation to identity precision and recall:</span>
+<span id="cb1-129"><a href="#cb1-129" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-130"><a href="#cb1-130" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-131"><a href="#cb1-131" aria-hidden="true" tabindex="-1"></a>\mathrm{IDF1}</span>
+<span id="cb1-132"><a href="#cb1-132" aria-hidden="true" tabindex="-1"></a>=\frac{2\,\mathrm{IDP}\,\mathrm{IDR}}{\mathrm{IDP}+\mathrm{IDR}}</span>
+<span id="cb1-133"><a href="#cb1-133" aria-hidden="true" tabindex="-1"></a>=\frac{20}{31}\approx0.645.</span>
+<span id="cb1-134"><a href="#cb1-134" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-135"><a href="#cb1-135" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-136"><a href="#cb1-136" aria-hidden="true" tabindex="-1"></a><span class="fu">## Evaluating the basketball tracks</span></span>
+<span id="cb1-137"><a href="#cb1-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-138"><a href="#cb1-138" aria-hidden="true" tabindex="-1"></a>We can now evaluate the last-box and two-observation motion trackers over frames 50–100 of the basketball video. This gives 51 frames, with six annotated players in every frame, so there are $6\times51=306$ annotated boxes. Each run creates eight predicted track IDs over this window. We include the detections stored under all eight IDs, including tracks that become inactive before frame 100.</span>
+<span id="cb1-139"><a href="#cb1-139" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-140"><a href="#cb1-140" aria-hidden="true" tabindex="-1"></a>The confidence cutoff of 0.50 gives 297 predicted boxes, while the cutoff of 0.40 gives 304. At each cutoff, both tracking methods use the same detections. We keep the court filter, tracking IoU threshold of 0.30 and three-miss inactivity rule unchanged.</span>
+<span id="cb1-141"><a href="#cb1-141" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-142"><a href="#cb1-142" aria-hidden="true" tabindex="-1"></a>For evaluation, we accept box overlaps with IoU at least 0.50. Detection precision and recall use the per-frame matching rule developed in the detection-evaluation chapter: maximise total IoU, then reject selected pairs below the threshold. For identity precision and recall, we instead choose the track-to-annotation ID pairing over all 51 frames, as in the worked example above.</span>
+<span id="cb1-143"><a href="#cb1-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-144"><a href="#cb1-144" aria-hidden="true" tabindex="-1"></a>::: {#tracking-detection-identity-scores .tracking-metric-visual .detection-identities}</span>
+<span id="cb1-145"><a href="#cb1-145" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-146"><a href="#cb1-146" aria-hidden="true" tabindex="-1"></a>| Tracking method | Confidence cutoff | Detection precision | Detection recall | Identity precision | Identity recall |</span>
+<span id="cb1-147"><a href="#cb1-147" aria-hidden="true" tabindex="-1"></a>|:---|---:|---:|---:|---:|---:|</span>
+<span id="cb1-148"><a href="#cb1-148" aria-hidden="true" tabindex="-1"></a>| Last-box | 0.50 | **0.976** | 0.948 | 0.852 | 0.827 |</span>
+<span id="cb1-149"><a href="#cb1-149" aria-hidden="true" tabindex="-1"></a>| Two-observation motion | 0.50 | **0.976** | 0.948 | 0.852 | 0.827 |</span>
+<span id="cb1-150"><a href="#cb1-150" aria-hidden="true" tabindex="-1"></a>| Last-box | 0.40 | 0.970 | **0.964** | **0.914** | **0.908** |</span>
+<span id="cb1-151"><a href="#cb1-151" aria-hidden="true" tabindex="-1"></a>| Two-observation motion | 0.40 | 0.970 | **0.964** | 0.862 | 0.856 |</span>
+<span id="cb1-152"><a href="#cb1-152" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-153"><a href="#cb1-153" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">Bold marks the best value in each score column, including ties.</span><span class="co">]</span>{.metric-key}</span>
+<span id="cb1-154"><a href="#cb1-154" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-155"><a href="#cb1-155" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-156"><a href="#cb1-156" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-157"><a href="#cb1-157" aria-hidden="true" tabindex="-1"></a>For example, last-box tracking at confidence cutoff 0.40 gives 278 accepted identity matches. The remaining 26 predicted boxes contribute to IDFP, and the remaining 28 annotated boxes contribute to IDFN. Thus,</span>
+<span id="cb1-158"><a href="#cb1-158" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-159"><a href="#cb1-159" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-160"><a href="#cb1-160" aria-hidden="true" tabindex="-1"></a>\mathrm{IDP}=\frac{278}{304}\approx0.914,</span>
+<span id="cb1-161"><a href="#cb1-161" aria-hidden="true" tabindex="-1"></a>\qquad</span>
+<span id="cb1-162"><a href="#cb1-162" aria-hidden="true" tabindex="-1"></a>\mathrm{IDR}=\frac{278}{306}\approx0.908.</span>
+<span id="cb1-163"><a href="#cb1-163" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-164"><a href="#cb1-164" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-165"><a href="#cb1-165" aria-hidden="true" tabindex="-1"></a>Detection precision and recall assess matches between detections and annotations within each frame, not the tracking links between frames. At each confidence cutoff, these scores are identical for the two tracking methods because their boxes are unchanged. Lowering the cutoff recovers five additional detection matches, but also adds two unmatched predicted boxes. Detection recall therefore increases, while detection precision falls slightly. Last-box tracking at cutoff 0.40 has the highest identity precision and recall among these four runs.</span>
+<span id="cb1-166"><a href="#cb1-166" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-167"><a href="#cb1-167" aria-hidden="true" tabindex="-1"></a>::: {#tracking-basketball-pairing-note}</span>
+<span id="cb1-168"><a href="#cb1-168" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-169"><a href="#cb1-169" aria-hidden="true" tabindex="-1"></a>At cutoff 0.50, the identity scores are also identical, despite the motion predictor avoiding the frame-66 switch. For evaluation, each annotated player is paired with one predicted track ID over the whole sequence.</span>
+<span id="cb1-170"><a href="#cb1-170" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-171"><a href="#cb1-171" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-172"><a href="#cb1-172" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-173"><a href="#cb1-173" aria-hidden="true" tabindex="-1"></a>Consider the red player's annotations. T2 has 14 acceptable box overlaps with these annotations under last-box tracking and 18 under motion-based tracking. However, T7 has 29 in both runs, so the joint sequence-wide identity pairing still selects T7 for the red player in both cases.</span>
+<span id="cb1-174"><a href="#cb1-174" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-175"><a href="#cb1-175" aria-hidden="true" tabindex="-1"></a>::: {#tracking-red-identity-history .tracking-metric-visual}</span>
+<span id="cb1-176"><a href="#cb1-176" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-177"><a href="#cb1-177" aria-hidden="true" tabindex="-1"></a>| Method | Matches under T2 | Matches under T7 | ID paired with red |</span>
+<span id="cb1-178"><a href="#cb1-178" aria-hidden="true" tabindex="-1"></a>|:---|---:|---:|:---|</span>
+<span id="cb1-179"><a href="#cb1-179" aria-hidden="true" tabindex="-1"></a>| Last-box | 14 | 29 | T7 |</span>
+<span id="cb1-180"><a href="#cb1-180" aria-hidden="true" tabindex="-1"></a>| Two-observation motion | <span class="co">[</span><span class="ot">**18 (+4)**</span><span class="co">]</span>{.improved} | 29 | T7 |</span>
+<span id="cb1-181"><a href="#cb1-181" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-182"><a href="#cb1-182" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">Frames 50–100: box matches with the red player's annotations. Green marks the additional matches under T2, not a change in the selected pairing.</span><span class="co">]</span>{.metric-key}</span>
+<span id="cb1-183"><a href="#cb1-183" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-184"><a href="#cb1-184" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-185"><a href="#cb1-185" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-186"><a href="#cb1-186" aria-hidden="true" tabindex="-1"></a>Motion increases T2's overlaps with the red player, but we cannot also count these as identity matches for red, because red is already paired with T7. The other chosen ID pairings and the total numbers of predicted and annotated boxes are unchanged too, so identity precision and recall remain unchanged.</span>
+<span id="cb1-187"><a href="#cb1-187" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-188"><a href="#cb1-188" aria-hidden="true" tabindex="-1"></a><span class="fu">## MOTA and HOTA {#hota-and-other-tracking-measures}</span></span>
+<span id="cb1-189"><a href="#cb1-189" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-190"><a href="#cb1-190" aria-hidden="true" tabindex="-1"></a>IDF1 combines identity precision and recall into a single score. MOTA and HOTA use information about tracking errors that these two numbers do not retain, so they can distinguish tracking outputs with identical identity precision and recall.</span>
+<span id="cb1-191"><a href="#cb1-191" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-192"><a href="#cb1-192" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">**MOTA**, or *Multiple Object Tracking Accuracy*</span><span class="co">](https://link.springer.com/article/10.1155/2008/246309)</span>, starts with **detection false positives and false negatives**: predicted boxes without matching annotations, and annotations without matching predicted boxes. It then adds a penalty whenever the track ID assigned to a player changes. This is an **identity switch**.</span>
+<span id="cb1-193"><a href="#cb1-193" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-194"><a href="#cb1-194" aria-hidden="true" tabindex="-1"></a>Returning to the eight-frame toy example, we now put the annotated players in the rows. Each entry names the predicted track whose box matches that player's annotation. Each arrow marks an identity switch; changing back also counts.</span>
+<span id="cb1-195"><a href="#cb1-195" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-196"><a href="#cb1-196" aria-hidden="true" tabindex="-1"></a>::: {#tracking-toy-mota .tracking-metric-visual .timeline}</span>
+<span id="cb1-197"><a href="#cb1-197" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-198"><a href="#cb1-198" aria-hidden="true" tabindex="-1"></a>| Frame | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |</span>
+<span id="cb1-199"><a href="#cb1-199" aria-hidden="true" tabindex="-1"></a>|:---|:---|:---|:---|:---|:---|:---|:---|:---|</span>
+<span id="cb1-200"><a href="#cb1-200" aria-hidden="true" tabindex="-1"></a>| G1 annotations | T1 | <span class="co">[</span><span class="ot">→</span><span class="co">]</span>{.switch-arrow} T2 | <span class="co">[</span><span class="ot">→</span><span class="co">]</span>{.switch-arrow} T1 | T1 | <span class="co">[</span><span class="ot">—</span><span class="co">]</span>{.no-match} | T1 | <span class="co">[</span><span class="ot">→</span><span class="co">]</span>{.switch-arrow} T2 | <span class="co">[</span><span class="ot">→</span><span class="co">]</span>{.switch-arrow} T1 |</span>
+<span id="cb1-201"><a href="#cb1-201" aria-hidden="true" tabindex="-1"></a>| G2 annotations | T2 | <span class="co">[</span><span class="ot">→</span><span class="co">]</span>{.switch-arrow} T1 | <span class="co">[</span><span class="ot">→</span><span class="co">]</span>{.switch-arrow} T2 | <span class="co">[</span><span class="ot">—</span><span class="co">]</span>{.no-match} | T2 | T2 | <span class="co">[</span><span class="ot">→</span><span class="co">]</span>{.switch-arrow} T1 | <span class="co">[</span><span class="ot">→</span><span class="co">]</span>{.switch-arrow} T2 |</span>
+<span id="cb1-202"><a href="#cb1-202" aria-hidden="true" tabindex="-1"></a>| Unmatched predictions | <span class="co">[</span><span class="ot">—</span><span class="co">]</span>{.absent} | <span class="co">[</span><span class="ot">—</span><span class="co">]</span>{.absent} | <span class="co">[</span><span class="ot">—</span><span class="co">]</span>{.absent} | <span class="co">[</span><span class="ot">T2</span><span class="co">]</span>{.no-match} | <span class="co">[</span><span class="ot">—</span><span class="co">]</span>{.absent} | <span class="co">[</span><span class="ot">—</span><span class="co">]</span>{.absent} | <span class="co">[</span><span class="ot">—</span><span class="co">]</span>{.absent} | <span class="co">[</span><span class="ot">—</span><span class="co">]</span>{.absent} |</span>
+<span id="cb1-203"><a href="#cb1-203" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-204"><a href="#cb1-204" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-205"><a href="#cb1-205" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-206"><a href="#cb1-206" aria-hidden="true" tabindex="-1"></a>The eight arrows give eight identity switches, four for each player. G1 returns after its frame-5 gap with the same ID as before the gap, and G2 does the same after its frame-4 gap, so these returns add no switches. There is one detection false positive and two detection false negatives. These differ from the identity counts IDFP = 5 and IDFN = 6 calculated using a fixed ID pairing.</span>
+<span id="cb1-207"><a href="#cb1-207" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-208"><a href="#cb1-208" aria-hidden="true" tabindex="-1"></a>MOTA adds the detection errors and identity switches, divides by the total number of annotated boxes, and subtracts the result from 1. Writing **IDSW** for the number of identity switches, our toy example gives</span>
+<span id="cb1-209"><a href="#cb1-209" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-210"><a href="#cb1-210" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-211"><a href="#cb1-211" aria-hidden="true" tabindex="-1"></a>\mathrm{MOTA}</span>
+<span id="cb1-212"><a href="#cb1-212" aria-hidden="true" tabindex="-1"></a>=1-\frac{\mathrm{FP}+\mathrm{FN}+\mathrm{IDSW}}{\text{number of annotated boxes}}</span>
+<span id="cb1-213"><a href="#cb1-213" aria-hidden="true" tabindex="-1"></a>=1-\frac{1+2+8}{16}</span>
+<span id="cb1-214"><a href="#cb1-214" aria-hidden="true" tabindex="-1"></a>=0.3125.</span>
+<span id="cb1-215"><a href="#cb1-215" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-216"><a href="#cb1-216" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-217"><a href="#cb1-217" aria-hidden="true" tabindex="-1"></a>MOTA is at most 1, but can be negative if the total error count exceeds the number of annotated boxes.</span>
+<span id="cb1-218"><a href="#cb1-218" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-219"><a href="#cb1-219" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">**HOTA**, or *Higher Order Tracking Accuracy*</span><span class="co">](https://doi.org/10.1007/s11263-020-01375-2)</span>, combines a detection score and an association score. We first compare its detection score with precision and recall, using the same eight-frame toy example.</span>
+<span id="cb1-220"><a href="#cb1-220" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-221"><a href="#cb1-221" aria-hidden="true" tabindex="-1"></a>| Measure | Formula | Detection example |</span>
+<span id="cb1-222"><a href="#cb1-222" aria-hidden="true" tabindex="-1"></a>|:---|:---|:---|</span>
+<span id="cb1-223"><a href="#cb1-223" aria-hidden="true" tabindex="-1"></a>| Binary classification accuracy | $\frac{\mathrm{TP}+\mathrm{TN}}{\mathrm{TP}+\mathrm{TN}+\mathrm{FP}+\mathrm{FN}}$ | Not used here: there is no natural count of true-negative boxes. |</span>
+<span id="cb1-224"><a href="#cb1-224" aria-hidden="true" tabindex="-1"></a>| Precision | $\frac{\mathrm{TP}}{\mathrm{TP}+\mathrm{FP}}$ | $14/15\approx0.933$ |</span>
+<span id="cb1-225"><a href="#cb1-225" aria-hidden="true" tabindex="-1"></a>| Recall | $\frac{\mathrm{TP}}{\mathrm{TP}+\mathrm{FN}}$ | $14/16=0.875$ |</span>
+<span id="cb1-226"><a href="#cb1-226" aria-hidden="true" tabindex="-1"></a>| HOTA's detection score | $\frac{\mathrm{TP}}{\mathrm{TP}+\mathrm{FP}+\mathrm{FN}}$ | $14/17\approx0.824$ |</span>
+<span id="cb1-227"><a href="#cb1-227" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-228"><a href="#cb1-228" aria-hidden="true" tabindex="-1"></a>We used box IoU to compare two boxes by dividing their shared area by the area covered by either box. This intersection-over-union measure is also called the **Jaccard index**, and we can apply it to detection counts once we have matched the boxes.</span>
+<span id="cb1-229"><a href="#cb1-229" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-230"><a href="#cb1-230" aria-hidden="true" tabindex="-1"></a>For the Jaccard detection score, each matched prediction–annotation pair counts as one shared item. The 14 matches form the intersection, and adding the one unmatched prediction and two unmatched annotations gives a union of 17 items, so the score is 14/17. HOTA calls this component **detection accuracy**.</span>
+<span id="cb1-231"><a href="#cb1-231" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-232"><a href="#cb1-232" aria-hidden="true" tabindex="-1"></a>To see how HOTA's association score works, start with a box match between G1 and T1. HOTA compares **all G1 annotation boxes with all T1 prediction boxes across the sequence**, including frames where they do not match. In our eight-frame toy example:</span>
+<span id="cb1-233"><a href="#cb1-233" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-234"><a href="#cb1-234" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Frames 1, 3, 4, 6 and 8 give five correct box matches.</span>
+<span id="cb1-235"><a href="#cb1-235" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>G1's annotations in frames 2, 5 and 7 have no matching T1 prediction: three false negatives for this comparison.</span>
+<span id="cb1-236"><a href="#cb1-236" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>T1's predictions in frames 2 and 7 are around the black player, so they have no matching G1 annotation: two false positives for this comparison.</span>
+<span id="cb1-237"><a href="#cb1-237" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-238"><a href="#cb1-238" aria-hidden="true" tabindex="-1"></a>We divide the number of matches by the matches plus both kinds of unmatched box. This gives the association score</span>
+<span id="cb1-239"><a href="#cb1-239" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-240"><a href="#cb1-240" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-241"><a href="#cb1-241" aria-hidden="true" tabindex="-1"></a>\text{G1–T1 association score}=\frac{5}{5+3+2}=0.5.</span>
+<span id="cb1-242"><a href="#cb1-242" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-243"><a href="#cb1-243" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-244"><a href="#cb1-244" aria-hidden="true" tabindex="-1"></a>::: {#tracking-hota-g1-t1 .tracking-metric-visual .timeline}</span>
+<span id="cb1-245"><a href="#cb1-245" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-246"><a href="#cb1-246" aria-hidden="true" tabindex="-1"></a>| Frame | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |</span>
+<span id="cb1-247"><a href="#cb1-247" aria-hidden="true" tabindex="-1"></a>|:---|:---|:---|:---|:---|:---|:---|:---|:---|</span>
+<span id="cb1-248"><a href="#cb1-248" aria-hidden="true" tabindex="-1"></a>| G1 annotations | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.history-miss} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.history-miss} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.history-miss} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} |</span>
+<span id="cb1-249"><a href="#cb1-249" aria-hidden="true" tabindex="-1"></a>| Association score | <span class="co">[</span><span class="ot">0.5</span><span class="co">]</span>{.history-score} | | <span class="co">[</span><span class="ot">0.5</span><span class="co">]</span>{.history-score} | <span class="co">[</span><span class="ot">0.5</span><span class="co">]</span>{.history-score} | | <span class="co">[</span><span class="ot">0.5</span><span class="co">]</span>{.history-score} | | <span class="co">[</span><span class="ot">0.5</span><span class="co">]</span>{.history-score} |</span>
+<span id="cb1-250"><a href="#cb1-250" aria-hidden="true" tabindex="-1"></a>| T1 predictions | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-error} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">—</span><span class="co">]</span>{.absent} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-error} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} |</span>
+<span id="cb1-251"><a href="#cb1-251" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-252"><a href="#cb1-252" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">Green links the five matches. Amber marks G1 annotations not matched by T1; red marks T1 predictions not matched to G1.</span><span class="co">]</span>{.metric-key}</span>
+<span id="cb1-253"><a href="#cb1-253" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-254"><a href="#cb1-254" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-255"><a href="#cb1-255" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-256"><a href="#cb1-256" aria-hidden="true" tabindex="-1"></a>Each of the five G1–T1 box matches receives this score, because each uses the same complete histories of G1 and T1.</span>
+<span id="cb1-257"><a href="#cb1-257" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-258"><a href="#cb1-258" aria-hidden="true" tabindex="-1"></a>HOTA also compares G1 with T2, because those IDs have box matches in frames 2 and 7. Their complete histories give two correct matches, six false negatives and six false positives. The false positives for this comparison include T2's five boxes around G2 and its spurious frame-4 box. Thus,</span>
+<span id="cb1-259"><a href="#cb1-259" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-260"><a href="#cb1-260" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-261"><a href="#cb1-261" aria-hidden="true" tabindex="-1"></a>\text{G1–T2 association score}=\frac{2}{2+6+6}=\frac17\approx0.143.</span>
+<span id="cb1-262"><a href="#cb1-262" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-263"><a href="#cb1-263" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-264"><a href="#cb1-264" aria-hidden="true" tabindex="-1"></a>::: {#tracking-hota-g1-t2 .tracking-metric-visual .timeline}</span>
+<span id="cb1-265"><a href="#cb1-265" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-266"><a href="#cb1-266" aria-hidden="true" tabindex="-1"></a>| Frame | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |</span>
+<span id="cb1-267"><a href="#cb1-267" aria-hidden="true" tabindex="-1"></a>|:---|:---|:---|:---|:---|:---|:---|:---|:---|</span>
+<span id="cb1-268"><a href="#cb1-268" aria-hidden="true" tabindex="-1"></a>| G1 annotations | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.history-miss} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.history-miss} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.history-miss} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.history-miss} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.history-miss} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.history-miss} |</span>
+<span id="cb1-269"><a href="#cb1-269" aria-hidden="true" tabindex="-1"></a>| Association score | | <span class="co">[</span><span class="ot">1/7</span><span class="co">]</span>{.history-score} | | | | | <span class="co">[</span><span class="ot">1/7</span><span class="co">]</span>{.history-score} | |</span>
+<span id="cb1-270"><a href="#cb1-270" aria-hidden="true" tabindex="-1"></a>| T2 predictions | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-error} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-error} | <span class="co">[</span><span class="ot">×</span><span class="co">]</span>{.id-error} | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-error} | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-error} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-error} |</span>
+<span id="cb1-271"><a href="#cb1-271" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-272"><a href="#cb1-272" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">Green links the two matches. Amber marks G1 annotations not matched by T2; red marks T2 predictions not matched to G1.</span><span class="co">]</span>{.metric-key}</span>
+<span id="cb1-273"><a href="#cb1-273" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-274"><a href="#cb1-274" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-275"><a href="#cb1-275" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-276"><a href="#cb1-276" aria-hidden="true" tabindex="-1"></a>Both G1–T2 matches receive this score. Repeating the comparison for G2 gives two more scores:</span>
+<span id="cb1-277"><a href="#cb1-277" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-278"><a href="#cb1-278" aria-hidden="true" tabindex="-1"></a>| Player–track pair | Box matches | Unmatched annotations | Unmatched predictions | Association score |</span>
+<span id="cb1-279"><a href="#cb1-279" aria-hidden="true" tabindex="-1"></a>|:---|---:|---:|---:|---:|</span>
+<span id="cb1-280"><a href="#cb1-280" aria-hidden="true" tabindex="-1"></a>| G1–T1 | 5 | 3 | 2 | 1/2 |</span>
+<span id="cb1-281"><a href="#cb1-281" aria-hidden="true" tabindex="-1"></a>| G1–T2 | 2 | 6 | 6 | 1/7 |</span>
+<span id="cb1-282"><a href="#cb1-282" aria-hidden="true" tabindex="-1"></a>| G2–T1 | 2 | 6 | 5 | 2/13 |</span>
+<span id="cb1-283"><a href="#cb1-283" aria-hidden="true" tabindex="-1"></a>| G2–T2 | 5 | 3 | 3 | 5/11 |</span>
+<span id="cb1-284"><a href="#cb1-284" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-285"><a href="#cb1-285" aria-hidden="true" tabindex="-1"></a>Each unmatched count in this table refers to the player–track pair in that row. To average over all 14 box matches, multiply each row's score by its number of matches and divide the sum of those contributions by 14:</span>
+<span id="cb1-286"><a href="#cb1-286" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-287"><a href="#cb1-287" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-288"><a href="#cb1-288" aria-hidden="true" tabindex="-1"></a>\text{Association accuracy}</span>
+<span id="cb1-289"><a href="#cb1-289" aria-hidden="true" tabindex="-1"></a>=\frac{5(1/2)+2(1/7)+2(2/13)+5(5/11)}{14}</span>
+<span id="cb1-290"><a href="#cb1-290" aria-hidden="true" tabindex="-1"></a>\approx0.383.</span>
+<span id="cb1-291"><a href="#cb1-291" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-292"><a href="#cb1-292" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-293"><a href="#cb1-293" aria-hidden="true" tabindex="-1"></a>For IDP and IDR, we selected one fixed ID pairing for the whole sequence. **HOTA instead checks the complete histories behind every box match**, including matches involving the player's other predicted IDs.</span>
+<span id="cb1-294"><a href="#cb1-294" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-295"><a href="#cb1-295" aria-hidden="true" tabindex="-1"></a>For our fixed set of box matches, detection accuracy is about 0.824 and association accuracy is about 0.383. HOTA combines them using a **geometric mean**, which means multiplying the two components and taking the square root:</span>
+<span id="cb1-296"><a href="#cb1-296" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-297"><a href="#cb1-297" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-298"><a href="#cb1-298" aria-hidden="true" tabindex="-1"></a>\mathrm{HOTA}=\sqrt{\text{detection accuracy}\times\text{association accuracy}}</span>
+<span id="cb1-299"><a href="#cb1-299" aria-hidden="true" tabindex="-1"></a>\approx\sqrt{0.824\times0.383}\approx0.562.</span>
+<span id="cb1-300"><a href="#cb1-300" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-301"><a href="#cb1-301" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-302"><a href="#cb1-302" aria-hidden="true" tabindex="-1"></a>This is the calculation at one evaluation IoU threshold. The full HOTA metric repeats it over several thresholds and averages the resulting HOTA values. The geometric mean is calculated at each threshold before averaging; it is not generally the geometric mean of the two separately averaged components.</span>
+<span id="cb1-303"><a href="#cb1-303" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-304"><a href="#cb1-304" aria-hidden="true" tabindex="-1"></a>For numerical comparisons, a standard evaluator such as <span class="co">[</span><span class="ot">TrackEval</span><span class="co">](https://github.com/JonathonLuiten/TrackEval)</span> implements these measures, including their matching and scoring rules. This evaluation compares tracker outputs with annotations; it is separate from the track–detection assignment inside our tracker. In particular, the evaluation IoU threshold has a different role from our tracking acceptance threshold of 0.30.</span>
+<span id="cb1-305"><a href="#cb1-305" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-306"><a href="#cb1-306" aria-hidden="true" tabindex="-1"></a>We can now return to the basketball tracks. The table below uses the saved, independently started frames 50–100 runs, with the same 306 annotated boxes in each run. IDF1 and MOTA use evaluation IoU 0.50; HOTA is averaged over the standard 19 thresholds from 0.05 to 0.95. The ID-switch column gives the switches counted by TrackEval's CLEAR evaluation, as used in MOTA.</span>
+<span id="cb1-307"><a href="#cb1-307" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-308"><a href="#cb1-308" aria-hidden="true" tabindex="-1"></a>| Confidence cutoff | Tracking method | IDF1 | MOTA | HOTA | ID switches |</span>
+<span id="cb1-309"><a href="#cb1-309" aria-hidden="true" tabindex="-1"></a>|:---|:---|---:|---:|---:|---:|</span>
+<span id="cb1-310"><a href="#cb1-310" aria-hidden="true" tabindex="-1"></a>| 0.50 | Last-box | **0.8391** | 0.9118 | 0.6758 | 4 |</span>
+<span id="cb1-311"><a href="#cb1-311" aria-hidden="true" tabindex="-1"></a>| 0.50 | Two-observation motion | **0.8391** | **0.9150** | **0.6793** | **3** |</span>
+<span id="cb1-312"><a href="#cb1-312" aria-hidden="true" tabindex="-1"></a>| 0.40 | Last-box | **0.9115** | **0.9314** | **0.7153** | **1** |</span>
+<span id="cb1-313"><a href="#cb1-313" aria-hidden="true" tabindex="-1"></a>| 0.40 | Two-observation motion | 0.8590 | 0.9248 | 0.6703 | 3 |</span>
+<span id="cb1-314"><a href="#cb1-314" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-315"><a href="#cb1-315" aria-hidden="true" tabindex="-1"></a>Bold marks the best values within each confidence group, including ties. Higher scores and fewer switches are better.</span>
+<span id="cb1-316"><a href="#cb1-316" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-317"><a href="#cb1-317" aria-hidden="true" tabindex="-1"></a>At confidence cutoff 0.50, motion removes the frame-66 identity switch, reducing the count from four to three. MOTA increases by $1/306$, while IDF1 stays unchanged. HOTA also increases slightly. At 0.40, two-observation motion scores below last-box tracking on all three measures.</span>
+<span id="cb1-318"><a href="#cb1-318" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-319"><a href="#cb1-319" aria-hidden="true" tabindex="-1"></a>HOTA uses sequence-wide identity information to help choose its within-frame box matches. Its accepted matches can therefore change when track IDs change, even with identical supplied boxes. Its detection component need not use the same box matches as our earlier detection precision and recall. At cutoff 0.50, HOTA's detection component increases while its association component falls slightly when averaged over the thresholds, so the small HOTA increase should not be described as an improvement in the association component.</span>
+<span id="cb1-320"><a href="#cb1-320" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-321"><a href="#cb1-321" aria-hidden="true" tabindex="-1"></a>We should compare methods on the same annotated sequences and state which inputs and settings change. Holding the detector outputs fixed, as in our motion comparison, helps isolate the effect of the tracking method.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div></div></div></div></div>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p><a href="attribution.txt">Third-party sources and licences</a></p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    </div>
+    <div class="nav-footer-right">
+      &nbsp;
+    </div>
+  </div>
+</footer>
+
+
+
+
+</body></html>

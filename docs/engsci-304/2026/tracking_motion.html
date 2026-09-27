@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>ENGSCI 304: Engineering Machine Learning II - 11&nbsp; Motion-based tracking and beyond</title>
+<title>ENGSCI 304: Engineering Machine Learning II - 11&nbsp; Motion-based tracking</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -64,6 +64,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta name="quarto:offset" content="./">
+<link href="./tracking_evaluation.html" rel="next">
 <link href="./tracking.html" rel="prev">
 <script src="site_libs/quarto-html/quarto.js"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
@@ -143,7 +144,7 @@ window.Quarto = {
       <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
         <i class="bi bi-layout-text-sidebar-reverse"></i>
       </button>
-        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./visual.html">Visual data</a></li><li class="breadcrumb-item"><a href="./tracking_motion.html"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Motion-based tracking and beyond</span></a></li></ol></nav>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./visual.html">Visual data</a></li><li class="breadcrumb-item"><a href="./tracking_motion.html"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Motion-based tracking</span></a></li></ol></nav>
         <a class="flex-grow-1" role="button" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
         </a>
       <button type="button" class="btn quarto-search-button" aria-label="" onclick="window.quartoOpenSearch();">
@@ -252,7 +253,19 @@ window.Quarto = {
           <li class="sidebar-item">
   <div class="sidebar-item-container"> 
   <a href="./tracking_motion.html" class="sidebar-item-text sidebar-link active">
- <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Motion-based tracking and beyond</span></span></a>
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Motion-based tracking</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tracking_evaluation.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Evaluating tracks</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="./tracking_filtering.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">Filtering and practical trackers</span></span></a>
   </div>
 </li>
       </ul>
@@ -271,23 +284,15 @@ window.Quarto = {
   <li><a href="#using-the-motion-prediction" id="toc-using-the-motion-prediction" class="nav-link" data-scroll-target="#using-the-motion-prediction"><span class="header-section-number">11.2</span> Using the motion prediction</a></li>
   <li><a href="#does-the-motion-prediction-help" id="toc-does-the-motion-prediction-help" class="nav-link" data-scroll-target="#does-the-motion-prediction-help"><span class="header-section-number">11.3</span> Does the motion prediction help?</a></li>
   <li><a href="#changing-the-confidence-cutoff" id="toc-changing-the-confidence-cutoff" class="nav-link" data-scroll-target="#changing-the-confidence-cutoff"><span class="header-section-number">11.4</span> Changing the confidence cutoff</a></li>
-  <li><a href="#filtering-the-motion-estimates" id="toc-filtering-the-motion-estimates" class="nav-link" data-scroll-target="#filtering-the-motion-estimates"><span class="header-section-number">11.5</span> Filtering the motion estimates</a></li>
-  <li><a href="#filtering-the-basketball-tracks" id="toc-filtering-the-basketball-tracks" class="nav-link" data-scroll-target="#filtering-the-basketball-tracks"><span class="header-section-number">11.6</span> Filtering the basketball tracks</a></li>
-  <li><a href="#practical-trackers-and-appearance-information" id="toc-practical-trackers-and-appearance-information" class="nav-link" data-scroll-target="#practical-trackers-and-appearance-information"><span class="header-section-number">11.7</span> Practical trackers and appearance information</a>
-  <ul class="collapse">
-  <li><a href="#using-confidence-differently-for-updates-and-new-tracks" id="toc-using-confidence-differently-for-updates-and-new-tracks" class="nav-link" data-scroll-target="#using-confidence-differently-for-updates-and-new-tracks"><span class="header-section-number">11.7.1</span> Using confidence differently for updates and new tracks</a></li>
-  <li><a href="#using-the-image-inside-the-box" id="toc-using-the-image-inside-the-box" class="nav-link" data-scroll-target="#using-the-image-inside-the-box"><span class="header-section-number">11.7.2</span> Using the image inside the box</a></li>
-  </ul></li>
-  <li><a href="#modern-directions-promptable-video-segmentation" id="toc-modern-directions-promptable-video-segmentation" class="nav-link" data-scroll-target="#modern-directions-promptable-video-segmentation"><span class="header-section-number">11.8</span> Modern directions: promptable video segmentation</a></li>
   </ul>
 </nav>
     </div>
 <!-- main -->
 <main class="content" id="quarto-document-content">
 
-<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./visual.html">Visual data</a></li><li class="breadcrumb-item"><a href="./tracking_motion.html"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Motion-based tracking and beyond</span></a></li></ol></nav>
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./visual.html">Visual data</a></li><li class="breadcrumb-item"><a href="./tracking_motion.html"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Motion-based tracking</span></a></li></ol></nav>
 <div class="quarto-title">
-<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Motion-based tracking and beyond</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
+<div class="quarto-title-block"><div><h1 class="title"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">Motion-based tracking</span></h1><button type="button" class="btn code-tools-button" id="quarto-code-tools-source"><i class="bi"></i> Code</button></div></div>
 </div>
 
 
@@ -518,201 +523,10 @@ Figure&nbsp;11.6: Additional detections admitted at confidence cutoff 0.40: thre
 </figure>
 </div>
 <p>Lowering the cutoff can therefore recover useful observations, but it can also introduce detections that make tracking harder. The <a href="https://doi.org/10.1109/ICIP.2016.7533003">original SORT paper</a> emphasises that detection quality is a key factor influencing tracking performance. Here confidence cutoff is one choice that affects which detections reach the tracker, though no choice, whether higher or lower, is obviously better in the present example.</p>
-</section>
-<section id="filtering-the-motion-estimates" class="level2" data-number="11.5">
-<h2 data-number="11.5" class="anchored" data-anchor-id="filtering-the-motion-estimates"><span class="header-section-number">11.5</span> Filtering the motion estimates</h2>
-<p>Our current motion predictor estimates velocity from the two most recent detections. Errors in their positions therefore also affect the velocity estimate, which we then use to predict the next position.</p>
-<p>For a simple example, suppose an object moves horizontally by 4 pixels per frame. Its true centre positions in four consecutive frames are 20, 24, 28 and 32 pixels. Suppose the first two detections give the correct positions, but the third gives 40 instead of 28. Our estimated velocity is then</p>
-<p><span class="math display">\[
-v = 40 - 24 = 16\quad\text{pixels per frame},
-\]</span></p>
-<p>and the predicted position in the fourth frame is</p>
-<p><span class="math display">\[
-x_{\mathrm{predicted}} = 40 + 16 = 56\quad\text{pixels}.
-\]</span></p>
-<p>The true position is 32 pixels. The error in the third detection affects both the position from which we predict and the velocity used in that prediction.</p>
-<p>A <strong>filter</strong>, in the context of state estimation and tracking, combines a motion prediction with a new observation to update our estimate of the object’s state (true position and velocity).</p>
-<p>In the present application, we predict the object’s position in the new frame based on earlier frames, and the centre of a detected bounding box in the new frame is treated as a new noisy measurement of the current position. We then aim to combine the predicted and detected positions to obtain a new position state estimate for the current frame.</p>
-<p>As a simple example, for one position coordinate, we can combine the predicted and detected positions using a weighted average:</p>
-<p><span class="math display">\[
-x_{\mathrm{updated}}
-= (1-k)x_{\mathrm{predicted}} + kx_{\mathrm{detected}},
-\qquad 0\leq k\leq 1.
-\]</span></p>
-<p>Here <span class="math inline">\(k\)</span> controls how much weight we give the new detection. A value close to 1 puts most of the weight on the detected position, while a value close to 0 puts most of the weight on the prediction. Equivalently,</p>
-<p><span class="math display">\[
-x_{\mathrm{updated}}
-= x_{\mathrm{predicted}}
-+ k\bigl(x_{\mathrm{detected}}-x_{\mathrm{predicted}}\bigr).
-\]</span></p>
-<p>Thus we see the idea is to form the update as a corrected prediction, based on the difference between the predicted and detected positions. The degree to which we weight the prediction or the new observation needs to be determined.</p>
-<p>A <strong>Kalman filter</strong> uses estimates of uncertainty to determine these correction weights. A more uncertain observation receives less weight relative to the prediction; a more uncertain prediction receives less weight relative to the observation. The filter combines the motion model with an <strong>observation model</strong> describing errors in the detected positions. It updates the velocity estimate as well: an error in velocity produces a position error during prediction, so the position discrepancy also provides information about velocity. We will not describe Kalman filters in detail here, but they are used in the <a href="https://doi.org/10.1109/ICIP.2016.7533003">SORT tracking algorithm</a> and are widely used in navigation and control systems more generally.</p>
-<p>If we take this approach, our tracking loop now also carries filtered estimates of position and velocity for each track. Given a new frame, we first use the previous estimates to predict the object’s next box and perform the same IoU-based matching to detections as before, using the (uncorrected) prediction and new detection. Once the new prediction–detection pair has been established, we carry out the filter’s correction step for the position and velocity estimates, in preparation for predicting the next frame. In this example, we keep the width and height of the latest observed box for the estimated box.</p>
-<p>In terms of recording the results, we still record the actual detection alongside the current estimated position and velocity. Saving these observations and state estimates at each frame lets us compare the <strong>detection history</strong> with the <strong>estimated trajectory</strong> for the same track. When an active track has no assigned detection, its detection history has a gap, while the motion model provides a predicted position for that frame.</p>
-</section>
-<section id="filtering-the-basketball-tracks" class="level2" data-number="11.6">
-<h2 data-number="11.6" class="anchored" data-anchor-id="filtering-the-basketball-tracks"><span class="header-section-number">11.6</span> Filtering the basketball tracks</h2>
-<p>We can now repeat the basketball example using Kalman-filtered motion in place of the two-observation motion predictor. We again track frames 50–100 at confidence cutoff 0.40, keeping the court filter, tracking IoU threshold of 0.30 and three-miss inactivation rule the same. The filter’s correction weights depend on assumptions about measurement noise and changes in motion. Here we use fixed, illustrative noise settings that have not been calibrated to this video.<a href="#fn1" class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a></p>
-<p>At frame 64, T2 labels the red player and T4 the black player. With the two-observation predictor, these labels have been exchanged by frame 71 and remain exchanged at frame 74. With filtering, T2 still labels the red player and T4 the black player in both frames. The boxes shown below are the detections assigned to each track.</p>
-<div id="fig-tracking-basketball-filtered-motion" class="quarto-figure quarto-figure-center quarto-float anchored" alt="Assigned detections using the two-observation motion predictor (top) and Kalman-filtered motion (bottom).">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-tracking-basketball-filtered-motion-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="attachments/tracking/basketball-filtered-motion.png" class="img-fluid figure-img" style="width:100.0%" alt="Assigned detections using the two-observation motion predictor (top) and Kalman-filtered motion (bottom).">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tracking-basketball-filtered-motion-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;11.7: Assigned detections using the two-observation motion predictor (top) and Kalman-filtered motion (bottom).
-</figcaption>
-</figure>
-</div>
-<p>At the original confidence cutoff of 0.50, last-box matching, the two-observation predictor and Kalman-filtered motion all show the earlier frame-74 identity error. At 0.40, last-box matching avoids this red/black exchange, but the black player’s ID has changed from T4 to T7. Filtering keeps both original IDs through this interaction, using the additional detections available at 0.40. These additional detections also include duplicate boxes, and all three methods still create temporary duplicate tracks.</p>
-<p>We also compare filtered motion with our original last-box method over the full clip (frames 1–142), starting both trackers at frame 1 and using the cutoff of 0.40. In this new run, T2 labels the orange-shirted player below. At frame 116, a duplicate detection creates a second track, T12, for the same player.</p>
-<div id="fig-tracking-basketball-filtering-failure119" class="quarto-figure quarto-figure-center quarto-float anchored" alt="Last-box matching (top) and Kalman-filtered motion (bottom) when duplicate detections create competing tracks.">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-tracking-basketball-filtering-failure119-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="attachments/tracking/basketball-filtering-failure119.png" class="img-fluid figure-img" style="width:100.0%" alt="Last-box matching (top) and Kalman-filtered motion (bottom) when duplicate detections create competing tracks.">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tracking-basketball-filtering-failure119-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;11.8: Last-box matching (top) and Kalman-filtered motion (bottom) when duplicate detections create competing tracks.
-</figcaption>
-</figure>
-</div>
-<p>At frame 119, last-box matching keeps T2, while filtered motion assigns the detection to T12. The T2 reference box has IoU 0.776 with the detection under last-box matching, and 0.743 when predicted from the filtered state. The competing T12 reference has IoU 0.749 in both runs. All these overlaps are above the acceptance cutoff of 0.30, but the one-to-one assignment selects a different track in each case.</p>
-<p>With the settings used here, adding Kalman filtering gives a local improvement in the assigned track IDs but no clear overall advantage over last-box matching across this short clip. Missing detections and competing tracks created by duplicate boxes still cause problems.</p>
-<p>A clearer benefit can arise for an object moving a substantial distance between frames at roughly constant speed and direction, with noisy position measurements. The motion model predicts beyond the last observed box, while the filter combines observations over time to reduce the effect of individual detection errors on the position and velocity estimates.</p>
-<p><em>Source images: <a href="https://doi.org/10.1145/3728423.3759400">TrackID3x3</a>, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.</em></p>
-</section>
-<section id="practical-trackers-and-appearance-information" class="level2" data-number="11.7">
-<h2 data-number="11.7" class="anchored" data-anchor-id="practical-trackers-and-appearance-information"><span class="header-section-number">11.7</span> Practical trackers and appearance information</h2>
-<p>We have used three ways to form the reference box for matching a track to a new detection:</p>
-<table class="table">
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
-<thead>
-<tr class="header">
-<th style="text-align: left;">Reference</th>
-<th style="text-align: left;">How we form it</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;">Last observed box</td>
-<td style="text-align: left;">Use the box from the most recent detection assigned to the track.</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;">Two-observation motion</td>
-<td style="text-align: left;">Estimate velocity from the two most recent observations and predict the next box.</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;">Kalman-filtered motion</td>
-<td style="text-align: left;">Predict from position and velocity estimates that combine earlier predictions and observations.</td>
-</tr>
-</tbody>
-</table>
-<p>A complete tracker combines its motion model and matching method with rules for starting, confirming and ending tracks. The following methods illustrate different combinations of these ideas:</p>
-<table class="table">
-<thead>
-<tr class="header">
-<th style="text-align: left;">Method</th>
-<th style="text-align: left;">Main ideas</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td style="text-align: left;"><a href="https://doi.org/10.1109/ICIP.2016.7533003">SORT</a></td>
-<td style="text-align: left;">Kalman box prediction, IoU association and track management.</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><a href="https://doi.org/10.1109/ICIP.2017.8296962">Deep SORT</a></td>
-<td style="text-align: left;">Kalman motion prediction and learned appearance information for association.</td>
-</tr>
-<tr class="odd">
-<td style="text-align: left;"><a href="https://doi.org/10.1007/978-3-031-20047-2_1">ByteTrack</a></td>
-<td style="text-align: left;">Kalman motion prediction; match high-confidence detections first, then use lower-confidence detections to update remaining active tracks.</td>
-</tr>
-<tr class="even">
-<td style="text-align: left;"><a href="https://arxiv.org/abs/2206.14651">BoT-SORT</a></td>
-<td style="text-align: left;">ByteTrack-style association with a revised box-motion model, camera-motion compensation and optional appearance matching.</td>
-</tr>
-</tbody>
-</table>
-<p>Our small filter-based tracker shares its basic structure with SORT, although SORT also models box size and has different track-confirmation and expiry rules. We can now consider two further sources of information used by these methods: detection confidence and appearance.</p>
-<section id="using-confidence-differently-for-updates-and-new-tracks" class="level3" data-number="11.7.1">
-<h3 data-number="11.7.1" class="anchored" data-anchor-id="using-confidence-differently-for-updates-and-new-tracks"><span class="header-section-number">11.7.1</span> Using confidence differently for updates and new tracks</h3>
-<p>In our simple loop, an unmatched detection that passes the confidence cutoff starts a new track. ByteTrack separates the evidence needed to update a track from that needed to start one. It first matches high-confidence detections to existing tracks. It then tries lower-confidence detections against the remaining unmatched active tracks. These lower-confidence boxes can update those tracks, but cannot start new ones.</p>
-<p>In our frames 50–100 test, the high threshold is 0.50 and the second stage uses scores between 0.10 and 0.50. It supplies six additional player observations compared with the same ByteTrack given only high-confidence inputs, including observations of the red and black players at frame 65. The benefit of this second stage is fewer gaps in the assigned detections.</p>
-<p>At frame 73, the box with confidence about 0.69 updates T6. The overlapping box with confidence about 0.42 is unused: T6 has already been matched, and this lower-confidence box cannot start a new track. It therefore avoids the extra record created by our simple tracker at cutoff 0.40.</p>
-<div id="fig-tracking-bytetrack-frame73" class="quarto-figure quarto-figure-center quarto-float anchored" alt="ByteTrack's supplied detections and assigned observation at frame 73.">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-tracking-bytetrack-frame73-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="attachments/tracking/bytetrack-frame73.png" class="img-fluid figure-img" style="width:100.0%" alt="ByteTrack's supplied detections and assigned observation at frame 73.">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tracking-bytetrack-frame73-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;11.9: ByteTrack’s supplied detections and assigned observation at frame 73.
-</figcaption>
-</figure>
-</div>
-<p>Allowing weak observations can also affect later associations. In our full-clip test with high threshold 0.40, enabling the lower-confidence updates recovered additional observations but also produced more ID changes and duplicates than withholding those boxes.</p>
-</section>
-<section id="using-the-image-inside-the-box" class="level3" data-number="11.7.2">
-<h3 data-number="11.7.2" class="anchored" data-anchor-id="using-the-image-inside-the-box"><span class="header-section-number">11.7.2</span> Using the image inside the box</h3>
-<p>The image inside each box provides another source of information about which player it belongs to. A network trained for <strong>person re-identification (ReID)</strong> maps a cropped person image to a vector of features, or an <strong>appearance embedding</strong>. Its training encourages different images of the same person to have similar vectors. The tracker can compare a new crop with earlier crops assigned to a track, alongside its comparison of box positions.</p>
-<p>We tested BoT-SORT with its appearance component switched off and on, keeping the other settings and supplied detections the same. Both runs cover frames 50–100 with high threshold 0.50. Camera-motion compensation is switched off for our fixed-camera video, and the appearance network is pretrained rather than trained on this basketball sequence.</p>
-<p>At frame 71, both runs label the red player T2 and the black player T4. Both assign T4 to the red player at frame 73. With appearance enabled, the red player regains T2 at frame 74 and the black player regains T4 at frame 76. Without appearance, the red player remains T4 and the black player T2 through the rest of the run. The figure shows the assigned detection boxes.</p>
-<div id="fig-tracking-botsort-appearance" class="quarto-figure quarto-figure-center quarto-float anchored" alt="BoT-SORT associations with appearance off (top) and on (bottom).">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-tracking-botsort-appearance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="attachments/tracking/botsort-appearance.png" class="img-fluid figure-img" style="width:100.0%" alt="BoT-SORT associations with appearance off (top) and on (bottom).">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tracking-botsort-appearance-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;11.10: BoT-SORT associations with appearance off (top) and on (bottom).
-</figcaption>
-</figure>
-</div>
-<p>Appearance can also favour a duplicate detection. In a run starting at frame 1 with the same high threshold of 0.50, the appearance-enabled tracker selects a lower-confidence duplicate at frame 27 because its crop is slightly more similar to the track’s stored appearance. The other, higher-confidence box then starts an additional track. Both crops depict the same player: appearance similarity alone does not select the better-localised box or prevent a duplicate record. The way the tracker combines appearance, confidence and track-management rules therefore still matters.</p>
-<p><em>Source images: <a href="https://doi.org/10.1145/3728423.3759400">TrackID3x3</a>, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.</em></p>
-</section>
-</section>
-<section id="modern-directions-promptable-video-segmentation" class="level2" data-number="11.8">
-<h2 data-number="11.8" class="anchored" data-anchor-id="modern-directions-promptable-video-segmentation"><span class="header-section-number">11.8</span> Modern directions: promptable video segmentation</h2>
-<p>In <a href="./image_tasks.html">Image analysis tasks</a>, we introduced <strong>instance segmentation</strong>, which identifies the pixels belonging to each separate object. This gives us a pixel mask for each player. We can also follow these masks through a video, keeping a consistent ID for each player.</p>
-<p>Models such as <a href="https://ai.meta.com/research/sam3/"><strong>SAM 3</strong></a> support this kind of tracking. We can select an object using a <strong>box prompt</strong>: a rectangle indicating which object we want the model to segment and follow.</p>
-<p>Here we use the <strong>six YOLO11n detections from frame 50 as initial box prompts</strong>. These are the same boxes retained by our confidence threshold of 0.50 and court filter. We give the selected objects IDs S1–S6, and SAM 3 predicts a mask for each one.</p>
-<div id="fig-tracking-sam3-initial-prompts" class="quarto-figure quarto-figure-center quarto-float anchored" alt="Frame 50: the YOLO boxes on the left provide the initial prompts; SAM 3 predicts the masks on the right.">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-tracking-sam3-initial-prompts-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="attachments/tracking/sam3-initial-prompts.png" class="img-fluid figure-img" style="width:100.0%" alt="Frame 50: the YOLO boxes on the left provide the initial prompts; SAM 3 predicts the masks on the right.">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tracking-sam3-initial-prompts-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;11.11: Frame 50: the YOLO boxes on the left provide the initial prompts; SAM 3 predicts the masks on the right. Source: TrackID3x3, CC BY 4.0; masks, overlays and layout added.
-</figcaption>
-</figure>
-</div>
-<p>After frame 50, we supply only the subsequent video frames, with no further YOLO detections or corrective prompts. SAM 3 uses each new image together with stored visual information from earlier frames to predict the six masks. In this example, it maintains the six identities through frame 100. The frames below show S2 and S4 remaining with the red- and black-shirted players as they overlap.</p>
-<div id="fig-tracking-sam3-overlap" class="quarto-figure quarto-figure-center quarto-float anchored" alt="The two focal players retain their IDs through the overlap. S2 follows the player initially selected in the red shirt, and S4 follows the player in the black shirt.">
-<figure class="quarto-float quarto-float-fig figure">
-<div aria-describedby="fig-tracking-sam3-overlap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-<img src="attachments/tracking/sam3-overlap.png" class="img-fluid figure-img" style="width:100.0%" alt="The two focal players retain their IDs through the overlap. S2 follows the player initially selected in the red shirt, and S4 follows the player in the black shirt.">
-</div>
-<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tracking-sam3-overlap-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
-Figure&nbsp;11.12: The two focal players retain their IDs through the overlap. S2 follows the player initially selected in the red shirt, and S4 follows the player in the black shirt. Source: TrackID3x3, CC BY 4.0; masks, crops, overlays and layout added.
-</figcaption>
-</figure>
-</div>
-<p><a href="attachments/tracking/sam3-50-100-slow.mp4">SAM 3 tracking the six players, shown in slow motion.</a></p>
-<p>This is online tracking: each step uses the current image and information from earlier frames. However, real-time tracking also requires processing to keep up with the video. In the experiment we ran SAM3 processed the frames more slowly than they would arrive from a live camera so could not be used for real-time tracking.</p>
-<p>Video and images: <a href="https://doi.org/10.1145/3728423.3759400">TrackID3x3</a>, <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.</p>
 
 
 <!-- -->
 
-</section>
-<section id="footnotes" class="footnotes footnotes-end-of-document" role="doc-endnotes">
-<hr>
-<ol>
-<li id="fn1"><p>Per image coordinate, we use a measurement-error standard deviation of 4 pixels and an acceleration-noise standard deviation of 1 pixel/frame². A new track starts with zero estimated velocity, position standard deviation 4 pixels and velocity standard deviation 10 pixels/frame.<a href="#fnref1" class="footnote-back" role="doc-backlink">↩︎</a></p></li>
-</ol>
 </section>
 
 </main> <!-- /main -->
@@ -1179,9 +993,12 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
       </a>          
   </div>
   <div class="nav-page nav-page-next">
+      <a href="./tracking_evaluation.html" class="pagination-link" aria-label="<span class='chapter-number'>12</span>&nbsp; <span class='chapter-title'>Evaluating tracks</span>">
+        <span class="nav-page-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">Evaluating tracks</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
   </div>
 </nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Motion-based tracking and beyond</span></span>
+<div class="sourceCode" id="cb1" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Motion-based tracking</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">## Predicting the next box</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
@@ -1323,144 +1140,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb1-140"><a href="#cb1-140" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-141"><a href="#cb1-141" aria-hidden="true" tabindex="-1"></a>!<span class="co">[</span><span class="ot">Additional detections admitted at confidence cutoff 0.40: three boxes around the focal pair at frame 67, and two boxes around another player at frame 73. The frame-73 T6/T8 assignments are identical in both runs. Boxes show current detections. Source: [TrackID3x3](https://doi.org/10.1145/3728423.3759400), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).</span><span class="co">](&lt;attachments/tracking/cutoff040-additional-boxes.png&gt;)</span>{#fig-tracking-cutoff040-additional-boxes width=100% fig-alt="Additional detections admitted at confidence cutoff 0.40: three boxes around the focal pair at frame 67, and two boxes around another player at frame 73. The frame-73 T6/T8 assignments are identical in both runs. Boxes show current detections."}</span>
 <span id="cb1-142"><a href="#cb1-142" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-143"><a href="#cb1-143" aria-hidden="true" tabindex="-1"></a>Lowering the cutoff can therefore recover useful observations, but it can also introduce detections that make tracking harder. The <span class="co">[</span><span class="ot">original SORT paper</span><span class="co">](https://doi.org/10.1109/ICIP.2016.7533003)</span> emphasises that detection quality is a key factor influencing tracking performance. Here confidence cutoff is one choice that affects which detections reach the tracker, though no choice, whether higher or lower, is obviously better in the present example.</span>
-<span id="cb1-144"><a href="#cb1-144" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-145"><a href="#cb1-145" aria-hidden="true" tabindex="-1"></a><span class="fu">## Filtering the motion estimates</span></span>
-<span id="cb1-146"><a href="#cb1-146" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-147"><a href="#cb1-147" aria-hidden="true" tabindex="-1"></a>Our current motion predictor estimates velocity from the two most recent detections. Errors in their positions therefore also affect the velocity estimate, which we then use to predict the next position.</span>
-<span id="cb1-148"><a href="#cb1-148" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-149"><a href="#cb1-149" aria-hidden="true" tabindex="-1"></a>For a simple example, suppose an object moves horizontally by 4 pixels per frame. Its true centre positions in four consecutive frames are 20, 24, 28 and 32 pixels. Suppose the first two detections give the correct positions, but the third gives 40 instead of 28. Our estimated velocity is then</span>
-<span id="cb1-150"><a href="#cb1-150" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-151"><a href="#cb1-151" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb1-152"><a href="#cb1-152" aria-hidden="true" tabindex="-1"></a>v = 40 - 24 = 16\quad\text{pixels per frame},</span>
-<span id="cb1-153"><a href="#cb1-153" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb1-154"><a href="#cb1-154" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-155"><a href="#cb1-155" aria-hidden="true" tabindex="-1"></a>and the predicted position in the fourth frame is</span>
-<span id="cb1-156"><a href="#cb1-156" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-157"><a href="#cb1-157" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb1-158"><a href="#cb1-158" aria-hidden="true" tabindex="-1"></a>x_{\mathrm{predicted}} = 40 + 16 = 56\quad\text{pixels}.</span>
-<span id="cb1-159"><a href="#cb1-159" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb1-160"><a href="#cb1-160" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-161"><a href="#cb1-161" aria-hidden="true" tabindex="-1"></a>The true position is 32 pixels. The error in the third detection affects both the position from which we predict and the velocity used in that prediction.</span>
-<span id="cb1-162"><a href="#cb1-162" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-163"><a href="#cb1-163" aria-hidden="true" tabindex="-1"></a>A **filter**, in the context of state estimation and tracking, combines a motion prediction with a new observation to update our estimate of the object's state (true position and velocity).</span>
-<span id="cb1-164"><a href="#cb1-164" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-165"><a href="#cb1-165" aria-hidden="true" tabindex="-1"></a>In the present application, we predict the object's position in the new frame based on earlier frames, and the centre of a detected bounding box in the new frame is treated as a new noisy measurement of the current position. We then aim to combine the predicted and detected positions to obtain a new position state estimate for the current frame.</span>
-<span id="cb1-166"><a href="#cb1-166" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-167"><a href="#cb1-167" aria-hidden="true" tabindex="-1"></a>As a simple example, for one position coordinate, we can combine the predicted and detected positions using a weighted average:</span>
-<span id="cb1-168"><a href="#cb1-168" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-169"><a href="#cb1-169" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb1-170"><a href="#cb1-170" aria-hidden="true" tabindex="-1"></a>x_{\mathrm{updated}}</span>
-<span id="cb1-171"><a href="#cb1-171" aria-hidden="true" tabindex="-1"></a>= (1-k)x_{\mathrm{predicted}} + kx_{\mathrm{detected}},</span>
-<span id="cb1-172"><a href="#cb1-172" aria-hidden="true" tabindex="-1"></a>\qquad 0\leq k\leq 1.</span>
-<span id="cb1-173"><a href="#cb1-173" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb1-174"><a href="#cb1-174" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-175"><a href="#cb1-175" aria-hidden="true" tabindex="-1"></a>Here $k$ controls how much weight we give the new detection. A value close to 1 puts most of the weight on the detected position, while a value close to 0 puts most of the weight on the prediction. Equivalently,</span>
-<span id="cb1-176"><a href="#cb1-176" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-177"><a href="#cb1-177" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb1-178"><a href="#cb1-178" aria-hidden="true" tabindex="-1"></a>x_{\mathrm{updated}}</span>
-<span id="cb1-179"><a href="#cb1-179" aria-hidden="true" tabindex="-1"></a>= x_{\mathrm{predicted}}</span>
-<span id="cb1-180"><a href="#cb1-180" aria-hidden="true" tabindex="-1"></a><span class="ss">+ </span>k\bigl(x_{\mathrm{detected}}-x_{\mathrm{predicted}}\bigr).</span>
-<span id="cb1-181"><a href="#cb1-181" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb1-182"><a href="#cb1-182" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-183"><a href="#cb1-183" aria-hidden="true" tabindex="-1"></a>Thus we see the idea is to form the update as a corrected prediction, based on the difference between the predicted and detected positions. The degree to which we weight the prediction or the new observation needs to be determined.</span>
-<span id="cb1-184"><a href="#cb1-184" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-185"><a href="#cb1-185" aria-hidden="true" tabindex="-1"></a>A **Kalman filter** uses estimates of uncertainty to determine these correction weights. A more uncertain observation receives less weight relative to the prediction; a more uncertain prediction receives less weight relative to the observation. The filter combines the motion model with an **observation model** describing errors in the detected positions. It updates the velocity estimate as well: an error in velocity produces a position error during prediction, so the position discrepancy also provides information about velocity. We will not describe Kalman filters in detail here, but they are used in the <span class="co">[</span><span class="ot">SORT tracking algorithm</span><span class="co">](https://doi.org/10.1109/ICIP.2016.7533003)</span> and are widely used in navigation and control systems more generally.</span>
-<span id="cb1-186"><a href="#cb1-186" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-187"><a href="#cb1-187" aria-hidden="true" tabindex="-1"></a>If we take this approach, our tracking loop now also carries filtered estimates of position and velocity for each track. Given a new frame, we first use the previous estimates to predict the object's next box and perform the same IoU-based matching to detections as before, using the (uncorrected) prediction and new detection. Once the new prediction–detection pair has been established, we carry out the filter's correction step for the position and velocity estimates, in preparation for predicting the next frame. In this example, we keep the width and height of the latest observed box for the estimated box.</span>
-<span id="cb1-188"><a href="#cb1-188" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-189"><a href="#cb1-189" aria-hidden="true" tabindex="-1"></a>In terms of recording the results, we still record the actual detection alongside the current estimated position and velocity. Saving these observations and state estimates at each frame lets us compare the **detection history** with the **estimated trajectory** for the same track. When an active track has no assigned detection, its detection history has a gap, while the motion model provides a predicted position for that frame.</span>
-<span id="cb1-190"><a href="#cb1-190" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-191"><a href="#cb1-191" aria-hidden="true" tabindex="-1"></a><span class="fu">## Filtering the basketball tracks</span></span>
-<span id="cb1-192"><a href="#cb1-192" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-193"><a href="#cb1-193" aria-hidden="true" tabindex="-1"></a>We can now repeat the basketball example using Kalman-filtered motion in place of the two-observation motion predictor. We again track frames 50–100 at confidence cutoff 0.40, keeping the court filter, tracking IoU threshold of 0.30 and three-miss inactivation rule the same. The filter's correction weights depend on assumptions about measurement noise and changes in motion. Here we use fixed, illustrative noise settings that have not been calibrated to this video.<span class="ot">[^filter-noise]</span></span>
-<span id="cb1-194"><a href="#cb1-194" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-195"><a href="#cb1-195" aria-hidden="true" tabindex="-1"></a>At frame 64, T2 labels the red player and T4 the black player. With the two-observation predictor, these labels have been exchanged by frame 71 and remain exchanged at frame 74. With filtering, T2 still labels the red player and T4 the black player in both frames. The boxes shown below are the detections assigned to each track.</span>
-<span id="cb1-196"><a href="#cb1-196" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-197"><a href="#cb1-197" aria-hidden="true" tabindex="-1"></a><span class="al">![Assigned detections using the two-observation motion predictor (top) and Kalman-filtered motion (bottom).](&lt;attachments/tracking/basketball-filtered-motion.png&gt;)</span>{#fig-tracking-basketball-filtered-motion width=100% fig-alt="Assigned detections using the two-observation motion predictor (top) and Kalman-filtered motion (bottom)."}</span>
-<span id="cb1-198"><a href="#cb1-198" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-199"><a href="#cb1-199" aria-hidden="true" tabindex="-1"></a>At the original confidence cutoff of 0.50, last-box matching, the two-observation predictor and Kalman-filtered motion all show the earlier frame-74 identity error. At 0.40, last-box matching avoids this red/black exchange, but the black player's ID has changed from T4 to T7. Filtering keeps both original IDs through this interaction, using the additional detections available at 0.40. These additional detections also include duplicate boxes, and all three methods still create temporary duplicate tracks.</span>
-<span id="cb1-200"><a href="#cb1-200" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-201"><a href="#cb1-201" aria-hidden="true" tabindex="-1"></a>We also compare filtered motion with our original last-box method over the full clip (frames 1–142), starting both trackers at frame 1 and using the cutoff of 0.40. In this new run, T2 labels the orange-shirted player below. At frame 116, a duplicate detection creates a second track, T12, for the same player.</span>
-<span id="cb1-202"><a href="#cb1-202" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-203"><a href="#cb1-203" aria-hidden="true" tabindex="-1"></a><span class="al">![Last-box matching (top) and Kalman-filtered motion (bottom) when duplicate detections create competing tracks.](&lt;attachments/tracking/basketball-filtering-failure119.png&gt;)</span>{#fig-tracking-basketball-filtering-failure119 width=100% fig-alt="Last-box matching (top) and Kalman-filtered motion (bottom) when duplicate detections create competing tracks."}</span>
-<span id="cb1-204"><a href="#cb1-204" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-205"><a href="#cb1-205" aria-hidden="true" tabindex="-1"></a>At frame 119, last-box matching keeps T2, while filtered motion assigns the detection to T12. The T2 reference box has IoU 0.776 with the detection under last-box matching, and 0.743 when predicted from the filtered state. The competing T12 reference has IoU 0.749 in both runs. All these overlaps are above the acceptance cutoff of 0.30, but the one-to-one assignment selects a different track in each case.</span>
-<span id="cb1-206"><a href="#cb1-206" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-207"><a href="#cb1-207" aria-hidden="true" tabindex="-1"></a>With the settings used here, adding Kalman filtering gives a local improvement in the assigned track IDs but no clear overall advantage over last-box matching across this short clip. Missing detections and competing tracks created by duplicate boxes still cause problems.</span>
-<span id="cb1-208"><a href="#cb1-208" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-209"><a href="#cb1-209" aria-hidden="true" tabindex="-1"></a>A clearer benefit can arise for an object moving a substantial distance between frames at roughly constant speed and direction, with noisy position measurements. The motion model predicts beyond the last observed box, while the filter combines observations over time to reduce the effect of individual detection errors on the position and velocity estimates.</span>
-<span id="cb1-210"><a href="#cb1-210" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-211"><a href="#cb1-211" aria-hidden="true" tabindex="-1"></a>*Source images: [TrackID3x3](https://doi.org/10.1145/3728423.3759400), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).*</span>
-<span id="cb1-212"><a href="#cb1-212" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-213"><a href="#cb1-213" aria-hidden="true" tabindex="-1"></a><span class="ot">[^filter-noise]: </span>Per image coordinate, we use a measurement-error standard deviation of 4 pixels and an acceleration-noise standard deviation of 1 pixel/frame². A new track starts with zero estimated velocity, position standard deviation 4 pixels and velocity standard deviation 10 pixels/frame.</span>
-<span id="cb1-214"><a href="#cb1-214" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-215"><a href="#cb1-215" aria-hidden="true" tabindex="-1"></a><span class="fu">## Practical trackers and appearance information</span></span>
-<span id="cb1-216"><a href="#cb1-216" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-217"><a href="#cb1-217" aria-hidden="true" tabindex="-1"></a>We have used three ways to form the reference box for matching a track to a new detection:</span>
-<span id="cb1-218"><a href="#cb1-218" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-219"><a href="#cb1-219" aria-hidden="true" tabindex="-1"></a>| Reference | How we form it |</span>
-<span id="cb1-220"><a href="#cb1-220" aria-hidden="true" tabindex="-1"></a>|:--|:--|</span>
-<span id="cb1-221"><a href="#cb1-221" aria-hidden="true" tabindex="-1"></a>| Last observed box | Use the box from the most recent detection assigned to the track. |</span>
-<span id="cb1-222"><a href="#cb1-222" aria-hidden="true" tabindex="-1"></a>| Two-observation motion | Estimate velocity from the two most recent observations and predict the next box. |</span>
-<span id="cb1-223"><a href="#cb1-223" aria-hidden="true" tabindex="-1"></a>| Kalman-filtered motion | Predict from position and velocity estimates that combine earlier predictions and observations. |</span>
-<span id="cb1-224"><a href="#cb1-224" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-225"><a href="#cb1-225" aria-hidden="true" tabindex="-1"></a>A complete tracker combines its motion model and matching method with rules for starting, confirming and ending tracks. The following methods illustrate different combinations of these ideas:</span>
-<span id="cb1-226"><a href="#cb1-226" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-227"><a href="#cb1-227" aria-hidden="true" tabindex="-1"></a>| Method | Main ideas |</span>
-<span id="cb1-228"><a href="#cb1-228" aria-hidden="true" tabindex="-1"></a>|:--|:--|</span>
-<span id="cb1-229"><a href="#cb1-229" aria-hidden="true" tabindex="-1"></a>| <span class="co">[</span><span class="ot">SORT</span><span class="co">](https://doi.org/10.1109/ICIP.2016.7533003)</span> | Kalman box prediction, IoU association and track management. |</span>
-<span id="cb1-230"><a href="#cb1-230" aria-hidden="true" tabindex="-1"></a>| <span class="co">[</span><span class="ot">Deep SORT</span><span class="co">](https://doi.org/10.1109/ICIP.2017.8296962)</span> | Kalman motion prediction and learned appearance information for association. |</span>
-<span id="cb1-231"><a href="#cb1-231" aria-hidden="true" tabindex="-1"></a>| <span class="co">[</span><span class="ot">ByteTrack</span><span class="co">](https://doi.org/10.1007/978-3-031-20047-2_1)</span> | Kalman motion prediction; match high-confidence detections first, then use lower-confidence detections to update remaining active tracks. |</span>
-<span id="cb1-232"><a href="#cb1-232" aria-hidden="true" tabindex="-1"></a>| <span class="co">[</span><span class="ot">BoT-SORT</span><span class="co">](https://arxiv.org/abs/2206.14651)</span> | ByteTrack-style association with a revised box-motion model, camera-motion compensation and optional appearance matching. |</span>
-<span id="cb1-233"><a href="#cb1-233" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-234"><a href="#cb1-234" aria-hidden="true" tabindex="-1"></a>Our small filter-based tracker shares its basic structure with SORT, although SORT also models box size and has different track-confirmation and expiry rules. We can now consider two further sources of information used by these methods: detection confidence and appearance.</span>
-<span id="cb1-235"><a href="#cb1-235" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-236"><a href="#cb1-236" aria-hidden="true" tabindex="-1"></a><span class="fu">### Using confidence differently for updates and new tracks</span></span>
-<span id="cb1-237"><a href="#cb1-237" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-238"><a href="#cb1-238" aria-hidden="true" tabindex="-1"></a>In our simple loop, an unmatched detection that passes the confidence cutoff starts a new track. ByteTrack separates the evidence needed to update a track from that needed to start one. It first matches high-confidence detections to existing tracks. It then tries lower-confidence detections against the remaining unmatched active tracks. These lower-confidence boxes can update those tracks, but cannot start new ones.</span>
-<span id="cb1-239"><a href="#cb1-239" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-240"><a href="#cb1-240" aria-hidden="true" tabindex="-1"></a>In our frames 50–100 test, the high threshold is 0.50 and the second stage uses scores between 0.10 and 0.50. It supplies six additional player observations compared with the same ByteTrack given only high-confidence inputs, including observations of the red and black players at frame 65. The benefit of this second stage is fewer gaps in the assigned detections.</span>
-<span id="cb1-241"><a href="#cb1-241" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-242"><a href="#cb1-242" aria-hidden="true" tabindex="-1"></a>At frame 73, the box with confidence about 0.69 updates T6. The overlapping box with confidence about 0.42 is unused: T6 has already been matched, and this lower-confidence box cannot start a new track. It therefore avoids the extra record created by our simple tracker at cutoff 0.40.</span>
-<span id="cb1-243"><a href="#cb1-243" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-244"><a href="#cb1-244" aria-hidden="true" tabindex="-1"></a><span class="al">![ByteTrack's supplied detections and assigned observation at frame 73.](&lt;attachments/tracking/bytetrack-frame73.png&gt;)</span>{#fig-tracking-bytetrack-frame73 width=100% fig-alt="ByteTrack's supplied detections and assigned observation at frame 73."}</span>
-<span id="cb1-245"><a href="#cb1-245" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-246"><a href="#cb1-246" aria-hidden="true" tabindex="-1"></a>Allowing weak observations can also affect later associations. In our full-clip test with high threshold 0.40, enabling the lower-confidence updates recovered additional observations but also produced more ID changes and duplicates than withholding those boxes.</span>
-<span id="cb1-247"><a href="#cb1-247" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-248"><a href="#cb1-248" aria-hidden="true" tabindex="-1"></a><span class="fu">### Using the image inside the box</span></span>
-<span id="cb1-249"><a href="#cb1-249" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-250"><a href="#cb1-250" aria-hidden="true" tabindex="-1"></a>The image inside each box provides another source of information about which player it belongs to. A network trained for **person re-identification (ReID)** maps a cropped person image to a vector of features, or an **appearance embedding**. Its training encourages different images of the same person to have similar vectors. The tracker can compare a new crop with earlier crops assigned to a track, alongside its comparison of box positions.</span>
-<span id="cb1-251"><a href="#cb1-251" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-252"><a href="#cb1-252" aria-hidden="true" tabindex="-1"></a>We tested BoT-SORT with its appearance component switched off and on, keeping the other settings and supplied detections the same. Both runs cover frames 50–100 with high threshold 0.50. Camera-motion compensation is switched off for our fixed-camera video, and the appearance network is pretrained rather than trained on this basketball sequence.</span>
-<span id="cb1-253"><a href="#cb1-253" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-254"><a href="#cb1-254" aria-hidden="true" tabindex="-1"></a>At frame 71, both runs label the red player T2 and the black player T4. Both assign T4 to the red player at frame 73. With appearance enabled, the red player regains T2 at frame 74 and the black player regains T4 at frame 76. Without appearance, the red player remains T4 and the black player T2 through the rest of the run. The figure shows the assigned detection boxes.</span>
-<span id="cb1-255"><a href="#cb1-255" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-256"><a href="#cb1-256" aria-hidden="true" tabindex="-1"></a><span class="al">![BoT-SORT associations with appearance off (top) and on (bottom).](&lt;attachments/tracking/botsort-appearance.png&gt;)</span>{#fig-tracking-botsort-appearance width=100% fig-alt="BoT-SORT associations with appearance off (top) and on (bottom)."}</span>
-<span id="cb1-257"><a href="#cb1-257" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-258"><a href="#cb1-258" aria-hidden="true" tabindex="-1"></a>Appearance can also favour a duplicate detection. In a run starting at frame 1 with the same high threshold of 0.50, the appearance-enabled tracker selects a lower-confidence duplicate at frame 27 because its crop is slightly more similar to the track's stored appearance. The other, higher-confidence box then starts an additional track. Both crops depict the same player: appearance similarity alone does not select the better-localised box or prevent a duplicate record. The way the tracker combines appearance, confidence and track-management rules therefore still matters.</span>
-<span id="cb1-259"><a href="#cb1-259" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-260"><a href="#cb1-260" aria-hidden="true" tabindex="-1"></a>*Source images: [TrackID3x3](https://doi.org/10.1145/3728423.3759400), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).*</span>
-<span id="cb1-261"><a href="#cb1-261" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-262"><a href="#cb1-262" aria-hidden="true" tabindex="-1"></a><span class="fu">## Modern directions: promptable video segmentation</span></span>
-<span id="cb1-263"><a href="#cb1-263" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-264"><a href="#cb1-264" aria-hidden="true" tabindex="-1"></a>In <span class="co">[</span><span class="ot">Image analysis tasks</span><span class="co">](image_tasks.qmd)</span>, we introduced **instance segmentation**, which identifies the pixels belonging to each separate object. This gives us a pixel mask for each player. We can also follow these masks through a video, keeping a consistent ID for each player.</span>
-<span id="cb1-265"><a href="#cb1-265" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-266"><a href="#cb1-266" aria-hidden="true" tabindex="-1"></a>Models such as <span class="co">[</span><span class="ot">**SAM 3**</span><span class="co">](https://ai.meta.com/research/sam3/)</span> support this kind of tracking. We can select an object using a **box prompt**: a rectangle indicating which object we want the model to segment and follow.</span>
-<span id="cb1-267"><a href="#cb1-267" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-268"><a href="#cb1-268" aria-hidden="true" tabindex="-1"></a>Here we use the **six YOLO11n detections from frame 50 as initial box prompts**. These are the same boxes retained by our confidence threshold of 0.50 and court filter. We give the selected objects IDs S1–S6, and SAM 3 predicts a mask for each one.</span>
-<span id="cb1-269"><a href="#cb1-269" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-270"><a href="#cb1-270" aria-hidden="true" tabindex="-1"></a><span class="al">![Frame 50: the YOLO boxes on the left provide the initial prompts; SAM 3 predicts the masks on the right. Source: TrackID3x3, CC BY 4.0; masks, overlays and layout added.](&lt;attachments/tracking/sam3-initial-prompts.png&gt;)</span>{#fig-tracking-sam3-initial-prompts width=100% fig-alt="Frame 50: the YOLO boxes on the left provide the initial prompts; SAM 3 predicts the masks on the right."}</span>
-<span id="cb1-271"><a href="#cb1-271" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-272"><a href="#cb1-272" aria-hidden="true" tabindex="-1"></a>After frame 50, we supply only the subsequent video frames, with no further YOLO detections or corrective prompts. SAM 3 uses each new image together with stored visual information from earlier frames to predict the six masks. In this example, it maintains the six identities through frame 100. The frames below show S2 and S4 remaining with the red- and black-shirted players as they overlap.</span>
-<span id="cb1-273"><a href="#cb1-273" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-274"><a href="#cb1-274" aria-hidden="true" tabindex="-1"></a><span class="al">![The two focal players retain their IDs through the overlap. S2 follows the player initially selected in the red shirt, and S4 follows the player in the black shirt. Source: TrackID3x3, CC BY 4.0; masks, crops, overlays and layout added.](&lt;attachments/tracking/sam3-overlap.png&gt;)</span>{#fig-tracking-sam3-overlap width=100% fig-alt="The two focal players retain their IDs through the overlap. S2 follows the player initially selected in the red shirt, and S4 follows the player in the black shirt."}</span>
-<span id="cb1-275"><a href="#cb1-275" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-276"><a href="#cb1-276" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">SAM 3 tracking the six players, shown in slow motion.</span><span class="co">](&lt;attachments/tracking/sam3-50-100-slow.mp4&gt;)</span></span>
-<span id="cb1-277"><a href="#cb1-277" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-278"><a href="#cb1-278" aria-hidden="true" tabindex="-1"></a>This is online tracking: each step uses the current image and information from earlier frames. However, real-time tracking also requires processing to keep up with the video. In the experiment we ran SAM3 processed the frames more slowly than they would arrive from a live camera so could not be used for real-time tracking.</span>
-<span id="cb1-279"><a href="#cb1-279" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-280"><a href="#cb1-280" aria-hidden="true" tabindex="-1"></a>Video and images: <span class="co">[</span><span class="ot">TrackID3x3</span><span class="co">](https://doi.org/10.1145/3728423.3759400)</span>, <span class="co">[</span><span class="ot">CC BY 4.0</span><span class="co">](https://creativecommons.org/licenses/by/4.0/)</span>.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-143"><a href="#cb1-143" aria-hidden="true" tabindex="-1"></a>Lowering the cutoff can therefore recover useful observations, but it can also introduce detections that make tracking harder. The <span class="co">[</span><span class="ot">original SORT paper</span><span class="co">](https://doi.org/10.1109/ICIP.2016.7533003)</span> emphasises that detection quality is a key factor influencing tracking performance. Here confidence cutoff is one choice that affects which detections reach the tracker, though no choice, whether higher or lower, is obviously better in the present example.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 <footer class="footer">
