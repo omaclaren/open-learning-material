@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="350" viewBox="0 0 1200 350" role="img" aria-labelledby="title desc">
+<title id="title">Area IoU and detection-count Jaccard</title>
+<desc id="desc">Left: two overlapping boxes; their intersection is shared area and their union is all coloured area. Right: after matching, 14 shared pairs, one unmatched prediction and two unmatched annotations give 17 union items.</desc>
+<rect width="1200" height="350" fill="white"/>
+<g font-family="Helvetica Neue, Arial, sans-serif" fill="#243644" font-size="24">
+<text x="285" y="30" text-anchor="middle" font-size="28" font-weight="600">Box areas</text>
+<text x="930" y="30" text-anchor="middle" font-size="28" font-weight="600">Detection counts</text>
+<line x1="600" x2="600" y1="15" y2="340" stroke="#cbd5db"/>
+<rect x="75" y="90" width="245" height="145" fill="#e4eff7"/>
+<rect x="230" y="140" width="220" height="145" fill="#fff1d8"/>
+<rect x="230" y="140" width="90" height="95" fill="#b9dec9"/>
+<rect x="75" y="90" width="245" height="145" fill="none" stroke="#286789" stroke-width="3"/>
+<rect x="230" y="140" width="220" height="145" fill="none" stroke="#8b5b0b" stroke-width="3"/>
+<text x="75" y="73" fill="#286789">Prediction</text>
+<text x="460" y="272" fill="#8b5b0b" font-size="22">Annotation</text>
+<text x="275" y="181" text-anchor="middle" fill="#176846" font-size="22">Shared</text>
+<text x="275" y="208" text-anchor="middle" fill="#176846" font-size="22">area</text>
+<text x="295" y="305" text-anchor="middle" font-size="20">Union = all coloured area</text>
+<text x="295" y="335" text-anchor="middle">Shared area / union area</text>
+<rect x="665" y="75" width="370" height="200" fill="#e4eff7"/>
+<rect x="810" y="110" width="375" height="195" fill="#fff1d8"/>
+<rect x="810" y="110" width="225" height="165" fill="#e8f4ed"/>
+<rect x="665" y="75" width="370" height="200" fill="none" stroke="#286789" stroke-width="3"/>
+<rect x="810" y="110" width="375" height="195" fill="none" stroke="#8b5b0b" stroke-width="3"/>
+<text x="665" y="58" fill="#286789">Predictions: 15</text>
+<text x="1185" y="65" text-anchor="end" fill="#8b5b0b">Annotations: 16</text>
+<circle class="fp-item" cx="737" cy="163" r="9" fill="#a42b36"/>
+<circle class="tp-item" cx="846" cy="145" r="7" fill="#176846"/>
+<circle class="tp-item" cx="871" cy="145" r="7" fill="#176846"/>
+<circle class="tp-item" cx="896" cy="145" r="7" fill="#176846"/>
+<circle class="tp-item" cx="921" cy="145" r="7" fill="#176846"/>
+<circle class="tp-item" cx="946" cy="145" r="7" fill="#176846"/>
+<circle class="tp-item" cx="971" cy="145" r="7" fill="#176846"/>
+<circle class="tp-item" cx="996" cy="145" r="7" fill="#176846"/>
+<circle class="tp-item" cx="846" cy="188" r="7" fill="#176846"/>
+<circle class="tp-item" cx="871" cy="188" r="7" fill="#176846"/>
+<circle class="tp-item" cx="896" cy="188" r="7" fill="#176846"/>
+<circle class="tp-item" cx="921" cy="188" r="7" fill="#176846"/>
+<circle class="tp-item" cx="946" cy="188" r="7" fill="#176846"/>
+<circle class="tp-item" cx="971" cy="188" r="7" fill="#176846"/>
+<circle class="tp-item" cx="996" cy="188" r="7" fill="#176846"/>
+<circle class="fn-item" cx="1080" cy="163" r="9" fill="#8b5b0b"/>
+<circle class="fn-item" cx="1140" cy="163" r="9" fill="#8b5b0b"/>
+<text x="737" y="235" text-anchor="middle" fill="#a42b36">1 FP</text>
+<text x="922" y="235" text-anchor="middle" fill="#176846">14 TP</text>
+<text x="1110" y="235" text-anchor="middle" fill="#8b5b0b">2 FN</text>
+<text x="737" y="260" text-anchor="middle" font-size="18">Unmatched</text>
+<text x="922" y="260" text-anchor="middle" font-size="18">Matched pairs</text>
+<text x="1110" y="260" text-anchor="middle" font-size="18">Unmatched</text>
+<text x="925" y="331" text-anchor="middle">14 shared items / 17 union items</text>
+</g></svg>

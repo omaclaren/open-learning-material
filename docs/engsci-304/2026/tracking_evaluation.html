@@ -620,14 +620,20 @@ window.Quarto = {
 <div id="tracking-basketball-pairing-note">
 <p>At cutoff 0.50, the identity scores are also identical, despite the motion predictor avoiding the frame-66 switch. For evaluation, each annotated player is paired with one predicted track ID over the whole sequence.</p>
 </div>
-<p>Consider the red player’s annotations. T2 has 14 acceptable box overlaps with these annotations under last-box tracking and 18 under motion-based tracking. However, T7 has 29 in both runs, so the joint sequence-wide identity pairing still selects T7 for the red player in both cases.</p>
+<p>Consider the red player’s annotations. At cutoff 0.50, T2 follows the red player earlier in the clip and T7 follows the red player later. T2 has 14 acceptable box overlaps with these annotations under last-box tracking and 18 under motion-based tracking. However, T7 has 29 in both runs, so the joint sequence-wide identity pairing still selects T7 for the red player in both cases.</p>
 <div id="tracking-red-identity-history" class="tracking-metric-visual">
 <table class="table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
 <thead>
 <tr class="header">
 <th style="text-align: left;">Method</th>
-<th style="text-align: right;">Matches under T2</th>
-<th style="text-align: right;">Matches under T7</th>
+<th style="text-align: right;">Matches under T2 (earlier)</th>
+<th style="text-align: right;">Matches under T7 (later)</th>
 <th style="text-align: left;">ID paired with red</th>
 </tr>
 </thead>
@@ -648,7 +654,7 @@ window.Quarto = {
 </table>
 <p><span class="metric-key">Frames 50–100: box matches with the red player’s annotations. Green marks the additional matches under T2, not a change in the selected pairing.</span></p>
 </div>
-<p>Motion increases T2’s overlaps with the red player, but we cannot also count these as identity matches for red, because red is already paired with T7. The other chosen ID pairings and the total numbers of predicted and annotated boxes are unchanged too, so identity precision and recall remain unchanged.</p>
+<p>Motion extends T2’s earlier part of the red player’s history, but it does not join that part to T7’s later part. We cannot count T2’s overlaps as identity matches for red, because red is already paired with T7. The other chosen ID pairings and the total numbers of predicted and annotated boxes are also the same, so identity precision and recall do not change.</p>
 </section>
 <section id="hota-and-other-tracking-measures" class="level2" data-number="12.5">
 <h2 data-number="12.5" class="anchored" data-anchor-id="hota-and-other-tracking-measures"><span class="header-section-number">12.5</span> MOTA and HOTA</h2>
@@ -727,7 +733,7 @@ window.Quarto = {
 =0.3125.
 \]</span></p>
 <p>MOTA is at most 1, but can be negative if the total error count exceeds the number of annotated boxes.</p>
-<p><a href="https://doi.org/10.1007/s11263-020-01375-2"><strong>HOTA</strong>, or <em>Higher Order Tracking Accuracy</em></a>, combines a detection score and an association score. We first compare its detection score with precision and recall, using the same eight-frame toy example.</p>
+<p><a href="https://doi.org/10.1007/s11263-020-01375-2"><strong>HOTA</strong>, or <em>Higher Order Tracking Accuracy</em></a>, combines a detection component and an association component. We first compare its detection component with precision and recall, using the same eight-frame toy example.</p>
 <table class="table">
 <colgroup>
 <col style="width: 33%">
@@ -766,6 +772,16 @@ window.Quarto = {
 </table>
 <p>We used box IoU to compare two boxes by dividing their shared area by the area covered by either box. This intersection-over-union measure is also called the <strong>Jaccard index</strong>, and we can apply it to detection counts once we have matched the boxes.</p>
 <p>For the Jaccard detection score, each matched prediction–annotation pair counts as one shared item. The 14 matches form the intersection, and adding the one unmatched prediction and two unmatched annotations gives a union of 17 items, so the score is 14/17. HOTA calls this component <strong>detection accuracy</strong>.</p>
+<div id="fig-tracking-iou-jaccard" class="quarto-figure quarto-figure-center quarto-float anchored" alt="Left: two overlapping boxes; their shared area is the intersection and all coloured area is the union. Right: 14 matched pairs form the intersection, with one unmatched prediction and two unmatched annotations, giving 17 items in the union.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-tracking-iou-jaccard-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="attachments/tracking/iou-jaccard-illustration.svg" class="img-fluid figure-img" style="width:100.0%" alt="Left: two overlapping boxes; their shared area is the intersection and all coloured area is the union. Right: 14 matched pairs form the intersection, with one unmatched prediction and two unmatched annotations, giving 17 items in the union.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-tracking-iou-jaccard-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;12.1: Box IoU and the Jaccard detection score. Left: the IoU of two boxes divides their shared area by the area they cover together. Right: after matching, the 14 matched pairs form the intersection; adding the one unmatched prediction and two unmatched annotations gives a union of 17 items.
+</figcaption>
+</figure>
+</div>
 <p>To see how HOTA’s association score works, start with a box match between G1 and T1. HOTA compares <strong>all G1 annotation boxes with all T1 prediction boxes across the sequence</strong>, including frames where they do not match. In our eight-frame toy example:</p>
 <ul>
 <li>Frames 1, 3, 4, 6 and 8 give five correct box matches.</li>
@@ -1678,11 +1694,11 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb1-170"><a href="#cb1-170" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-171"><a href="#cb1-171" aria-hidden="true" tabindex="-1"></a>:::</span>
 <span id="cb1-172"><a href="#cb1-172" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-173"><a href="#cb1-173" aria-hidden="true" tabindex="-1"></a>Consider the red player's annotations. T2 has 14 acceptable box overlaps with these annotations under last-box tracking and 18 under motion-based tracking. However, T7 has 29 in both runs, so the joint sequence-wide identity pairing still selects T7 for the red player in both cases.</span>
+<span id="cb1-173"><a href="#cb1-173" aria-hidden="true" tabindex="-1"></a>Consider the red player's annotations. At cutoff 0.50, T2 follows the red player earlier in the clip and T7 follows the red player later. T2 has 14 acceptable box overlaps with these annotations under last-box tracking and 18 under motion-based tracking. However, T7 has 29 in both runs, so the joint sequence-wide identity pairing still selects T7 for the red player in both cases.</span>
 <span id="cb1-174"><a href="#cb1-174" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-175"><a href="#cb1-175" aria-hidden="true" tabindex="-1"></a>::: {#tracking-red-identity-history .tracking-metric-visual}</span>
 <span id="cb1-176"><a href="#cb1-176" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-177"><a href="#cb1-177" aria-hidden="true" tabindex="-1"></a>| Method | Matches under T2 | Matches under T7 | ID paired with red |</span>
+<span id="cb1-177"><a href="#cb1-177" aria-hidden="true" tabindex="-1"></a>| Method | Matches under T2 (earlier) | Matches under T7 (later) | ID paired with red |</span>
 <span id="cb1-178"><a href="#cb1-178" aria-hidden="true" tabindex="-1"></a>|:---|---:|---:|:---|</span>
 <span id="cb1-179"><a href="#cb1-179" aria-hidden="true" tabindex="-1"></a>| Last-box | 14 | 29 | T7 |</span>
 <span id="cb1-180"><a href="#cb1-180" aria-hidden="true" tabindex="-1"></a>| Two-observation motion | <span class="co">[</span><span class="ot">**18 (+4)**</span><span class="co">]</span>{.improved} | 29 | T7 |</span>
@@ -1691,7 +1707,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb1-183"><a href="#cb1-183" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-184"><a href="#cb1-184" aria-hidden="true" tabindex="-1"></a>:::</span>
 <span id="cb1-185"><a href="#cb1-185" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-186"><a href="#cb1-186" aria-hidden="true" tabindex="-1"></a>Motion increases T2's overlaps with the red player, but we cannot also count these as identity matches for red, because red is already paired with T7. The other chosen ID pairings and the total numbers of predicted and annotated boxes are unchanged too, so identity precision and recall remain unchanged.</span>
+<span id="cb1-186"><a href="#cb1-186" aria-hidden="true" tabindex="-1"></a>Motion extends T2's earlier part of the red player's history, but it does not join that part to T7's later part. We cannot count T2's overlaps as identity matches for red, because red is already paired with T7. The other chosen ID pairings and the total numbers of predicted and annotated boxes are also the same, so identity precision and recall do not change.</span>
 <span id="cb1-187"><a href="#cb1-187" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-188"><a href="#cb1-188" aria-hidden="true" tabindex="-1"></a><span class="fu">## MOTA and HOTA {#hota-and-other-tracking-measures}</span></span>
 <span id="cb1-189"><a href="#cb1-189" aria-hidden="true" tabindex="-1"></a></span>
@@ -1724,7 +1740,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb1-216"><a href="#cb1-216" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-217"><a href="#cb1-217" aria-hidden="true" tabindex="-1"></a>MOTA is at most 1, but can be negative if the total error count exceeds the number of annotated boxes.</span>
 <span id="cb1-218"><a href="#cb1-218" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-219"><a href="#cb1-219" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">**HOTA**, or *Higher Order Tracking Accuracy*</span><span class="co">](https://doi.org/10.1007/s11263-020-01375-2)</span>, combines a detection score and an association score. We first compare its detection score with precision and recall, using the same eight-frame toy example.</span>
+<span id="cb1-219"><a href="#cb1-219" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">**HOTA**, or *Higher Order Tracking Accuracy*</span><span class="co">](https://doi.org/10.1007/s11263-020-01375-2)</span>, combines a detection component and an association component. We first compare its detection component with precision and recall, using the same eight-frame toy example.</span>
 <span id="cb1-220"><a href="#cb1-220" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-221"><a href="#cb1-221" aria-hidden="true" tabindex="-1"></a>| Measure | Formula | Detection example |</span>
 <span id="cb1-222"><a href="#cb1-222" aria-hidden="true" tabindex="-1"></a>|:---|:---|:---|</span>
@@ -1737,96 +1753,98 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb1-229"><a href="#cb1-229" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-230"><a href="#cb1-230" aria-hidden="true" tabindex="-1"></a>For the Jaccard detection score, each matched prediction–annotation pair counts as one shared item. The 14 matches form the intersection, and adding the one unmatched prediction and two unmatched annotations gives a union of 17 items, so the score is 14/17. HOTA calls this component **detection accuracy**.</span>
 <span id="cb1-231"><a href="#cb1-231" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-232"><a href="#cb1-232" aria-hidden="true" tabindex="-1"></a>To see how HOTA's association score works, start with a box match between G1 and T1. HOTA compares **all G1 annotation boxes with all T1 prediction boxes across the sequence**, including frames where they do not match. In our eight-frame toy example:</span>
+<span id="cb1-232"><a href="#cb1-232" aria-hidden="true" tabindex="-1"></a><span class="al">![Box IoU and the Jaccard detection score. Left: the IoU of two boxes divides their shared area by the area they cover together. Right: after matching, the 14 matched pairs form the intersection; adding the one unmatched prediction and two unmatched annotations gives a union of 17 items.](&lt;attachments/tracking/iou-jaccard-illustration.svg&gt;)</span>{#fig-tracking-iou-jaccard width=100% fig-alt="Left: two overlapping boxes; their shared area is the intersection and all coloured area is the union. Right: 14 matched pairs form the intersection, with one unmatched prediction and two unmatched annotations, giving 17 items in the union."}</span>
 <span id="cb1-233"><a href="#cb1-233" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-234"><a href="#cb1-234" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Frames 1, 3, 4, 6 and 8 give five correct box matches.</span>
-<span id="cb1-235"><a href="#cb1-235" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>G1's annotations in frames 2, 5 and 7 have no matching T1 prediction: three false negatives for this comparison.</span>
-<span id="cb1-236"><a href="#cb1-236" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>T1's predictions in frames 2 and 7 are around the black player, so they have no matching G1 annotation: two false positives for this comparison.</span>
-<span id="cb1-237"><a href="#cb1-237" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-238"><a href="#cb1-238" aria-hidden="true" tabindex="-1"></a>We divide the number of matches by the matches plus both kinds of unmatched box. This gives the association score</span>
+<span id="cb1-234"><a href="#cb1-234" aria-hidden="true" tabindex="-1"></a>To see how HOTA's association score works, start with a box match between G1 and T1. HOTA compares **all G1 annotation boxes with all T1 prediction boxes across the sequence**, including frames where they do not match. In our eight-frame toy example:</span>
+<span id="cb1-235"><a href="#cb1-235" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-236"><a href="#cb1-236" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Frames 1, 3, 4, 6 and 8 give five correct box matches.</span>
+<span id="cb1-237"><a href="#cb1-237" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>G1's annotations in frames 2, 5 and 7 have no matching T1 prediction: three false negatives for this comparison.</span>
+<span id="cb1-238"><a href="#cb1-238" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>T1's predictions in frames 2 and 7 are around the black player, so they have no matching G1 annotation: two false positives for this comparison.</span>
 <span id="cb1-239"><a href="#cb1-239" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-240"><a href="#cb1-240" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb1-241"><a href="#cb1-241" aria-hidden="true" tabindex="-1"></a>\text{G1–T1 association score}=\frac{5}{5+3+2}=0.5.</span>
+<span id="cb1-240"><a href="#cb1-240" aria-hidden="true" tabindex="-1"></a>We divide the number of matches by the matches plus both kinds of unmatched box. This gives the association score</span>
+<span id="cb1-241"><a href="#cb1-241" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-242"><a href="#cb1-242" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb1-243"><a href="#cb1-243" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-244"><a href="#cb1-244" aria-hidden="true" tabindex="-1"></a>::: {#tracking-hota-g1-t1 .tracking-metric-visual .timeline}</span>
+<span id="cb1-243"><a href="#cb1-243" aria-hidden="true" tabindex="-1"></a>\text{G1–T1 association score}=\frac{5}{5+3+2}=0.5.</span>
+<span id="cb1-244"><a href="#cb1-244" aria-hidden="true" tabindex="-1"></a>$$</span>
 <span id="cb1-245"><a href="#cb1-245" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-246"><a href="#cb1-246" aria-hidden="true" tabindex="-1"></a>| Frame | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |</span>
-<span id="cb1-247"><a href="#cb1-247" aria-hidden="true" tabindex="-1"></a>|:---|:---|:---|:---|:---|:---|:---|:---|:---|</span>
-<span id="cb1-248"><a href="#cb1-248" aria-hidden="true" tabindex="-1"></a>| G1 annotations | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.history-miss} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.history-miss} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.history-miss} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} |</span>
-<span id="cb1-249"><a href="#cb1-249" aria-hidden="true" tabindex="-1"></a>| Association score | <span class="co">[</span><span class="ot">0.5</span><span class="co">]</span>{.history-score} | | <span class="co">[</span><span class="ot">0.5</span><span class="co">]</span>{.history-score} | <span class="co">[</span><span class="ot">0.5</span><span class="co">]</span>{.history-score} | | <span class="co">[</span><span class="ot">0.5</span><span class="co">]</span>{.history-score} | | <span class="co">[</span><span class="ot">0.5</span><span class="co">]</span>{.history-score} |</span>
-<span id="cb1-250"><a href="#cb1-250" aria-hidden="true" tabindex="-1"></a>| T1 predictions | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-error} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">—</span><span class="co">]</span>{.absent} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-error} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} |</span>
-<span id="cb1-251"><a href="#cb1-251" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-252"><a href="#cb1-252" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">Green links the five matches. Amber marks G1 annotations not matched by T1; red marks T1 predictions not matched to G1.</span><span class="co">]</span>{.metric-key}</span>
+<span id="cb1-246"><a href="#cb1-246" aria-hidden="true" tabindex="-1"></a>::: {#tracking-hota-g1-t1 .tracking-metric-visual .timeline}</span>
+<span id="cb1-247"><a href="#cb1-247" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-248"><a href="#cb1-248" aria-hidden="true" tabindex="-1"></a>| Frame | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |</span>
+<span id="cb1-249"><a href="#cb1-249" aria-hidden="true" tabindex="-1"></a>|:---|:---|:---|:---|:---|:---|:---|:---|:---|</span>
+<span id="cb1-250"><a href="#cb1-250" aria-hidden="true" tabindex="-1"></a>| G1 annotations | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.history-miss} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.history-miss} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.history-miss} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} |</span>
+<span id="cb1-251"><a href="#cb1-251" aria-hidden="true" tabindex="-1"></a>| Association score | <span class="co">[</span><span class="ot">0.5</span><span class="co">]</span>{.history-score} | | <span class="co">[</span><span class="ot">0.5</span><span class="co">]</span>{.history-score} | <span class="co">[</span><span class="ot">0.5</span><span class="co">]</span>{.history-score} | | <span class="co">[</span><span class="ot">0.5</span><span class="co">]</span>{.history-score} | | <span class="co">[</span><span class="ot">0.5</span><span class="co">]</span>{.history-score} |</span>
+<span id="cb1-252"><a href="#cb1-252" aria-hidden="true" tabindex="-1"></a>| T1 predictions | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-error} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">—</span><span class="co">]</span>{.absent} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-error} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} |</span>
 <span id="cb1-253"><a href="#cb1-253" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-254"><a href="#cb1-254" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-254"><a href="#cb1-254" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">Green links the five matches. Amber marks G1 annotations not matched by T1; red marks T1 predictions not matched to G1.</span><span class="co">]</span>{.metric-key}</span>
 <span id="cb1-255"><a href="#cb1-255" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-256"><a href="#cb1-256" aria-hidden="true" tabindex="-1"></a>Each of the five G1–T1 box matches receives this score, because each uses the same complete histories of G1 and T1.</span>
+<span id="cb1-256"><a href="#cb1-256" aria-hidden="true" tabindex="-1"></a>:::</span>
 <span id="cb1-257"><a href="#cb1-257" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-258"><a href="#cb1-258" aria-hidden="true" tabindex="-1"></a>HOTA also compares G1 with T2, because those IDs have box matches in frames 2 and 7. Their complete histories give two correct matches, six false negatives and six false positives. The false positives for this comparison include T2's five boxes around G2 and its spurious frame-4 box. Thus,</span>
+<span id="cb1-258"><a href="#cb1-258" aria-hidden="true" tabindex="-1"></a>Each of the five G1–T1 box matches receives this score, because each uses the same complete histories of G1 and T1.</span>
 <span id="cb1-259"><a href="#cb1-259" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-260"><a href="#cb1-260" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb1-261"><a href="#cb1-261" aria-hidden="true" tabindex="-1"></a>\text{G1–T2 association score}=\frac{2}{2+6+6}=\frac17\approx0.143.</span>
+<span id="cb1-260"><a href="#cb1-260" aria-hidden="true" tabindex="-1"></a>HOTA also compares G1 with T2, because those IDs have box matches in frames 2 and 7. Their complete histories give two correct matches, six false negatives and six false positives. The false positives for this comparison include T2's five boxes around G2 and its spurious frame-4 box. Thus,</span>
+<span id="cb1-261"><a href="#cb1-261" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-262"><a href="#cb1-262" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb1-263"><a href="#cb1-263" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-264"><a href="#cb1-264" aria-hidden="true" tabindex="-1"></a>::: {#tracking-hota-g1-t2 .tracking-metric-visual .timeline}</span>
+<span id="cb1-263"><a href="#cb1-263" aria-hidden="true" tabindex="-1"></a>\text{G1–T2 association score}=\frac{2}{2+6+6}=\frac17\approx0.143.</span>
+<span id="cb1-264"><a href="#cb1-264" aria-hidden="true" tabindex="-1"></a>$$</span>
 <span id="cb1-265"><a href="#cb1-265" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-266"><a href="#cb1-266" aria-hidden="true" tabindex="-1"></a>| Frame | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |</span>
-<span id="cb1-267"><a href="#cb1-267" aria-hidden="true" tabindex="-1"></a>|:---|:---|:---|:---|:---|:---|:---|:---|:---|</span>
-<span id="cb1-268"><a href="#cb1-268" aria-hidden="true" tabindex="-1"></a>| G1 annotations | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.history-miss} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.history-miss} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.history-miss} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.history-miss} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.history-miss} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.history-miss} |</span>
-<span id="cb1-269"><a href="#cb1-269" aria-hidden="true" tabindex="-1"></a>| Association score | | <span class="co">[</span><span class="ot">1/7</span><span class="co">]</span>{.history-score} | | | | | <span class="co">[</span><span class="ot">1/7</span><span class="co">]</span>{.history-score} | |</span>
-<span id="cb1-270"><a href="#cb1-270" aria-hidden="true" tabindex="-1"></a>| T2 predictions | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-error} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-error} | <span class="co">[</span><span class="ot">×</span><span class="co">]</span>{.id-error} | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-error} | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-error} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-error} |</span>
-<span id="cb1-271"><a href="#cb1-271" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-272"><a href="#cb1-272" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">Green links the two matches. Amber marks G1 annotations not matched by T2; red marks T2 predictions not matched to G1.</span><span class="co">]</span>{.metric-key}</span>
+<span id="cb1-266"><a href="#cb1-266" aria-hidden="true" tabindex="-1"></a>::: {#tracking-hota-g1-t2 .tracking-metric-visual .timeline}</span>
+<span id="cb1-267"><a href="#cb1-267" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-268"><a href="#cb1-268" aria-hidden="true" tabindex="-1"></a>| Frame | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 |</span>
+<span id="cb1-269"><a href="#cb1-269" aria-hidden="true" tabindex="-1"></a>|:---|:---|:---|:---|:---|:---|:---|:---|:---|</span>
+<span id="cb1-270"><a href="#cb1-270" aria-hidden="true" tabindex="-1"></a>| G1 annotations | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.history-miss} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.history-miss} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.history-miss} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.history-miss} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.history-miss} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.history-miss} |</span>
+<span id="cb1-271"><a href="#cb1-271" aria-hidden="true" tabindex="-1"></a>| Association score | | <span class="co">[</span><span class="ot">1/7</span><span class="co">]</span>{.history-score} | | | | | <span class="co">[</span><span class="ot">1/7</span><span class="co">]</span>{.history-score} | |</span>
+<span id="cb1-272"><a href="#cb1-272" aria-hidden="true" tabindex="-1"></a>| T2 predictions | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-error} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-error} | <span class="co">[</span><span class="ot">×</span><span class="co">]</span>{.id-error} | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-error} | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-error} | <span class="co">[</span><span class="ot">G1</span><span class="co">]</span>{.id-good} | <span class="co">[</span><span class="ot">G2</span><span class="co">]</span>{.id-error} |</span>
 <span id="cb1-273"><a href="#cb1-273" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-274"><a href="#cb1-274" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb1-274"><a href="#cb1-274" aria-hidden="true" tabindex="-1"></a><span class="co">[</span><span class="ot">Green links the two matches. Amber marks G1 annotations not matched by T2; red marks T2 predictions not matched to G1.</span><span class="co">]</span>{.metric-key}</span>
 <span id="cb1-275"><a href="#cb1-275" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-276"><a href="#cb1-276" aria-hidden="true" tabindex="-1"></a>Both G1–T2 matches receive this score. Repeating the comparison for G2 gives two more scores:</span>
+<span id="cb1-276"><a href="#cb1-276" aria-hidden="true" tabindex="-1"></a>:::</span>
 <span id="cb1-277"><a href="#cb1-277" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-278"><a href="#cb1-278" aria-hidden="true" tabindex="-1"></a>| Player–track pair | Box matches | Unmatched annotations | Unmatched predictions | Association score |</span>
-<span id="cb1-279"><a href="#cb1-279" aria-hidden="true" tabindex="-1"></a>|:---|---:|---:|---:|---:|</span>
-<span id="cb1-280"><a href="#cb1-280" aria-hidden="true" tabindex="-1"></a>| G1–T1 | 5 | 3 | 2 | 1/2 |</span>
-<span id="cb1-281"><a href="#cb1-281" aria-hidden="true" tabindex="-1"></a>| G1–T2 | 2 | 6 | 6 | 1/7 |</span>
-<span id="cb1-282"><a href="#cb1-282" aria-hidden="true" tabindex="-1"></a>| G2–T1 | 2 | 6 | 5 | 2/13 |</span>
-<span id="cb1-283"><a href="#cb1-283" aria-hidden="true" tabindex="-1"></a>| G2–T2 | 5 | 3 | 3 | 5/11 |</span>
-<span id="cb1-284"><a href="#cb1-284" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-285"><a href="#cb1-285" aria-hidden="true" tabindex="-1"></a>Each unmatched count in this table refers to the player–track pair in that row. To average over all 14 box matches, multiply each row's score by its number of matches and divide the sum of those contributions by 14:</span>
+<span id="cb1-278"><a href="#cb1-278" aria-hidden="true" tabindex="-1"></a>Both G1–T2 matches receive this score. Repeating the comparison for G2 gives two more scores:</span>
+<span id="cb1-279"><a href="#cb1-279" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-280"><a href="#cb1-280" aria-hidden="true" tabindex="-1"></a>| Player–track pair | Box matches | Unmatched annotations | Unmatched predictions | Association score |</span>
+<span id="cb1-281"><a href="#cb1-281" aria-hidden="true" tabindex="-1"></a>|:---|---:|---:|---:|---:|</span>
+<span id="cb1-282"><a href="#cb1-282" aria-hidden="true" tabindex="-1"></a>| G1–T1 | 5 | 3 | 2 | 1/2 |</span>
+<span id="cb1-283"><a href="#cb1-283" aria-hidden="true" tabindex="-1"></a>| G1–T2 | 2 | 6 | 6 | 1/7 |</span>
+<span id="cb1-284"><a href="#cb1-284" aria-hidden="true" tabindex="-1"></a>| G2–T1 | 2 | 6 | 5 | 2/13 |</span>
+<span id="cb1-285"><a href="#cb1-285" aria-hidden="true" tabindex="-1"></a>| G2–T2 | 5 | 3 | 3 | 5/11 |</span>
 <span id="cb1-286"><a href="#cb1-286" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-287"><a href="#cb1-287" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb1-288"><a href="#cb1-288" aria-hidden="true" tabindex="-1"></a>\text{Association accuracy}</span>
-<span id="cb1-289"><a href="#cb1-289" aria-hidden="true" tabindex="-1"></a>=\frac{5(1/2)+2(1/7)+2(2/13)+5(5/11)}{14}</span>
-<span id="cb1-290"><a href="#cb1-290" aria-hidden="true" tabindex="-1"></a>\approx0.383.</span>
-<span id="cb1-291"><a href="#cb1-291" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb1-292"><a href="#cb1-292" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-293"><a href="#cb1-293" aria-hidden="true" tabindex="-1"></a>For IDP and IDR, we selected one fixed ID pairing for the whole sequence. **HOTA instead checks the complete histories behind every box match**, including matches involving the player's other predicted IDs.</span>
+<span id="cb1-287"><a href="#cb1-287" aria-hidden="true" tabindex="-1"></a>Each unmatched count in this table refers to the player–track pair in that row. To average over all 14 box matches, multiply each row's score by its number of matches and divide the sum of those contributions by 14:</span>
+<span id="cb1-288"><a href="#cb1-288" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-289"><a href="#cb1-289" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-290"><a href="#cb1-290" aria-hidden="true" tabindex="-1"></a>\text{Association accuracy}</span>
+<span id="cb1-291"><a href="#cb1-291" aria-hidden="true" tabindex="-1"></a>=\frac{5(1/2)+2(1/7)+2(2/13)+5(5/11)}{14}</span>
+<span id="cb1-292"><a href="#cb1-292" aria-hidden="true" tabindex="-1"></a>\approx0.383.</span>
+<span id="cb1-293"><a href="#cb1-293" aria-hidden="true" tabindex="-1"></a>$$</span>
 <span id="cb1-294"><a href="#cb1-294" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-295"><a href="#cb1-295" aria-hidden="true" tabindex="-1"></a>For our fixed set of box matches, detection accuracy is about 0.824 and association accuracy is about 0.383. HOTA combines them using a **geometric mean**, which means multiplying the two components and taking the square root:</span>
+<span id="cb1-295"><a href="#cb1-295" aria-hidden="true" tabindex="-1"></a>For IDP and IDR, we selected one fixed ID pairing for the whole sequence. **HOTA instead checks the complete histories behind every box match**, including matches involving the player's other predicted IDs.</span>
 <span id="cb1-296"><a href="#cb1-296" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-297"><a href="#cb1-297" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb1-298"><a href="#cb1-298" aria-hidden="true" tabindex="-1"></a>\mathrm{HOTA}=\sqrt{\text{detection accuracy}\times\text{association accuracy}}</span>
-<span id="cb1-299"><a href="#cb1-299" aria-hidden="true" tabindex="-1"></a>\approx\sqrt{0.824\times0.383}\approx0.562.</span>
-<span id="cb1-300"><a href="#cb1-300" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb1-301"><a href="#cb1-301" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-302"><a href="#cb1-302" aria-hidden="true" tabindex="-1"></a>This is the calculation at one evaluation IoU threshold. The full HOTA metric repeats it over several thresholds and averages the resulting HOTA values. The geometric mean is calculated at each threshold before averaging; it is not generally the geometric mean of the two separately averaged components.</span>
+<span id="cb1-297"><a href="#cb1-297" aria-hidden="true" tabindex="-1"></a>For our fixed set of box matches, detection accuracy is about 0.824 and association accuracy is about 0.383. HOTA combines them using a **geometric mean**, which means multiplying the two components and taking the square root:</span>
+<span id="cb1-298"><a href="#cb1-298" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-299"><a href="#cb1-299" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb1-300"><a href="#cb1-300" aria-hidden="true" tabindex="-1"></a>\mathrm{HOTA}=\sqrt{\text{detection accuracy}\times\text{association accuracy}}</span>
+<span id="cb1-301"><a href="#cb1-301" aria-hidden="true" tabindex="-1"></a>\approx\sqrt{0.824\times0.383}\approx0.562.</span>
+<span id="cb1-302"><a href="#cb1-302" aria-hidden="true" tabindex="-1"></a>$$</span>
 <span id="cb1-303"><a href="#cb1-303" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-304"><a href="#cb1-304" aria-hidden="true" tabindex="-1"></a>For numerical comparisons, a standard evaluator such as <span class="co">[</span><span class="ot">TrackEval</span><span class="co">](https://github.com/JonathonLuiten/TrackEval)</span> implements these measures, including their matching and scoring rules. This evaluation compares tracker outputs with annotations; it is separate from the track–detection assignment inside our tracker. In particular, the evaluation IoU threshold has a different role from our tracking acceptance threshold of 0.30.</span>
+<span id="cb1-304"><a href="#cb1-304" aria-hidden="true" tabindex="-1"></a>This is the calculation at one evaluation IoU threshold. The full HOTA metric repeats it over several thresholds and averages the resulting HOTA values. The geometric mean is calculated at each threshold before averaging; it is not generally the geometric mean of the two separately averaged components.</span>
 <span id="cb1-305"><a href="#cb1-305" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-306"><a href="#cb1-306" aria-hidden="true" tabindex="-1"></a>We can now return to the basketball tracks. The table below uses the saved, independently started frames 50–100 runs, with the same 306 annotated boxes in each run. IDF1 and MOTA use evaluation IoU 0.50; HOTA is averaged over the standard 19 thresholds from 0.05 to 0.95. The ID-switch column gives the switches counted by TrackEval's CLEAR evaluation, as used in MOTA.</span>
+<span id="cb1-306"><a href="#cb1-306" aria-hidden="true" tabindex="-1"></a>For numerical comparisons, a standard evaluator such as <span class="co">[</span><span class="ot">TrackEval</span><span class="co">](https://github.com/JonathonLuiten/TrackEval)</span> implements these measures, including their matching and scoring rules. This evaluation compares tracker outputs with annotations; it is separate from the track–detection assignment inside our tracker. In particular, the evaluation IoU threshold has a different role from our tracking acceptance threshold of 0.30.</span>
 <span id="cb1-307"><a href="#cb1-307" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-308"><a href="#cb1-308" aria-hidden="true" tabindex="-1"></a>| Confidence cutoff | Tracking method | IDF1 | MOTA | HOTA | ID switches |</span>
-<span id="cb1-309"><a href="#cb1-309" aria-hidden="true" tabindex="-1"></a>|:---|:---|---:|---:|---:|---:|</span>
-<span id="cb1-310"><a href="#cb1-310" aria-hidden="true" tabindex="-1"></a>| 0.50 | Last-box | **0.8391** | 0.9118 | 0.6758 | 4 |</span>
-<span id="cb1-311"><a href="#cb1-311" aria-hidden="true" tabindex="-1"></a>| 0.50 | Two-observation motion | **0.8391** | **0.9150** | **0.6793** | **3** |</span>
-<span id="cb1-312"><a href="#cb1-312" aria-hidden="true" tabindex="-1"></a>| 0.40 | Last-box | **0.9115** | **0.9314** | **0.7153** | **1** |</span>
-<span id="cb1-313"><a href="#cb1-313" aria-hidden="true" tabindex="-1"></a>| 0.40 | Two-observation motion | 0.8590 | 0.9248 | 0.6703 | 3 |</span>
-<span id="cb1-314"><a href="#cb1-314" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-315"><a href="#cb1-315" aria-hidden="true" tabindex="-1"></a>Bold marks the best values within each confidence group, including ties. Higher scores and fewer switches are better.</span>
+<span id="cb1-308"><a href="#cb1-308" aria-hidden="true" tabindex="-1"></a>We can now return to the basketball tracks. The table below uses the saved, independently started frames 50–100 runs, with the same 306 annotated boxes in each run. IDF1 and MOTA use evaluation IoU 0.50; HOTA is averaged over the standard 19 thresholds from 0.05 to 0.95. The ID-switch column gives the switches counted by TrackEval's CLEAR evaluation, as used in MOTA.</span>
+<span id="cb1-309"><a href="#cb1-309" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-310"><a href="#cb1-310" aria-hidden="true" tabindex="-1"></a>| Confidence cutoff | Tracking method | IDF1 | MOTA | HOTA | ID switches |</span>
+<span id="cb1-311"><a href="#cb1-311" aria-hidden="true" tabindex="-1"></a>|:---|:---|---:|---:|---:|---:|</span>
+<span id="cb1-312"><a href="#cb1-312" aria-hidden="true" tabindex="-1"></a>| 0.50 | Last-box | **0.8391** | 0.9118 | 0.6758 | 4 |</span>
+<span id="cb1-313"><a href="#cb1-313" aria-hidden="true" tabindex="-1"></a>| 0.50 | Two-observation motion | **0.8391** | **0.9150** | **0.6793** | **3** |</span>
+<span id="cb1-314"><a href="#cb1-314" aria-hidden="true" tabindex="-1"></a>| 0.40 | Last-box | **0.9115** | **0.9314** | **0.7153** | **1** |</span>
+<span id="cb1-315"><a href="#cb1-315" aria-hidden="true" tabindex="-1"></a>| 0.40 | Two-observation motion | 0.8590 | 0.9248 | 0.6703 | 3 |</span>
 <span id="cb1-316"><a href="#cb1-316" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-317"><a href="#cb1-317" aria-hidden="true" tabindex="-1"></a>At confidence cutoff 0.50, motion removes the frame-66 identity switch, reducing the count from four to three. MOTA increases by $1/306$, while IDF1 stays unchanged. HOTA also increases slightly. At 0.40, two-observation motion scores below last-box tracking on all three measures.</span>
+<span id="cb1-317"><a href="#cb1-317" aria-hidden="true" tabindex="-1"></a>Bold marks the best values within each confidence group, including ties. Higher scores and fewer switches are better.</span>
 <span id="cb1-318"><a href="#cb1-318" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-319"><a href="#cb1-319" aria-hidden="true" tabindex="-1"></a>HOTA uses sequence-wide identity information to help choose its within-frame box matches. Its accepted matches can therefore change when track IDs change, even with identical supplied boxes. Its detection component need not use the same box matches as our earlier detection precision and recall. At cutoff 0.50, HOTA's detection component increases while its association component falls slightly when averaged over the thresholds, so the small HOTA increase should not be described as an improvement in the association component.</span>
+<span id="cb1-319"><a href="#cb1-319" aria-hidden="true" tabindex="-1"></a>At confidence cutoff 0.50, motion removes the frame-66 identity switch, reducing the count from four to three. MOTA increases by $1/306$, while IDF1 stays unchanged. HOTA also increases slightly. At 0.40, two-observation motion scores below last-box tracking on all three measures.</span>
 <span id="cb1-320"><a href="#cb1-320" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-321"><a href="#cb1-321" aria-hidden="true" tabindex="-1"></a>We should compare methods on the same annotated sequences and state which inputs and settings change. Holding the detector outputs fixed, as in our motion comparison, helps isolate the effect of the tracking method.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-321"><a href="#cb1-321" aria-hidden="true" tabindex="-1"></a>HOTA uses sequence-wide identity information to help choose its within-frame box matches. Its accepted matches can therefore change when track IDs change, even with identical supplied boxes. Its detection component need not use the same box matches as our earlier detection precision and recall. At cutoff 0.50, HOTA's detection component increases while its association component falls slightly when averaged over the thresholds, so the small HOTA increase should not be described as an improvement in the association component.</span>
+<span id="cb1-322"><a href="#cb1-322" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-323"><a href="#cb1-323" aria-hidden="true" tabindex="-1"></a>We should compare methods on the same annotated sequences and state which inputs and settings change. Holding the detector outputs fixed, as in our motion comparison, helps isolate the effect of the tracking method.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 <footer class="footer">
