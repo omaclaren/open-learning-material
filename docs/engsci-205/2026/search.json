@@ -374,7 +374,7 @@
     "href": "vectors_matrices_tensors.html#arraystensors-storage-vs-access",
     "title": "Vectors, matrices, arrays, tensors",
     "section": "Arrays/tensors: storage vs access",
-    "text": "Arrays/tensors: storage vs access\nAlthough we interact with tensors as multi-dimensional arrays, for efficient computation, tensor values are actually stored in memory in linear, contiguous chunks (i.e. continuous sequence of memory locations). When working with tensors, we typically just change how we access or index the underlying chunk of memory rather than copying the stored values, saving memory. This idea is represented by a view, a ‘virtual’ tensor that accesses the same memory but with a different shape or indexing.\nSome operations, like slicing or permuting (swapping or rearranging) dimensions, change how we index (refer to) the stored data without rearranging it in memory (where it is actually stored). The order we read elements of the tensor in terms of indices, e.g. row by row for a matrix (2D tensor) in PyTorch, might then not correspond to consecutively stored elements in memory. This is a non-contiguous layout. For example, flattening a transposed matrix while preserving its row-by-row order can require a copy, so attempting this with the no-copy view method can give an error.\nThe contiguous() method returns a tensor whose elements are stored consecutively in indexing order. It makes a copy if needed; otherwise it returns the original tensor. The result looks the same to us: the tensor’s shape and the values at its indices do not change. What may change is how those values are arranged in memory.\nThe reshape operation creates a view if the requested shape can be represented as a view using the existing layout in memory; otherwise it makes a copy with a compatible memory layout. The view method never copies the data, and gives an error if the requested shape cannot be represented as a view.\nIt can be important to know whether a tensor operation copies the underlying data or just returns a new view of the same data; e.g. modifying values via a view modifies the results of all other views of the same data, while modifying a copy doesn’t. However, making a copy means twice the memory! In general, check the documentation of the given operation if you need to know what’s happening! You can manually check by using .untyped_storage().data_ptr() on two tensors to check if they point to the same memory or not.\n\n# same memory location (same pointer)!\nprint(cat_red.untyped_storage().data_ptr())\nprint(cat.untyped_storage().data_ptr())\n\n5639372800\n5639372800",
+    "text": "Arrays/tensors: storage vs access\nAlthough we interact with tensors as multi-dimensional arrays, for efficient computation, tensor values are actually stored in memory in linear, contiguous chunks (i.e. continuous sequence of memory locations). When working with tensors, we typically just change how we access or index the underlying chunk of memory rather than copying the stored values, saving memory. This idea is represented by a view, a ‘virtual’ tensor that accesses the same memory but with a different shape or indexing.\nSome operations, like slicing or permuting (swapping or rearranging) dimensions, change how we index (refer to) the stored data without rearranging it in memory (where it is actually stored). The order we read elements of the tensor in terms of indices, e.g. row by row for a matrix (2D tensor) in PyTorch, might then not correspond to consecutively stored elements in memory. This is a non-contiguous layout. For example, flattening a transposed matrix while preserving its row-by-row order can require a copy, so attempting this with the no-copy view method can give an error.\nThe contiguous() method returns a tensor whose elements are stored consecutively in indexing order. It makes a copy if needed; otherwise it returns the original tensor. The result looks the same to us: the tensor’s shape and the values at its indices do not change. What may change is how those values are arranged in memory.\nThe reshape operation creates a view if the requested shape can be represented as a view using the existing layout in memory; otherwise it makes a copy with a compatible memory layout. The view method never copies the data, and gives an error if the requested shape cannot be represented as a view.\nIt can be important to know whether a tensor operation copies the underlying data or just returns a new view of the same data; e.g. modifying values via a view modifies the results of all other views of the same data, while modifying a copy doesn’t. However, making a copy means twice the memory! In general, check the documentation of the given operation if you need to know what’s happening! You can manually check by using .untyped_storage().data_ptr() on two tensors to check if they point to the same memory or not.\n\n# same memory location (same pointer)!\nprint(cat_red.untyped_storage().data_ptr())\nprint(cat.untyped_storage().data_ptr())\n\n5235081216\n5235081216",
     "crumbs": [
       "Vectors, matrices, arrays, tensors"
     ]
@@ -557,6 +557,216 @@
     "text": "Notes\nThere’s a lot here that we haven’t gone into detail on. Briefly though,\n\nrequires_grad=True enables PyTorch to record the computation and save information needed to calculate derivatives. This flag propagates automatically through tracked operations.\nPyTorch normally stores gradients in .grad for leaf tensors with requires_grad=True. A leaf tensor is an input to the recorded computation graph, rather than the result of an operation in that graph. E.g. x is a leaf tensor, but u = x**2 is not.\nTo also store the loss gradient with respect to u, call u.retain_grad() before backward(). The result will then be available in u.grad.\nCalling .backward() adds the computed gradients to .grad, and normally releases the saved information used for that backward pass.\nSometimes we want to run backward twice through the same graph. E.g. two losses might use the same predictions, calculated in one forward pass, but we want to examine the gradient of each loss separately. We then run backward on each loss separately, clearing the accumulated gradients between calls. We generally need retain_graph=True on the first backward call to keep the information needed for the second.\nIn our training loop, however, each iteration recalculates loss = func(x) using the current value of x. This builds a new graph even though we have the same formula and the same parameter tensor, because PyTorch records the operations and saves the numerical values needed for backward each time we run the calculation. E.g. for u = x**2, the derivative is 2*x, so the backward calculation needs the value of x used in that forward calculation. We therefore don’t need retain_graph=True here.\nBackpropagation (.backward()) applies the chain rule, multiplying derivative terms from output to input (i.e., backward through the computation graph).\n\nWe use an optimizer to update specific tensors. The optimizer adjusts the specified tensors based on the gradients accumulated by .backward().\n\nGradients accumulate when we call .backward(). Calling optimizer.zero_grad() clears the gradients of the parameters managed by the optimiser. In the loop above, we do this each iteration so that .grad contains the current loss gradient rather than a sum from previous iterations. Calling optimizer.step() updates the parameters but does not clear their gradients.\n\nWe will return to this topic when we look at training neural networks! First, a detour to a simpler, linear world!",
     "crumbs": [
       "Vectors, matrices, arrays, tensors"
+    ]
+  },
+  {
+    "objectID": "linear_models.html",
+    "href": "linear_models.html",
+    "title": "Linear models",
+    "section": "",
+    "text": "What is a linear model?\nWhat does it mean for a model to be linear? What is it linear in terms of? Generally speaking, the concept of a linear operation (or linear operator) is that it maps linear combinations of vectors to linear combinations of the operation applied to each vector:\n\\[\\mathcal{L}(a v_1 + b v_2) = a\\mathcal{L}(v_1) + b \\mathcal{L}(v_2)\\] for some linear operation \\(\\mathcal{L}\\), any scalars \\(a\\), \\(b\\), and any two vectors \\(v_1, v_2\\) to which \\(\\mathcal{L}\\) can be applied (note: I do not bold my vectors!).\nThis is quite abstract! More concretely, any (finite-dimensional) linear operator can be represented by matrix multiplication. Note, by the rules of linear (matrix) algebra: \\[A(a v_1 + b v_2) = aAv_1 + bAv_2\\] so clearly matrix multiplication is linear in this sense. Importantly, in statistics and machine learning, the term linear usually means linear in the unknown parameters (weights, coefficients) of the model.\nThis can be shown to mean our target \\(y\\) is expressed as a linear combination of (potentially nonlinear) feature vectors \\(F_i = f_i(x_i)\\), each of which may be a function of some raw feature vectors \\(x_i\\): \\[\ny \\approx F_1 w_1 + F_2 w_2 + \\dots + F_n w_n\n\\] where \\(w_i, i = 1,\\dots,n\\) are the (scalar) model parameters (or weights in neural network terminology).\nTo see how we can put this into matrix form, we \\(\\dots\\)",
+    "crumbs": [
+      "Linear models"
+    ]
+  },
+  {
+    "objectID": "linear_models.html#linear-models-matrix-form",
+    "href": "linear_models.html#linear-models-matrix-form",
+    "title": "Linear models",
+    "section": "Linear models: matrix form",
+    "text": "Linear models: matrix form\n\\(\\dots\\) first identify the \\(m \\times n\\) feature matrix \\(F\\) as the matrix having \\(n\\) columns, each given an \\(m\\)-dimensional \\(F_i\\), i.e.: \\[F = \\begin{bmatrix}F_1\\ \\vert & F_2\\ \\vert & \\dots\\vert\\ F_n\\end{bmatrix}\\] and collect the weights into a vector \\(w\\) where \\[w = \\begin{bmatrix}w_1\\\\ w_2 \\\\ \\vdots\\\\ w_n\\end{bmatrix} = w_1 e_1 + w_2 e_2 + \\dots w_n e_n\\] where the \\(e_i\\) are unit vectors with zeros in all entries except the \\(i\\)th, where they are one. \\[Fw = w_1 Fe_1 + w_2 F e_2 + \\dots + w_n F e_n = w_1F_1 + w_2 F_2 + \\dots + w_n F_n\\] where the first equality follows from linearity and the second since \\(F e_i = F_i\\) = the \\(i\\)th column of \\(F\\) (exercise: verify!).\nThis actually demonstrates a very useful alternative (but equivalent) perspective on matrix multiplication in linear algebra: a matrix times a vector is equal to a linear combination of the matrix columns with coefficients given by the vector entries.\nThis is all a long way of writing that our linear model takes the form \\[y \\approx F w\\] for target \\(y\\), feature matrix \\(F\\), and vector of parameters (weights) \\(w\\). The matrix \\(F\\) is often written as \\(X\\) and called the design matrix, giving \\[y \\approx X w.\\]",
+    "crumbs": [
+      "Linear models"
+    ]
+  },
+  {
+    "objectID": "linear_models.html#example",
+    "href": "linear_models.html#example",
+    "title": "Linear models",
+    "section": "Example",
+    "text": "Example\nConsider the following physics model of a projectile launched from a height \\(h_0\\) at velocity \\(v_0\\) subject to gravity but neglecting air resistance: \\[\\frac{d^2y}{dt^2} = -g\\] with initial conditions \\[\ny(0) = h_0,\\ \\ \\frac{dy}{dt}(0) = v_0.\n\\] This has solution \\[\ny = h_0 + v_0t -\\frac{g}{2}t^2\n\\]\n\n\n\n\n\nNow, suppose we observe (potentially noisy) data \\((t,y)_1, (t,y)_2,\\dots, (t,y)_m\\) = \\((t_1,y_1), (t_2,y_2),\\dots, (t_m,y_m)\\) but do not know \\(h_0\\), \\(v_0\\), or \\(g\\). The initial height \\(h_0\\) is labelled \\(y_0\\) in the figure.\nTo predict (using our physics knowledge!) the (unobserved) height \\(y_{m+1}\\) at a new (given) time point \\(t_{m+1}\\) we can do the following:\n\nDetermine the parameters \\(h_0\\), \\(v_0\\) and \\(g\\) in the physics-based model above that best fit the given ‘training’ data.\nUse these and \\(t = t_{m+1}\\) to predict \\(y_{m+1}\\).",
+    "crumbs": [
+      "Linear models"
+    ]
+  },
+  {
+    "objectID": "linear_models.html#example-continued",
+    "href": "linear_models.html#example-continued",
+    "title": "Linear models",
+    "section": "Example continued",
+    "text": "Example continued\nWe can consider our observations as approximate (due to noise) instances of our model: \\[\n\\begin{aligned}\ny_1 &\\approx h_0 + v_0t_1 -\\frac{g}{2}t_1^2\\\\\ny_2 &\\approx h_0 + v_0t_2 -\\frac{g}{2}t_2^2\\\\\n\\vdots\\\\\ny_m &\\approx h_0 + v_0t_m -\\frac{g}{2}t_m^2.\n\\end{aligned}\n\\] This can be written in matrix form \\[\n\\begin{bmatrix}\ny_1\\\\\ny_2\\\\\n\\vdots\\\\\ny_m\n\\end{bmatrix}\n\\approx\n\\begin{bmatrix}\n1 & t_1 & -\\frac{1}{2}t_1^2\\\\\n1 & t_2 & -\\frac{1}{2}t_2^2\\\\\n\\vdots&\\vdots&\\vdots\\\\\n1 & t_m & -\\frac{1}{2}t_m^2\n\\end{bmatrix}\n\\begin{bmatrix}\nh_0\\\\v_0\\\\ g\n\\end{bmatrix}\n\\] which can be verified either by the usual ‘rows of matrix times column vector’ or ‘linear combination of matrix columns’ interpretations of matrix multiplication.\nThus this model is linear in the unknown parameters \\(h_0, v_0, g\\) and the feature/design matrix has columns that are (potentially) nonlinear functions of the raw feature \\(t\\).",
+    "crumbs": [
+      "Linear models"
+    ]
+  },
+  {
+    "objectID": "linear_models.html#the-shape-of-linear-models-well--over--and-under-determined-linear-systems",
+    "href": "linear_models.html#the-shape-of-linear-models-well--over--and-under-determined-linear-systems",
+    "title": "Linear models",
+    "section": "The shape of linear models: well-, over- and under-determined linear systems",
+    "text": "The shape of linear models: well-, over- and under-determined linear systems\nIn our projectile case we might collect many more than three data points. However, our approximate physics-based solution (neglecting noise) is a quadratic, which requires three data points at distinct times to determine its three parameters. If we have more or fewer than three points our matrix equation will involve a non-square matrix! How do we solve this??\nFirstly, note that because we expect there to be some noise in our solution, we only expect the matrix equation to hold approximately. Secondly, there is a well-defined approach to solving non-square systems of equations: least squares! Let’s first introduce some terminology, to be discussed in more detail:\n\nTall systems (with linearly independent columns…) correspond to the over-determined, more-equations-than-unknowns case; a standard solution will not typically exist, but a least squares solution will.\nWide systems are under-determined, with fewer equations than unknowns. If the rows are linearly independent, there are infinitely many exact solutions for any observation vector \\(y\\). Among these, there is a unique least-norm solution.\nSquare systems (with linearly independent rows and columns) correspond to a well-determined system, same-equations-as-unknowns case; this is the exception not the norm in statistics and machine learning!\n\nGraphically, we get \\(\\dots\\)",
+    "crumbs": [
+      "Linear models"
+    ]
+  },
+  {
+    "objectID": "linear_models.html#the-shape-of-linear-models-well--over--and-under-determined-linear-systems-1",
+    "href": "linear_models.html#the-shape-of-linear-models-well--over--and-under-determined-linear-systems-1",
+    "title": "Linear models",
+    "section": "The shape of linear models: well-, over- and under-determined linear systems",
+    "text": "The shape of linear models: well-, over- and under-determined linear systems",
+    "crumbs": [
+      "Linear models"
+    ]
+  },
+  {
+    "objectID": "linear_models.html#solving-tall-linear-systems",
+    "href": "linear_models.html#solving-tall-linear-systems",
+    "title": "Linear models",
+    "section": "Solving tall linear systems",
+    "text": "Solving tall linear systems\nThe idea of solving a tall or over-determined system is, rather than solve it exactly, consider the residual \\[r = y - Xw\\] and minimise the size of this. We have used \\(X\\) to denote the feature/design matrix. Typically we minimise the sum of squared residuals, i.e. the square of the Euclidean (\\(L_2\\)) norm of the \\(r\\) vector \\[\n\\min_{w} ||y-Xw||^2.\n\\] You may have seen that the solution to this, assuming \\(X\\) has linearly independent columns can be given explicitly by \\[\nw = X^+y = (X^TX)^{-1}X^Ty\n\\] where \\(X^+\\) is called the (Moore-Penrose) pseudo-inverse. This gives us a best approximate solution in the least-squares sense. If a true inverse exists it will reduce to this (exercise: show this!). Note that this particular explicit expression for the pseudo-inverse only holds for the tall/square case, not, e.g., the wide case.\nPackages like NumPy and PyTorch have in-built functions for computing this solution. In PyTorch we can call a least squares solver and extract the solution:\nw = torch.linalg.lstsq(X, y).solution\nor explicitly compute the pseudoinverse and apply it to the observation vector:\nw = torch.linalg.pinv(X) @ y.\nBoth should give the same answer up to rounding errors, but the former is usually the most efficient and stable!",
+    "crumbs": [
+      "Linear models"
+    ]
+  },
+  {
+    "objectID": "linear_models.html#solving-tall-linear-systems-gradient-descent",
+    "href": "linear_models.html#solving-tall-linear-systems-gradient-descent",
+    "title": "Linear models",
+    "section": "Solving tall linear systems: gradient descent",
+    "text": "Solving tall linear systems: gradient descent\nIn PyTorch we can also solve this directly, though much less efficiently compared to specialised linear solvers, by using gradient descent optimisation. We’ve mentioned this in the last chapter, and will go into more detail when we discuss neural networks properly, but the figure below gives the general idea:\n\n\n\n\n\nEach time we call optimizer.step() in gradient descent, we update the parameters in the negative gradient direction of the loss, with the learning rate scaling the update. In the examples below, the loss uses all observations, so torch.optim.SGD performs full-batch gradient descent. We will discuss stochastic and minibatch updates when we introduce neural networks.",
+    "crumbs": [
+      "Linear models"
+    ]
+  },
+  {
+    "objectID": "linear_models.html#solving-tall-linear-systems-example",
+    "href": "linear_models.html#solving-tall-linear-systems-example",
+    "title": "Linear models",
+    "section": "Solving tall linear systems: example",
+    "text": "Solving tall linear systems: example\nHere we compare specialised solver solutions and gradient descent.\n\nimport torch\n# True parameters\nw_true = torch.tensor([10,10,9.81], dtype=torch.float32)\n\n# Design matrix X (m x n) \nX = torch.tensor([\n    [1.0, 0.1, -0.5*0.1**2],\n    [1.0, 0.5, -0.5*0.5**2],\n    [1.0, 0.8, -0.5*0.8**2],\n    [1.0, 1.0, -0.5*1.0**2],\n    [1.0, 1.1, -0.5*1.1**2],\n    [1.0, 2.0, -0.5*2.0**2],\n], dtype=torch.float32)\n\n# Observation vector y (m-dimensional)\ny = X@w_true\n\n# Add normal noise with mean 0 and standard deviation 1.0\ntorch.manual_seed(42)\nnoise = torch.randn(len(y)) * 1.0\ny_noisy = y + noise\n\n# Solution using lstsq\nlstsq_result = torch.linalg.lstsq(X, y_noisy)\nw_lstsq = lstsq_result.solution\n\n# Solution using pseudoinverse\nw_pinv = torch.linalg.pinv(X) @ y_noisy\n\n# Solution using gradient descent\nw = torch.zeros(X.shape[1], requires_grad=True)\n\n# Loss function, sum square residuals\ndef loss_fn(w):\n    return torch.norm(y_noisy - X @ w) ** 2  \n\n# Optimizer\nlearning_rate = 0.005 #had to play with\noptimizer = torch.optim.SGD([w], lr=learning_rate)\n\n# Gradient Descent Loop\nnum_iterations = 10000 #quite large!\nfor i in range(num_iterations):\n    optimizer.zero_grad()\n    loss = loss_fn(w)\n    loss.backward()\n    optimizer.step()\n\n# Create a tensor sharing w's data, without gradient tracking\nw_gd = w.detach()\n\n# Comparison\nprint(\"\\nUsing torch.linalg.lstsq:\")\nprint(w_lstsq)\nprint(\"\\nUsing torch.linalg.pinv:\")\nprint(w_pinv)\nprint(\"\\nUsing Gradient Descent:\")\nprint(w_gd)\nprint(\"\\nTrue:\")\nprint(w_true)\n\n\nUsing torch.linalg.lstsq:\ntensor([10.5745,  8.7996,  9.0290])\n\nUsing torch.linalg.pinv:\ntensor([10.5745,  8.7996,  9.0290])\n\nUsing Gradient Descent:\ntensor([10.5747,  8.7990,  9.0285])\n\nTrue:\ntensor([10.0000, 10.0000,  9.8100])\n\n\nNote: the gradient descent solution is very dependent on the learning rate and number of iterations (which needs to be quite large here!), even for such a simple problem. It is not generally a good idea to use this for such a simple problem, but turns out it is a more generalisable approach for more complex problems.\nThere are also many sophisticated tricks and different optimisers we can use in PyTorch. Here we have used the simplest naive approach.",
+    "crumbs": [
+      "Linear models"
+    ]
+  },
+  {
+    "objectID": "linear_models.html#solving-wide-linear-systems",
+    "href": "linear_models.html#solving-wide-linear-systems",
+    "title": "Linear models",
+    "section": "Solving wide linear systems",
+    "text": "Solving wide linear systems\nIn the wide or under-determined case there will typically be many solutions to our linear system. One approach to obtaining a unique solution is to take the ‘smallest’ solution in the least squares sense, i.e. solve \\[\n\\min_w ||w||^2\n\\] subject to \\[w\\text{ is a solution to } y=Xw\\] The idea is among the possible solutions to the main equations, we choose the smallest one, i.e. the one closest to zero in terms of Euclidean distance (\\(L_2\\) norm).\nWhen the rows of \\(X\\) are linearly independent we can obtain the explicit solution \\[\nw = X^+y = X^T(XX^T)^{-1}y.\n\\] Note that we again have the (Moore-Penrose) pseudo-inverse, but that this now has a different expression for wide systems.\ntorch.linalg.pinv(X) returns the pseudoinverse matrix \\(X^+\\). The corresponding fitted weights are \\(w=X^+y\\), which we can compute directly using torch.linalg.lstsq(X, y).solution. More generally (regardless of whether tall or wide or conditions on linear independence), the pseudoinverse solution solves the two stage optimisation problem\n\\[\n\\min_w ||w||^2\n\\] subject to \\[w\\text{ is a solution to } \\min_w ||y-Xw||^2\\] Now the idea is that among the (possibly approximate!) least squares solutions, we choose the one with minimum norm.\nThis idea is automatically implemented in torch.linalg.lstsq and torch.linalg.pinv. In contrast, formulating these ideas as a simple gradient descent problem is harder in general. Let’s look at an approximate approach!",
+    "crumbs": [
+      "Linear models"
+    ]
+  },
+  {
+    "objectID": "linear_models.html#solving-linear-systems-in-general",
+    "href": "linear_models.html#solving-linear-systems-in-general",
+    "title": "Linear models",
+    "section": "Solving linear systems in general",
+    "text": "Solving linear systems in general\nAs mentioned, the Moore-Penrose pseudo-inverse can be used to solve linear systems in general, whether tall, wide, or square. This pseudo-inverse can be characterised either in terms of a two-stage optimisation problem or a set of four algebraic equations.\nThough beyond the scope of this course, the algebraic characterisation is that the pseudo-inverse of \\(X\\), \\(X^+\\) should satisfy \\[\n\\begin{aligned}\nXX^+X = X\\\\\nX^+XX^+ = X^+\\\\\n(X^+X)^T = X^+X\\\\\n(XX^+)^T = XX^+\n\\end{aligned}\n\\]\nAlternatively, to implement the two-stage optimisation idea approximately, we can instead solve \\[\n\\min_w ||y-Xw||^2 + \\lambda ||w||^2\n\\] for a small regularisation parameter \\(\\lambda\\). We minimise the data-fit term and weight penalty together. As \\(\\lambda\\to0^+\\), the solution approaches the minimum-norm least-squares solution \\(w=X^+y\\), which can still leave a large residual if the model cannot represent the data well. However, non-zero \\(\\lambda\\) can in general have a non-trivial – and even good! – effect on the solution.",
+    "crumbs": [
+      "Linear models"
+    ]
+  },
+  {
+    "objectID": "linear_models.html#example-wide-system",
+    "href": "linear_models.html#example-wide-system",
+    "title": "Linear models",
+    "section": "Example wide system",
+    "text": "Example wide system\n\nimport torch\n# True parameters\nw_true = torch.tensor([10,10,9.81], dtype=torch.float32)\n\n# Design matrix X (m x n), dropping some data points\nX = torch.tensor([\n    [1.0, 0.1, -0.5*0.1**2],\n    [1.0, 2.0, -0.5*2.0**2],\n], dtype=torch.float32)\n\n# Observation vector y (m-dimensional)\ny = X@w_true\n\n# Add normal noise with mean 0 and standard deviation 1.0\ntorch.manual_seed(42)\nnoise = torch.randn(len(y)) * 1.0\ny_noisy = y + noise\n\n# Solution using lstsq\nlstsq_result = torch.linalg.lstsq(X, y_noisy)\nw_lstsq = lstsq_result.solution\n\n# Solution using pseudoinverse\nw_pinv = torch.linalg.pinv(X) @ y_noisy\n\n# Solution using gradient descent\nw = torch.zeros(X.shape[1], requires_grad=True)\n\n# Loss function, sum square residuals + penalty\nlam = 0.00001 #lambda param: made it up!\ndef loss_fn(w):\n    return (torch.norm(y_noisy - X @ w) ** 2 +\n                      lam*torch.norm(w) ** 2)\n\n# Optimizer\nlearning_rate = 0.0005 #had to play with\noptimizer = torch.optim.SGD([w], lr=learning_rate)\n\n# Gradient Descent Loop\nnum_iterations = 10000 #quite large!\nfor i in range(num_iterations):\n    optimizer.zero_grad()\n    loss = loss_fn(w)\n    loss.backward()\n    optimizer.step()\n\n# Create a tensor sharing w's data, without gradient tracking\nw_gd = w.detach()\n\n# Comparison\nprint(\"\\nUsing torch.linalg.lstsq:\")\nprint(w_lstsq)\nprint(\"\\nUsing torch.linalg.pinv:\")\nprint(w_pinv)\nprint(\"\\nUsing Gradient Descent:\")\nprint(w_gd)\nprint(\"\\nTrue:\")\nprint(w_true)\n\n\nUsing torch.linalg.lstsq:\ntensor([11.2546,  0.3671,  0.7400])\n\nUsing torch.linalg.pinv:\ntensor([11.2546,  0.3671,  0.7400])\n\nUsing Gradient Descent:\ntensor([11.2520,  0.3677,  0.7391])\n\nTrue:\ntensor([10.0000, 10.0000,  9.8100])\n\n\nThe solutions are quite a lot worse for the wide system than for the tall system (relative to the true values), as you might expect from having less data to inform our estimates, though they are very close to each other. This latter fact means we have (apparently) successfully implemented the pseudo-inverse using gradient descent (for this case and this choice of parameters…)\nSide note: In many cases, the optimiser itself favours ‘simple’ or small solutions without an explicit penalty in the loss. This is called implicit regularisation. If we set \\(\\lambda=0\\) in this linear least-squares example, gradient descent starting from zero approaches the minimum-norm solution, provided the learning rate is small enough for convergence. Try it here! In more general settings, the bias depends on the model and training procedure, including choices such as initialisation and early stopping. We look at implicit regularisation in more detail in ENGSCI 721. However, in our case we are interested in how to introduce explicit regularisation and control the types of bias introduced, so here we include it.\nBut how well have we fit the (two!) data points?",
+    "crumbs": [
+      "Linear models"
+    ]
+  },
+  {
+    "objectID": "linear_models.html#estimation-and-prediction",
+    "href": "linear_models.html#estimation-and-prediction",
+    "title": "Linear models",
+    "section": "Estimation and prediction",
+    "text": "Estimation and prediction\nAs mentioned, in order to predict for a new time point using our linear model, we first solve for the estimated parameters (weights), and then propagate these forward to our desired prediction. For a linear model this corresponds to evaluating the value of the new row \\[y_{m+1} = x_{m+1}^T\\hat{w}\\] where \\(x^T\\) is a new row vector of feature values at the time point for the prediction, generated according to the same recipe used to construct \\(X\\) at the training points, and now we plug-in the estimate \\(\\hat{w} = X^+y\\). For example, for the projectile we have \\[\n\\begin{bmatrix}\ny_{m+1}\n\\end{bmatrix}\n\\approx\n\\begin{bmatrix}\n1 & t_{m+1} & -\\frac{1}{2}t_{m+1}^2\\\\\n\\end{bmatrix}\n\\begin{bmatrix}\n\\hat{h}_0\\\\\\hat{v}_0\\\\ \\hat{g}\n\\end{bmatrix}\n\\] We can also consider the ‘fitted’ (within sample prediction) values of \\(y\\). For a tall system this gives \\[\\hat{y} = X\\hat{w} = XX^+y = Hy\\] Here the matrix \\(H = XX^+\\) is called the ‘hat’ matrix and it is a ‘projection’ matrix in data space. Projection matrices are defined by \\(HH = H\\), i.e. applying them twice does the same thing as applying them once. It is called the ‘hat matrix’ because it ‘puts the hat on’ \\(y\\). You can think of it as a ‘smoothing’ matrix that maps noisy observations to fitted values. For predictions at ‘in-between’ or ‘out-of-sample’ time points, we keep \\(\\hat{w}\\) fixed and construct new design-matrix rows at those times.\nLet’s consider an example! We will use the weight vectors computed using linear least squares in both the tall and wide cases.",
+    "crumbs": [
+      "Linear models"
+    ]
+  },
+  {
+    "objectID": "linear_models.html#example-constructing-x-for-prediction",
+    "href": "linear_models.html#example-constructing-x-for-prediction",
+    "title": "Linear models",
+    "section": "Example: constructing \\(X\\) for prediction",
+    "text": "Example: constructing \\(X\\) for prediction\nThe following function allows us to construct a design matrix to make predictions at any point of interest:\n\ndef prediction_design_matrix(t_rows):\n    # make columns separately\n    one_col = torch.ones(t_rows.shape[0], 1)  \n    time_col = t_rows.view(-1, 1)       \n    quad_col = -0.5 * (t_rows ** 2).view(-1, 1)  \n\n    # Concatenate the columns to form the design matrix\n    X = torch.cat([one_col, time_col, quad_col], dim=1)\n    return X\n\nUsing this in the tall and wide cases, respectively, gives \\(\\dots\\)",
+    "crumbs": [
+      "Linear models"
+    ]
+  },
+  {
+    "objectID": "linear_models.html#example-1",
+    "href": "linear_models.html#example-1",
+    "title": "Linear models",
+    "section": "Example",
+    "text": "Example\nTall:\n\n\n\n\n\n\n\n\n\nWide:",
+    "crumbs": [
+      "Linear models"
+    ]
+  },
+  {
+    "objectID": "linear_models.html#issues",
+    "href": "linear_models.html#issues",
+    "title": "Linear models",
+    "section": "Issues",
+    "text": "Issues\nIt seems we have a general approach to estimating and predicting with linear models! Unfortunately, however, we have an issue: in the wide-system case, our parameter estimates, and often our predictions too, can be very biased and also unstable due to the small amount of data and large number of possible approximate solutions that fit the data.\nImportantly, large, deep neural networks and related modern machine learning models are analogous to wide systems: we have very many (sometimes billions!) of parameters/weights to estimate from (typically) comparably less data.\nAs discussed, some form of ‘bias’ in the general sense is essentially necessary to make predictions from the data, particularly in the ‘wide’ setting.\nHowever, here our bias is of one particular form – could we do better? And does the amount of bias required relate to the amount of data we have? And can we better choose the bias to get more stable solutions?",
+    "crumbs": [
+      "Linear models"
+    ]
+  },
+  {
+    "objectID": "linear_models.html#regularisation-revisited",
+    "href": "linear_models.html#regularisation-revisited",
+    "title": "Linear models",
+    "section": "Regularisation revisited",
+    "text": "Regularisation revisited\nAn interesting approach to further stabilising solutions is to not target the \\(\\lambda \\rightarrow 0\\) limit (at least for finite amounts of data), and instead choose a non-zero value that provides additional penalisation towards \\(w = 0\\), i.e. we sacrifice some fit to the data in order to get a less variable solution. In statistics this idea is sometimes called the ‘bias-variance’ trade-off: often, we can deliberately introduce bias in order to ‘reduce the variance’ of our solutions, i.e. increase their stability (see ENGSCI 760 and ENGSCI 721).\nThus we solve \\[\n\\min_w ||y-Xw||^2 + \\lambda ||w||^2\n\\] for some other choice of \\(\\lambda\\), not necessarily as small as possible.\nThis particular form of a linear model plus penalty of this type is often called ridge regression in statistics and machine learning. It’s referred to as (a type of) Tikhonov regularisation in inverse problems (see ENGSCI 721).\nWe will look at methods for choosing \\(\\lambda\\) shortly. First, let’s look at how, for linear models, we can implement this efficiently when we want to use torch.linalg.lstsq or torch.linalg.pinv rather than direct gradient descent.",
+    "crumbs": [
+      "Linear models"
+    ]
+  },
+  {
+    "objectID": "linear_models.html#stacking",
+    "href": "linear_models.html#stacking",
+    "title": "Linear models",
+    "section": "Stacking",
+    "text": "Stacking\nConsider the squared Euclidean norm (\\(L_2\\) norm) of some vector \\(x\\): \\[||x||^2 = \\Big|\\Big|\\begin{bmatrix}x_1\\\\x_2\\\\\\vdots\\\\x_n\\end{bmatrix}\\Big|\\Big|^2 = x_1^2 + x_2^2 + \\dots + x_n^2.\\]\nNote that we can partition \\(x\\) into subvectors \\(y, z\\) and write \\(x\\) in terms of stacked vectors \\[||x||^2 = \\Big|\\Big|\\begin{bmatrix} y\\\\ z\\end{bmatrix}\\Big|\\Big|^2 = ||y||^2 + ||z||^2\\]\nIn our case, this means we can write \\[\n||y-Xw||^2 + \\lambda ||w||^2 = \\Big|\\Big|\\begin{bmatrix} y-Xw\\\\ \\sqrt{\\lambda}w\\end{bmatrix}\\Big|\\Big|^2\n\\] We can further write the right-hand side as the augmented system \\[\n\\Big|\\Big|\\begin{bmatrix} y-Xw\\\\ \\sqrt{\\lambda}w\\end{bmatrix}\\Big|\\Big|^2 = \\Big|\\Big|\\begin{bmatrix} y\\\\ 0 \\end{bmatrix} - \\begin{bmatrix}X\\\\\\sqrt{\\lambda}I \\end{bmatrix}w\\Big|\\Big|^2\n\\] i.e.  \\[\n\\Big|\\Big| \\tilde{y} - \\tilde{X}w\\Big|\\Big|^2\n\\] where \\[\\tilde{y} = \\begin{bmatrix} y\\\\ 0 \\end{bmatrix}, \\ \\ \\ \\tilde{X} = \\begin{bmatrix}X\\\\\\sqrt{\\lambda}I \\end{bmatrix}\\] So to solve the penalised linear least squares problem we can solve the standard linear least squares problem in augmented form: \\[\n\\min_w \\Big|\\Big| \\tilde{y} - \\tilde{X}w\\Big|\\Big|^2\n\\]",
+    "crumbs": [
+      "Linear models"
+    ]
+  },
+  {
+    "objectID": "linear_models.html#example-2",
+    "href": "linear_models.html#example-2",
+    "title": "Linear models",
+    "section": "Example",
+    "text": "Example\n\nimport torch\n\n# True parameters\nw_true = torch.tensor([10, 10, 9.81], dtype=torch.float32)\n\n# Design matrix X (m x n), with some data points omitted\nX = torch.tensor([\n    [1.0, 0.1, -0.5 * 0.1**2],\n    [1.0, 2.0, -0.5 * 2.0**2],\n], dtype=torch.float32)\n\n# Observation vector y (m-dimensional)\ny = X @ w_true\n\n# Add normal noise with mean 0 and standard deviation 1.0\ntorch.manual_seed(42)\nnoise = torch.randn(len(y)) * 1.0\ny_noisy = y + noise\n\n# Regularisation parameter (lambda)\nlambda_reg = torch.tensor(0.1, dtype=torch.float32)\n\n# Augment the design matrix and observation vector \nX_aug = (torch.cat([X, torch.sqrt(lambda_reg) * \n            torch.eye(X.shape[1])], dim=0))\ny_aug = torch.cat([y_noisy, torch.zeros(X.shape[1])])\n\n# Solution using least squares with regularisation\nlstsq_result_reg = torch.linalg.lstsq(X_aug, y_aug)\nw_reg = lstsq_result_reg.solution\n\n# Output the regularised solution\nprint(f\"Reg. least squares solution: {w_reg}\")\n\nReg. least squares solution: tensor([10.1896,  0.5805,  0.4094])\n\n\nFitted:\n\n\n\n\n\n\n\n\n\nNote that we have sacrificed some data fit for a ‘simpler solution’. Here the result is not really so good, but the idea of engineering/physics-informed machine learning (that we will see next week) is to penalise towards physical/engineering models at the possible expense of some pure data fitting performance. The idea is that we can generalise beyond the training data in this way.",
+    "crumbs": [
+      "Linear models"
+    ]
+  },
+  {
+    "objectID": "linear_models.html#solving-in-pytorch-with-gradient-descent",
+    "href": "linear_models.html#solving-in-pytorch-with-gradient-descent",
+    "title": "Linear models",
+    "section": "Solving in PyTorch with gradient descent",
+    "text": "Solving in PyTorch with gradient descent\nNothing much is changed in our PyTorch implementation – we just use a different \\(\\lambda\\).\n\n# Solution using gradient descent\nw = torch.zeros(X.shape[1], requires_grad=True)\n\n# Loss function, sum square residuals + penalty\nlam = 0.1 #lambda param: not as small anymore\ndef loss_fn(w):\n    return (torch.norm(y_noisy - X @ w) ** 2 +\n                      lam*torch.norm(w) ** 2)\n\n# Optimizer\nlearning_rate = 0.0005 #had to play with\noptimizer = torch.optim.SGD([w], lr=learning_rate)\n\n# Gradient Descent Loop\nnum_iterations = 10000 #quite large!\nfor i in range(num_iterations):\n    optimizer.zero_grad()\n    loss = loss_fn(w)\n    loss.backward()\n    optimizer.step()\n\n# Create a tensor sharing w's data, without gradient tracking\nw_gd = w.detach()\n\n# Print\nprint(\"\\nUsing Gradient Descent:\")\nprint(w_gd)\nprint(\"\\nTrue:\")\nprint(w_true)\n\n\nUsing Gradient Descent:\ntensor([10.1887,  0.5807,  0.4091])\n\nTrue:\ntensor([10.0000, 10.0000,  9.8100])\n\n\n\n\n\n\n\n\n\n\n\nThe result is very similar to what we found with the specialised solver.",
+    "crumbs": [
+      "Linear models"
+    ]
+  },
+  {
+    "objectID": "linear_models.html#choosing-regularisation-parameter",
+    "href": "linear_models.html#choosing-regularisation-parameter",
+    "title": "Linear models",
+    "section": "Choosing regularisation parameter",
+    "text": "Choosing regularisation parameter\nOne way to choose \\(\\lambda\\) is to fit the model for several values and compare prediction errors on validation data held out when fitting the weights. We choose the value with the lowest validation error. We discuss this approach in the next chapter.",
+    "crumbs": [
+      "Linear models"
     ]
   }
 ]

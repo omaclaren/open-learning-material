@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+
+<html lang="en" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml"><head>
+<meta charset="utf-8"/>
+<meta content="quarto-1.4.549" name="generator"/>
+<meta content="width=device-width, initial-scale=1.0, user-scalable=yes" name="viewport"/>
+<title>EngSci 205: Engineering-Centric Machine Learning - Linear models</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta content="./" name="quarto:offset"/>
+<link href="./vectors_matrices_tensors.html" rel="prev"/>
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet"/>
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" id="quarto-text-highlighting-styles" rel="stylesheet"/>
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet"/>
+<link data-mode="light" href="site_libs/bootstrap/bootstrap.min.css" id="quarto-bootstrap" rel="stylesheet"/>
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+<link href="html-preview.css" rel="stylesheet"/>
+<link href="navigation-preview.css" rel="stylesheet"/><script defer="" src="navigation-preview.js"></script></head>
+<body class="nav-sidebar floating">
+<div id="quarto-search-results"></div>
+<header class="headroom fixed-top" id="quarto-header">
+<nav class="quarto-secondary-nav">
+<div class="container-fluid d-flex">
+<button aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" class="quarto-btn-toggle btn" data-bs-target=".quarto-sidebar-collapse-item" data-bs-toggle="collapse" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }" type="button">
+<i class="bi bi-layout-text-sidebar-reverse"></i>
+</button>
+<nav aria-label="breadcrumb" class="quarto-page-breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./linear_models.html">Week 3: Linear models</a></li></ol></nav>
+<a aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" class="flex-grow-1" data-bs-target=".quarto-sidebar-collapse-item" data-bs-toggle="collapse" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }" role="button">
+</a>
+<button aria-label="" class="btn quarto-search-button" onclick="window.quartoOpenSearch();" type="button">
+<i class="bi bi-search"></i>
+</button>
+</div>
+</nav>
+</header>
+<!-- content -->
+<div class="quarto-container page-columns page-rows-contents page-layout-article" id="quarto-content">
+<!-- sidebar -->
+<nav class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto" id="quarto-sidebar">
+<div class="pt-lg-2 mt-2 text-left sidebar-header">
+<div class="sidebar-title mb-0 py-0">
+<a href="./">ENGSCI 205: Engineering-Centric Machine Learning</a>
+</div>
+</div>
+<div class="mt-2 flex-shrink-0 align-items-center">
+<div class="sidebar-search">
+<div class="" id="quarto-search" title="Search"></div>
+</div>
+</div>
+<div class="sidebar-menu-container">
+<ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./index.html">
+<span class="menu-text">Preface</span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./intro.html">
+<span class="menu-text">Week 1: Key ideas</span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./vectors_matrices_tensors.html">
+<span class="menu-text">Week 2: Tensors and PyTorch</span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link active" href="./linear_models.html">
+<span class="menu-text">Week 3: Linear models</span></a>
+</div>
+</li>
+</ul>
+</div>
+</nav>
+<div class="quarto-sidebar-collapse-item" data-bs-target=".quarto-sidebar-collapse-item" data-bs-toggle="collapse" id="quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+<div class="sidebar margin-sidebar" id="quarto-margin-sidebar">
+<nav class="engsci205-toc" id="TOC" role="doc-toc"><h2 id="toc-title">Table of contents</h2><ul class="toc-groups"><li class="toc-group-item"><details data-sections="title-block-header what-is-a-linear-model linear-models-matrix-form example example-continued"><summary>Linear models and design matrices</summary><ul class="toc-group-links"><li><a data-section="title-block-header" href="#title-block-header">Overview</a></li><li><a data-section="what-is-a-linear-model" href="#what-is-a-linear-model">What is a linear model?</a></li><li><a data-section="linear-models-matrix-form" href="#linear-models-matrix-form">Matrix form</a></li><li><a data-section="example-continued" href="#example-continued">Projectile example</a></li></ul></details></li><li class="toc-group-item"><details data-sections="the-shape-of-linear-models-well--over--and-under-determined-linear-systems the-shape-of-linear-models-well--over--and-under-determined-linear-systems-1"><summary>Tall, square and wide systems</summary><ul class="toc-group-links"><li><a data-section="the-shape-of-linear-models-well--over--and-under-determined-linear-systems" href="#the-shape-of-linear-models-well--over--and-under-determined-linear-systems">Shapes of linear systems</a></li></ul></details></li><li class="toc-group-item"><details data-sections="solving-tall-linear-systems solving-tall-linear-systems-gradient-descent solving-tall-linear-systems-example"><summary>Solving tall systems</summary><ul class="toc-group-links"><li><a data-section="solving-tall-linear-systems" href="#solving-tall-linear-systems">Least squares</a></li><li><a data-section="solving-tall-linear-systems-gradient-descent" href="#solving-tall-linear-systems-gradient-descent">Gradient descent</a></li><li><a data-section="solving-tall-linear-systems-example" href="#solving-tall-linear-systems-example">Least-squares example</a></li></ul></details></li><li class="toc-group-item"><details data-sections="solving-wide-linear-systems solving-linear-systems-in-general example-wide-system"><summary>Wide systems and the pseudoinverse</summary><ul class="toc-group-links"><li><a data-section="solving-wide-linear-systems" href="#solving-wide-linear-systems">Minimum-norm solutions</a></li><li><a data-section="solving-linear-systems-in-general" href="#solving-linear-systems-in-general">The pseudoinverse in general</a></li><li><a data-section="example-wide-system" href="#example-wide-system">Wide-system example</a></li></ul></details></li><li class="toc-group-item"><details data-sections="estimation-and-prediction example-constructing-x-for-prediction example-1"><summary>Estimation and prediction</summary><ul class="toc-group-links"><li><a data-section="estimation-and-prediction" href="#estimation-and-prediction">Estimation and prediction</a></li><li><a data-section="example-constructing-x-for-prediction" href="#example-constructing-x-for-prediction">Design matrix for prediction</a></li></ul></details></li><li class="toc-group-item"><details data-sections="issues regularisation-revisited stacking example-2 solving-in-pytorch-with-gradient-descent choosing-regularisation-parameter"><summary>Regularisation</summary><ul class="toc-group-links"><li><a data-section="issues" href="#issues">Bias and instability</a></li><li><a data-section="regularisation-revisited" href="#regularisation-revisited">Ridge regression</a></li><li><a data-section="stacking" href="#stacking">Stacking</a></li><li><a data-section="solving-in-pytorch-with-gradient-descent" href="#solving-in-pytorch-with-gradient-descent">Penalised gradient descent</a></li><li><a data-section="choosing-regularisation-parameter" href="#choosing-regularisation-parameter">Choosing the regularisation parameter</a></li></ul></details></li></ul></nav>
+</div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Linear models</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Currently (as of 2026), the most exciting class of model in machine learning is undoubtedly the <strong>neural network</strong>. However, it is worth first spending time on a simpler class of model, <strong>linear models</strong>. Why? Firstly, they are more than sufficient for many practical applications, particularly with well-structured, ‘tabular’ data. Linear models are simple yet powerful, well-understood, and easy to ‘train’. While neural networks can provide exceptional performance, particularly on ‘unstructured’ image, video, language, etc. data, they can be challenging and computationally intensive to train. For many engineering and scientific applications, linear models suffice. There are at least two other reasons to consider linear models: 1) neural networks combine many ‘layers’ of what amount to linear models with nonlinear ‘activation functions’, and understanding the linear components aids in understanding the overall model. In fact, for some choices of activation function, neural networks can be thought of roughly as (very large) piecewise linear functions of their inputs. 2) They serve as an easy setting to explore the incorporation of engineering and scientific information in the form of additional <strong>regularisation</strong> terms.</p>
+<section id="what-is-a-linear-model" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-a-linear-model">What is a linear model?</h2>
+<p>What does it mean for a model to be linear? What is it linear in terms of? Generally speaking, the concept of a <strong>linear operation</strong> (or linear <em>operator</em>) is that it maps <strong>linear combinations of vectors</strong> to <strong>linear combinations of the operation applied to each vector</strong>:</p>
+<p><span class="math display">\[\mathcal{L}(a v_1 + b v_2) = a\mathcal{L}(v_1) + b \mathcal{L}(v_2)\]</span> for some linear operation <span class="math inline">\(\mathcal{L}\)</span>, any scalars <span class="math inline">\(a\)</span>, <span class="math inline">\(b\)</span>, and any two vectors <span class="math inline">\(v_1, v_2\)</span> to which <span class="math inline">\(\mathcal{L}\)</span> can be applied (note: I do <em>not</em> bold my vectors!).</p>
+<p>This is quite abstract! More concretely, any (finite-dimensional) linear operator can be <strong>represented by matrix multiplication</strong>. Note, by the rules of linear (matrix) algebra: <span class="math display">\[A(a v_1 + b v_2) = aAv_1 + bAv_2\]</span> so clearly matrix multiplication is linear in this sense. Importantly, in <strong>statistics and machine learning</strong>, the term <strong>linear</strong> usually means <strong>linear in the unknown parameters (weights, coefficients)</strong> of the model.</p>
+<p>This can be shown to mean our <strong>target</strong> <span class="math inline">\(y\)</span> is expressed as a <strong>linear combination</strong> of (potentially nonlinear) <strong>feature vectors</strong> <span class="math inline">\(F_i = f_i(x_i)\)</span>, each of which may be a function of some <strong>raw feature vectors</strong> <span class="math inline">\(x_i\)</span>: <span class="math display">\[
+y \approx F_1 w_1 + F_2 w_2 + \dots + F_n w_n
+\]</span> where <span class="math inline">\(w_i, i = 1,\dots,n\)</span> are the (scalar) model parameters (or weights in neural network terminology).</p>
+<p>To see how we can put this into matrix form, we <span class="math inline">\(\dots\)</span></p>
+</section>
+<section id="linear-models-matrix-form" class="level2">
+<h2 class="anchored" data-anchor-id="linear-models-matrix-form">Linear models: matrix form</h2>
+<p><span class="math inline">\(\dots\)</span> first identify the <span class="math inline">\(m \times n\)</span> feature matrix <span class="math inline">\(F\)</span> as the matrix having <span class="math inline">\(n\)</span> columns, each given an <span class="math inline">\(m\)</span>-dimensional <span class="math inline">\(F_i\)</span>, i.e.: <span class="math display">\[F = \begin{bmatrix}F_1\ \vert &amp; F_2\ \vert &amp; \dots\vert\ F_n\end{bmatrix}\]</span> and collect the weights into a vector <span class="math inline">\(w\)</span> where <span class="math display">\[w = \begin{bmatrix}w_1\\ w_2 \\ \vdots\\ w_n\end{bmatrix} = w_1 e_1 + w_2 e_2 + \dots w_n e_n\]</span> where the <span class="math inline">\(e_i\)</span> are unit vectors with zeros in all entries except the <span class="math inline">\(i\)</span>th, where they are one. <span class="math display">\[Fw = w_1 Fe_1 + w_2 F e_2 + \dots + w_n F e_n = w_1F_1 + w_2 F_2 + \dots + w_n F_n\]</span> where the first equality follows from linearity and the second since <span class="math inline">\(F e_i = F_i\)</span> = the <span class="math inline">\(i\)</span>th column of <span class="math inline">\(F\)</span> (exercise: verify!).</p>
+<p>This actually demonstrates a <strong>very useful alternative (but equivalent) perspective on matrix multiplication in linear algebra: <em>a matrix times a vector is equal to a linear combination of the matrix columns with coefficients given by the vector entries</em></strong>.</p>
+<p>This is all a long way of writing that our linear model takes the form <span class="math display">\[y \approx F w\]</span> for target <span class="math inline">\(y\)</span>, feature matrix <span class="math inline">\(F\)</span>, and vector of parameters (weights) <span class="math inline">\(w\)</span>. The matrix <span class="math inline">\(F\)</span> is often written as <span class="math inline">\(X\)</span> and called the <strong>design matrix</strong>, giving <span class="math display">\[y \approx X w.\]</span></p>
+</section>
+<section id="example" class="level2">
+<h2 class="anchored" data-anchor-id="example">Example</h2>
+<p>Consider the following physics model of a <strong>projectile</strong> launched from a height <span class="math inline">\(h_0\)</span> at velocity <span class="math inline">\(v_0\)</span> subject to gravity but neglecting air resistance: <span class="math display">\[\frac{d^2y}{dt^2} = -g\]</span> with initial conditions <span class="math display">\[
+y(0) = h_0,\ \ \frac{dy}{dt}(0) = v_0.
+\]</span> This has solution <span class="math display">\[
+y = h_0 + v_0t -\frac{g}{2}t^2
+\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figures/projectile.svg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:45.0%"></p>
+</figure>
+</div>
+<p>Now, suppose we observe (potentially noisy) data <span class="math inline">\((t,y)_1, (t,y)_2,\dots, (t,y)_m\)</span> = <span class="math inline">\((t_1,y_1), (t_2,y_2),\dots, (t_m,y_m)\)</span> but <strong>do not know <span class="math inline">\(h_0\)</span>, <span class="math inline">\(v_0\)</span>, or <span class="math inline">\(g\)</span></strong>. The initial height <span class="math inline">\(h_0\)</span> is labelled <span class="math inline">\(y_0\)</span> in the figure.</p>
+<p>To <strong>predict</strong> (using our physics knowledge!) the (unobserved) height <span class="math inline">\(y_{m+1}\)</span> at a new (given) time point <span class="math inline">\(t_{m+1}\)</span> we can do the following:</p>
+<ul>
+<li><p>Determine the parameters <span class="math inline">\(h_0\)</span>, <span class="math inline">\(v_0\)</span> and <span class="math inline">\(g\)</span> in the physics-based model above that best fit the given ‘training’ data.</p></li>
+<li><p>Use these and <span class="math inline">\(t = t_{m+1}\)</span> to predict <span class="math inline">\(y_{m+1}\)</span>.</p></li>
+</ul>
+</section>
+<section id="example-continued" class="level2">
+<h2 class="anchored" data-anchor-id="example-continued">Example continued</h2>
+<p>We can consider our observations as approximate (due to noise) instances of our model: <span class="math display">\[
+\begin{aligned}
+y_1 &amp;\approx h_0 + v_0t_1 -\frac{g}{2}t_1^2\\
+y_2 &amp;\approx h_0 + v_0t_2 -\frac{g}{2}t_2^2\\
+\vdots\\
+y_m &amp;\approx h_0 + v_0t_m -\frac{g}{2}t_m^2.
+\end{aligned}
+\]</span> This can be written in matrix form <span class="math display">\[
+\begin{bmatrix}
+y_1\\
+y_2\\
+\vdots\\
+y_m
+\end{bmatrix}
+\approx
+\begin{bmatrix}
+1 &amp; t_1 &amp; -\frac{1}{2}t_1^2\\
+1 &amp; t_2 &amp; -\frac{1}{2}t_2^2\\
+\vdots&amp;\vdots&amp;\vdots\\
+1 &amp; t_m &amp; -\frac{1}{2}t_m^2
+\end{bmatrix}
+\begin{bmatrix}
+h_0\\v_0\\ g
+\end{bmatrix}
+\]</span> which can be verified either by the usual ‘rows of matrix times column vector’ or ‘linear combination of matrix columns’ interpretations of matrix multiplication.</p>
+<p>Thus <strong>this model is linear in the unknown parameters</strong> <span class="math inline">\(h_0, v_0, g\)</span> and the feature/design matrix has columns that are (potentially) nonlinear functions of the raw feature <span class="math inline">\(t\)</span>.</p>
+</section>
+<section id="the-shape-of-linear-models-well--over--and-under-determined-linear-systems" class="level2">
+<h2 class="anchored" data-anchor-id="the-shape-of-linear-models-well--over--and-under-determined-linear-systems">The shape of linear models: well-, over- and under-determined linear systems</h2>
+<p>In our projectile case we might collect many more than three data points. However, our approximate physics-based solution (neglecting noise) is a quadratic, which requires three data points at distinct times to determine its three parameters. If we have more or fewer than three points our matrix equation will involve a <strong>non-square</strong> matrix! How do we solve this??</p>
+<p>Firstly, note that because we expect there to be some noise in our solution, we only expect the matrix equation to hold approximately. Secondly, there is a well-defined approach to solving non-square systems of equations: <strong>least squares</strong>! Let’s first introduce some terminology, to be discussed in more detail:</p>
+<ul>
+<li><p><strong>Tall</strong> systems (with linearly independent columns…) correspond to the <strong>over-determined</strong>, more-equations-than-unknowns case; a standard solution will not typically exist, but a <strong>least squares</strong> solution will.</p></li>
+<li><p><strong>Wide</strong> systems are <strong>under-determined</strong>, with fewer equations than unknowns. If the rows are linearly independent, there are infinitely many exact solutions for any observation vector <span class="math inline">\(y\)</span>. Among these, there is a unique <strong>least-norm</strong> solution.</p></li>
+<li><p><strong>Square</strong> systems (with linearly independent rows and columns) correspond to a <strong>well-determined</strong> system, same-equations-as-unknowns case; this is <strong>the exception not the norm</strong> in statistics and machine learning!</p></li>
+</ul>
+<p>Graphically, we get <span class="math inline">\(\dots\)</span></p>
+</section>
+<section id="the-shape-of-linear-models-well--over--and-under-determined-linear-systems-1" class="level2">
+<h2 class="anchored" data-anchor-id="the-shape-of-linear-models-well--over--and-under-determined-linear-systems-1">The shape of linear models: well-, over- and under-determined linear systems</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figures/linear-shapes.svg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%"></p>
+</figure>
+</div>
+</section>
+<section id="solving-tall-linear-systems" class="level2">
+<h2 class="anchored" data-anchor-id="solving-tall-linear-systems">Solving tall linear systems</h2>
+<p>The idea of solving a <strong>tall</strong> or over-determined system is, rather than solve it exactly, consider the <strong>residual</strong> <span class="math display">\[r = y - Xw\]</span> and minimise the size of this. We have used <span class="math inline">\(X\)</span> to denote the feature/design matrix. Typically we minimise the <strong>sum of squared residuals</strong>, i.e.&nbsp;the square of the Euclidean (<span class="math inline">\(L_2\)</span>) norm of the <span class="math inline">\(r\)</span> vector <span class="math display">\[
+\min_{w} ||y-Xw||^2.
+\]</span> You may have seen that the solution to this, assuming <span class="math inline">\(X\)</span> has linearly independent columns can be given explicitly by <span class="math display">\[
+w = X^+y = (X^TX)^{-1}X^Ty
+\]</span> where <span class="math inline">\(X^+\)</span> is called the (Moore-Penrose) pseudo-inverse. This gives us a <strong>best approximate solution</strong> in the least-squares sense. If a true inverse exists it will reduce to this (exercise: show this!). Note that <strong>this particular explicit expression for the pseudo-inverse only holds for the tall/square case</strong>, not, e.g., the wide case.</p>
+<p>Packages like NumPy and PyTorch have in-built functions for computing this solution. In PyTorch we can call a <strong>least squares solver</strong> and extract the solution:</p>
+<p><code>w = torch.linalg.lstsq(X, y).solution</code></p>
+<p>or <strong>explicitly compute the pseudoinverse and apply it to the observation vector</strong>:</p>
+<p><code>w = torch.linalg.pinv(X) @ y</code>.</p>
+<p>Both should give the same answer up to rounding errors, but the former is usually the most efficient and stable!</p>
+</section>
+<section id="solving-tall-linear-systems-gradient-descent" class="level2">
+<h2 class="anchored" data-anchor-id="solving-tall-linear-systems-gradient-descent">Solving tall linear systems: gradient descent</h2>
+<p>In PyTorch we can also solve this directly, <em>though much less efficiently compared to specialised linear solvers</em>, by using <strong>gradient descent</strong> optimisation. We’ve mentioned this in the last chapter, and will go into more detail when we discuss neural networks properly, but the figure below gives the general idea:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figures/gradient_descent.svg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%"></p>
+</figure>
+</div>
+<p>Each time we call <code>optimizer.step()</code> in gradient descent, we update the parameters in the <strong>negative gradient direction</strong> of the loss, with the <strong>learning rate</strong> scaling the update. In the examples below, the loss uses all observations, so <code>torch.optim.SGD</code> performs <strong>full-batch gradient descent</strong>. We will discuss stochastic and minibatch updates when we introduce neural networks.</p>
+</section>
+<section id="solving-tall-linear-systems-example" class="level2">
+<h2 class="anchored" data-anchor-id="solving-tall-linear-systems-example">Solving tall linear systems: example</h2>
+<p>Here we compare specialised solver solutions and gradient descent.</p>
+<div id="be35ba23" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># True parameters</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>w_true <span class="op">=</span> torch.tensor([<span class="dv">10</span>,<span class="dv">10</span>,<span class="fl">9.81</span>], dtype<span class="op">=</span>torch.float32)</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Design matrix X (m x n) </span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> torch.tensor([</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">1.0</span>, <span class="fl">0.1</span>, <span class="op">-</span><span class="fl">0.5</span><span class="op">*</span><span class="fl">0.1</span><span class="op">**</span><span class="dv">2</span>],</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">1.0</span>, <span class="fl">0.5</span>, <span class="op">-</span><span class="fl">0.5</span><span class="op">*</span><span class="fl">0.5</span><span class="op">**</span><span class="dv">2</span>],</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">1.0</span>, <span class="fl">0.8</span>, <span class="op">-</span><span class="fl">0.5</span><span class="op">*</span><span class="fl">0.8</span><span class="op">**</span><span class="dv">2</span>],</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="op">-</span><span class="fl">0.5</span><span class="op">*</span><span class="fl">1.0</span><span class="op">**</span><span class="dv">2</span>],</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">1.0</span>, <span class="fl">1.1</span>, <span class="op">-</span><span class="fl">0.5</span><span class="op">*</span><span class="fl">1.1</span><span class="op">**</span><span class="dv">2</span>],</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">1.0</span>, <span class="fl">2.0</span>, <span class="op">-</span><span class="fl">0.5</span><span class="op">*</span><span class="fl">2.0</span><span class="op">**</span><span class="dv">2</span>],</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>], dtype<span class="op">=</span>torch.float32)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Observation vector y (m-dimensional)</span></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> X<span class="op">@</span>w_true</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="co"># Add normal noise with mean 0 and standard deviation 1.0</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(<span class="dv">42</span>)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>noise <span class="op">=</span> torch.randn(<span class="bu">len</span>(y)) <span class="op">*</span> <span class="fl">1.0</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>y_noisy <span class="op">=</span> y <span class="op">+</span> noise</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Solution using lstsq</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>lstsq_result <span class="op">=</span> torch.linalg.lstsq(X, y_noisy)</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>w_lstsq <span class="op">=</span> lstsq_result.solution</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Solution using pseudoinverse</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>w_pinv <span class="op">=</span> torch.linalg.pinv(X) <span class="op">@</span> y_noisy</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a><span class="co"># Solution using gradient descent</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>w <span class="op">=</span> torch.zeros(X.shape[<span class="dv">1</span>], requires_grad<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="co"># Loss function, sum square residuals</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> loss_fn(w):</span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> torch.norm(y_noisy <span class="op">-</span> X <span class="op">@</span> w) <span class="op">**</span> <span class="dv">2</span>  </span>
+<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a><span class="co"># Optimizer</span></span>
+<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>learning_rate <span class="op">=</span> <span class="fl">0.005</span> <span class="co">#had to play with</span></span>
+<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a>optimizer <span class="op">=</span> torch.optim.SGD([w], lr<span class="op">=</span>learning_rate)</span>
+<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a><span class="co"># Gradient Descent Loop</span></span>
+<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>num_iterations <span class="op">=</span> <span class="dv">10000</span> <span class="co">#quite large!</span></span>
+<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(num_iterations):</span>
+<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>    optimizer.zero_grad()</span>
+<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>    loss <span class="op">=</span> loss_fn(w)</span>
+<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a>    loss.backward()</span>
+<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>    optimizer.step()</span>
+<span id="cb1-48"><a href="#cb1-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-49"><a href="#cb1-49" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a tensor sharing w's data, without gradient tracking</span></span>
+<span id="cb1-50"><a href="#cb1-50" aria-hidden="true" tabindex="-1"></a>w_gd <span class="op">=</span> w.detach()</span>
+<span id="cb1-51"><a href="#cb1-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-52"><a href="#cb1-52" aria-hidden="true" tabindex="-1"></a><span class="co"># Comparison</span></span>
+<span id="cb1-53"><a href="#cb1-53" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Using torch.linalg.lstsq:"</span>)</span>
+<span id="cb1-54"><a href="#cb1-54" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(w_lstsq)</span>
+<span id="cb1-55"><a href="#cb1-55" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Using torch.linalg.pinv:"</span>)</span>
+<span id="cb1-56"><a href="#cb1-56" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(w_pinv)</span>
+<span id="cb1-57"><a href="#cb1-57" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Using Gradient Descent:"</span>)</span>
+<span id="cb1-58"><a href="#cb1-58" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(w_gd)</span>
+<span id="cb1-59"><a href="#cb1-59" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">True:"</span>)</span>
+<span id="cb1-60"><a href="#cb1-60" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(w_true)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Using torch.linalg.lstsq:
+tensor([10.5745,  8.7996,  9.0290])
+
+Using torch.linalg.pinv:
+tensor([10.5745,  8.7996,  9.0290])
+
+Using Gradient Descent:
+tensor([10.5747,  8.7990,  9.0285])
+
+True:
+tensor([10.0000, 10.0000,  9.8100])</code></pre>
+</div>
+</div>
+<p>Note: the gradient descent solution is very dependent on the learning rate and number of iterations (which needs to be quite large here!), even for such a simple problem. It is not generally a good idea to use this for such a simple problem, but turns out it is a more generalisable approach for more complex problems.</p>
+<p>There are also many sophisticated tricks and different optimisers we can use in PyTorch. Here we have used the simplest naive approach.</p>
+</section>
+<section id="solving-wide-linear-systems" class="level2">
+<h2 class="anchored" data-anchor-id="solving-wide-linear-systems">Solving wide linear systems</h2>
+<p>In the <strong>wide</strong> or under-determined case there will typically be many solutions to our linear system. One approach to obtaining a unique solution is to take the ‘smallest’ solution in the least squares sense, i.e.&nbsp;solve <span class="math display">\[
+\min_w ||w||^2
+\]</span> subject to <span class="math display">\[w\text{ is a solution to } y=Xw\]</span> The idea is <strong>among the possible solutions</strong> to the main equations, we choose the <strong>smallest</strong> one, i.e.&nbsp;the one closest to zero in terms of Euclidean distance (<span class="math inline">\(L_2\)</span> norm).</p>
+<p>When the rows of <span class="math inline">\(X\)</span> are linearly independent we can obtain the explicit solution <span class="math display">\[
+w = X^+y = X^T(XX^T)^{-1}y.
+\]</span> Note that we again have the (Moore-Penrose) pseudo-inverse, but that this now has a different expression for wide systems.</p>
+<p><code>torch.linalg.pinv(X)</code> returns the pseudoinverse matrix <span class="math inline">\(X^+\)</span>. The corresponding fitted weights are <span class="math inline">\(w=X^+y\)</span>, which we can compute directly using <code>torch.linalg.lstsq(X, y).solution</code>. More <strong>generally</strong> (regardless of whether tall or wide or conditions on linear independence), the pseudoinverse solution solves the <strong>two stage optimisation problem</strong></p>
+<p><span class="math display">\[
+\min_w ||w||^2
+\]</span> subject to <span class="math display">\[w\text{ is a solution to } \min_w ||y-Xw||^2\]</span> Now the idea is that <strong>among the (possibly approximate!) least squares solutions, we choose the one with minimum norm.</strong></p>
+<p>This idea is <strong>automatically</strong> implemented in <code>torch.linalg.lstsq</code> and <code>torch.linalg.pinv</code>. In contrast, formulating these ideas as a simple gradient descent problem is <strong>harder</strong> in general. Let’s look at an approximate approach!</p>
+</section>
+<section id="solving-linear-systems-in-general" class="level2">
+<h2 class="anchored" data-anchor-id="solving-linear-systems-in-general">Solving linear systems in general</h2>
+<p>As mentioned, the Moore-Penrose pseudo-inverse can be used to solve linear systems in general, whether tall, wide, or square. This pseudo-inverse can be characterised either in terms of a two-stage optimisation problem or a set of four algebraic equations.</p>
+<p>Though beyond the scope of this course, the algebraic characterisation is that the pseudo-inverse of <span class="math inline">\(X\)</span>, <span class="math inline">\(X^+\)</span> should satisfy <span class="math display">\[
+\begin{aligned}
+XX^+X = X\\
+X^+XX^+ = X^+\\
+(X^+X)^T = X^+X\\
+(XX^+)^T = XX^+
+\end{aligned}
+\]</span></p>
+<p>Alternatively, to implement the two-stage optimisation idea approximately, we can instead solve <span class="math display">\[
+\min_w ||y-Xw||^2 + \lambda ||w||^2
+\]</span> for a <em>small</em> <strong>regularisation parameter</strong> <span class="math inline">\(\lambda\)</span>. We minimise the data-fit term and weight penalty together. As <span class="math inline">\(\lambda\to0^+\)</span>, the solution approaches the minimum-norm least-squares solution <span class="math inline">\(w=X^+y\)</span>, which can still leave a large residual if the model cannot represent the data well. However, non-zero <span class="math inline">\(\lambda\)</span> can in general have a non-trivial – and even good! – effect on the solution. </p>
+</section>
+<section id="example-wide-system" class="level2">
+<h2 class="anchored" data-anchor-id="example-wide-system">Example wide system</h2>
+<div id="a2d5dd87" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># True parameters</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>w_true <span class="op">=</span> torch.tensor([<span class="dv">10</span>,<span class="dv">10</span>,<span class="fl">9.81</span>], dtype<span class="op">=</span>torch.float32)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Design matrix X (m x n), dropping some data points</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> torch.tensor([</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">1.0</span>, <span class="fl">0.1</span>, <span class="op">-</span><span class="fl">0.5</span><span class="op">*</span><span class="fl">0.1</span><span class="op">**</span><span class="dv">2</span>],</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">1.0</span>, <span class="fl">2.0</span>, <span class="op">-</span><span class="fl">0.5</span><span class="op">*</span><span class="fl">2.0</span><span class="op">**</span><span class="dv">2</span>],</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>], dtype<span class="op">=</span>torch.float32)</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Observation vector y (m-dimensional)</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> X<span class="op">@</span>w_true</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Add normal noise with mean 0 and standard deviation 1.0</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(<span class="dv">42</span>)</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>noise <span class="op">=</span> torch.randn(<span class="bu">len</span>(y)) <span class="op">*</span> <span class="fl">1.0</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>y_noisy <span class="op">=</span> y <span class="op">+</span> noise</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Solution using lstsq</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>lstsq_result <span class="op">=</span> torch.linalg.lstsq(X, y_noisy)</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>w_lstsq <span class="op">=</span> lstsq_result.solution</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Solution using pseudoinverse</span></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>w_pinv <span class="op">=</span> torch.linalg.pinv(X) <span class="op">@</span> y_noisy</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a><span class="co"># Solution using gradient descent</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>w <span class="op">=</span> torch.zeros(X.shape[<span class="dv">1</span>], requires_grad<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a><span class="co"># Loss function, sum square residuals + penalty</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>lam <span class="op">=</span> <span class="fl">0.00001</span> <span class="co">#lambda param: made it up!</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> loss_fn(w):</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> (torch.norm(y_noisy <span class="op">-</span> X <span class="op">@</span> w) <span class="op">**</span> <span class="dv">2</span> <span class="op">+</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>                      lam<span class="op">*</span>torch.norm(w) <span class="op">**</span> <span class="dv">2</span>)</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a><span class="co"># Optimizer</span></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>learning_rate <span class="op">=</span> <span class="fl">0.0005</span> <span class="co">#had to play with</span></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>optimizer <span class="op">=</span> torch.optim.SGD([w], lr<span class="op">=</span>learning_rate)</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a><span class="co"># Gradient Descent Loop</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>num_iterations <span class="op">=</span> <span class="dv">10000</span> <span class="co">#quite large!</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(num_iterations):</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>    optimizer.zero_grad()</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>    loss <span class="op">=</span> loss_fn(w)</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>    loss.backward()</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>    optimizer.step()</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a tensor sharing w's data, without gradient tracking</span></span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>w_gd <span class="op">=</span> w.detach()</span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a><span class="co"># Comparison</span></span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Using torch.linalg.lstsq:"</span>)</span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(w_lstsq)</span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Using torch.linalg.pinv:"</span>)</span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(w_pinv)</span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Using Gradient Descent:"</span>)</span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(w_gd)</span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">True:"</span>)</span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(w_true)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Using torch.linalg.lstsq:
+tensor([11.2546,  0.3671,  0.7400])
+
+Using torch.linalg.pinv:
+tensor([11.2546,  0.3671,  0.7400])
+
+Using Gradient Descent:
+tensor([11.2520,  0.3677,  0.7391])
+
+True:
+tensor([10.0000, 10.0000,  9.8100])</code></pre>
+</div>
+</div>
+<p>The solutions are quite a lot worse for the wide system than for the tall system (relative to the true values), as you might expect from having less data to inform our estimates, though they are very close to each other. This latter fact means we have (apparently) successfully implemented the pseudo-inverse using gradient descent (for this case and this choice of parameters…)</p>
+<p><strong>Side note:</strong> <em>In many cases, the <strong>optimiser</strong> itself favours ‘simple’ or small solutions without an explicit penalty in the loss. This is called <strong>implicit regularisation</strong>. If we set <span class="math inline">\(\lambda=0\)</span> in this linear least-squares example, gradient descent starting from zero approaches the minimum-norm solution, provided the learning rate is small enough for convergence. Try it here! In more general settings, the bias depends on the model and training procedure, including choices such as initialisation and early stopping. We look at implicit regularisation in more detail in ENGSCI 721. However, in our case we are interested in how to <strong>introduce explicit regularisation</strong> and <strong>control</strong> the types of bias introduced, so here we include it.</em></p>
+<p>But how well have we fit the (two!) data points? </p>
+</section>
+<section id="estimation-and-prediction" class="level2">
+<h2 class="anchored" data-anchor-id="estimation-and-prediction">Estimation and prediction</h2>
+<p>As mentioned, in order to <strong>predict</strong> for a new time point using our linear model, we <em>first</em> solve for the estimated parameters (weights), and <em>then</em> propagate these forward to our desired prediction. For a linear model this corresponds to evaluating the value of the new row <span class="math display">\[y_{m+1} = x_{m+1}^T\hat{w}\]</span> where <span class="math inline">\(x^T\)</span> is a new row vector of feature values at the time point for the prediction, generated according to the same recipe used to construct <span class="math inline">\(X\)</span> at the training points, and now we plug-in the estimate <span class="math inline">\(\hat{w} = X^+y\)</span>. For example, for the projectile we have <span class="math display">\[
+\begin{bmatrix}
+y_{m+1}
+\end{bmatrix}
+\approx
+\begin{bmatrix}
+1 &amp; t_{m+1} &amp; -\frac{1}{2}t_{m+1}^2\\
+\end{bmatrix}
+\begin{bmatrix}
+\hat{h}_0\\\hat{v}_0\\ \hat{g}
+\end{bmatrix}
+\]</span> We can also consider the ‘fitted’ (within sample prediction) values of <span class="math inline">\(y\)</span>. For a tall system this gives <span class="math display">\[\hat{y} = X\hat{w} = XX^+y = Hy\]</span> Here the matrix <span class="math inline">\(H = XX^+\)</span> is called the ‘hat’ matrix and it is a ‘projection’ matrix in data space. Projection matrices are defined by <span class="math inline">\(HH = H\)</span>, i.e.&nbsp;applying them twice does the same thing as applying them once. It is called the ‘hat matrix’ because it ‘puts the hat on’ <span class="math inline">\(y\)</span>. You can think of it as a ‘smoothing’ matrix that maps noisy observations to fitted values. For predictions at ‘in-between’ or ‘out-of-sample’ time points, we keep <span class="math inline">\(\hat{w}\)</span> fixed and construct new design-matrix rows at those times.</p>
+<p>Let’s consider an example! We will use the weight vectors computed using linear least squares in both the tall and wide cases.</p>
+</section>
+<section id="example-constructing-x-for-prediction" class="level2">
+<h2 class="anchored" data-anchor-id="example-constructing-x-for-prediction">Example: constructing <span class="math inline">\(X\)</span> for prediction</h2>
+<p>The following function allows us to construct a design matrix to make predictions at any point of interest:</p>
+<div id="b50e8926" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> prediction_design_matrix(t_rows):</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># make columns separately</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    one_col <span class="op">=</span> torch.ones(t_rows.shape[<span class="dv">0</span>], <span class="dv">1</span>)  </span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    time_col <span class="op">=</span> t_rows.view(<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>)       </span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    quad_col <span class="op">=</span> <span class="op">-</span><span class="fl">0.5</span> <span class="op">*</span> (t_rows <span class="op">**</span> <span class="dv">2</span>).view(<span class="op">-</span><span class="dv">1</span>, <span class="dv">1</span>)  </span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Concatenate the columns to form the design matrix</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    X <span class="op">=</span> torch.cat([one_col, time_col, quad_col], dim<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> X</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Using this in the tall and wide cases, respectively, gives <span class="math inline">\(\dots\)</span></p>
+</section>
+<section id="example-1" class="level2">
+<h2 class="anchored" data-anchor-id="example-1">Example</h2>
+<p><strong>Tall:</strong></p>
+<div id="0b6545a7" class="cell" data-execution_count="5">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="linear_models_files/figure-html/cell-6-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong>Wide:</strong></p>
+<div id="e83a6a4e" class="cell" data-execution_count="7">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="linear_models_files/figure-html/cell-8-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="issues" class="level2">
+<h2 class="anchored" data-anchor-id="issues">Issues</h2>
+<p>It seems we have a general approach to estimating and predicting with linear models! Unfortunately, however, we have an issue: in the <strong>wide-system</strong> case, our parameter estimates, and often our predictions too, can be <strong>very biased and also unstable</strong> due to the small amount of data and large number of possible approximate solutions that fit the data.</p>
+<p>Importantly, large, <strong>deep neural networks</strong> and related modern machine learning models are <strong>analogous to wide systems</strong>: we have <strong>very many (sometimes billions!) of parameters/weights</strong> to estimate from (typically) comparably less data.</p>
+<p>As discussed, some form of ‘bias’ in the general sense is essentially <strong>necessary</strong> to make predictions from the data, particularly in the ‘wide’ setting.</p>
+<p>However, here our bias is of one particular form – could we do better? And does the amount of bias required relate to the amount of data we have? And can we better choose the bias to get more stable solutions?</p>
+</section>
+<section id="regularisation-revisited" class="level2">
+<h2 class="anchored" data-anchor-id="regularisation-revisited">Regularisation revisited</h2>
+<p>An interesting approach to further stabilising solutions is to <strong>not</strong> target the <span class="math inline">\(\lambda \rightarrow 0\)</span> limit (at least for finite amounts of data), and instead choose a non-zero value that provides <strong>additional penalisation</strong> towards <span class="math inline">\(w = 0\)</span>, i.e.&nbsp;we <strong>sacrifice some fit to the data</strong> in order to get a less variable solution. In statistics this idea is sometimes called the ‘bias-variance’ trade-off: often, we can deliberately introduce bias in order to ‘reduce the variance’ of our solutions, i.e.&nbsp;increase their stability (see ENGSCI 760 and ENGSCI 721).</p>
+<p>Thus we solve <span class="math display">\[
+\min_w ||y-Xw||^2 + \lambda ||w||^2
+\]</span> for some other choice of <span class="math inline">\(\lambda\)</span>, not necessarily as small as possible.</p>
+<p>This particular form of a linear model plus penalty of this type is often called <strong>ridge regression</strong> in statistics and machine learning. It’s referred to as (a type of) <strong>Tikhonov regularisation</strong> in <strong>inverse problems</strong> (see ENGSCI 721).</p>
+<p>We will look at methods for choosing <span class="math inline">\(\lambda\)</span> shortly. First, let’s look at how, for <em>linear</em> models, we can implement this efficiently when we want to use <code>torch.linalg.lstsq</code> or <code>torch.linalg.pinv</code> rather than direct gradient descent.</p>
+</section>
+<section id="stacking" class="level2">
+<h2 class="anchored" data-anchor-id="stacking">Stacking</h2>
+<p>Consider the squared Euclidean norm (<span class="math inline">\(L_2\)</span> norm) of some vector <span class="math inline">\(x\)</span>: <span class="math display">\[||x||^2 = \Big|\Big|\begin{bmatrix}x_1\\x_2\\\vdots\\x_n\end{bmatrix}\Big|\Big|^2 = x_1^2 + x_2^2 + \dots + x_n^2.\]</span></p>
+<p>Note that we can partition <span class="math inline">\(x\)</span> into subvectors <span class="math inline">\(y, z\)</span> and write <span class="math inline">\(x\)</span> in terms of <strong>stacked</strong> vectors <span class="math display">\[||x||^2 = \Big|\Big|\begin{bmatrix} y\\ z\end{bmatrix}\Big|\Big|^2 = ||y||^2 + ||z||^2\]</span></p>
+<p>In our case, this means we can write <span class="math display">\[
+||y-Xw||^2 + \lambda ||w||^2 = \Big|\Big|\begin{bmatrix} y-Xw\\ \sqrt{\lambda}w\end{bmatrix}\Big|\Big|^2
+\]</span> We can further write the right-hand side as the <strong>augmented</strong> system <span class="math display">\[
+\Big|\Big|\begin{bmatrix} y-Xw\\ \sqrt{\lambda}w\end{bmatrix}\Big|\Big|^2 = \Big|\Big|\begin{bmatrix} y\\ 0 \end{bmatrix} - \begin{bmatrix}X\\\sqrt{\lambda}I \end{bmatrix}w\Big|\Big|^2
+\]</span> i.e.&nbsp; <span class="math display">\[
+\Big|\Big| \tilde{y} - \tilde{X}w\Big|\Big|^2
+\]</span> where <span class="math display">\[\tilde{y} = \begin{bmatrix} y\\ 0 \end{bmatrix}, \ \ \ \tilde{X} = \begin{bmatrix}X\\\sqrt{\lambda}I \end{bmatrix}\]</span> So to solve the penalised linear least squares problem we can solve the standard linear least squares problem in <strong>augmented</strong> form: <span class="math display">\[
+\min_w \Big|\Big| \tilde{y} - \tilde{X}w\Big|\Big|^2
+\]</span></p>
+</section>
+<section id="example-2" class="level2">
+<h2 class="anchored" data-anchor-id="example-2">Example</h2>
+<div id="6577700b" class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># True parameters</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>w_true <span class="op">=</span> torch.tensor([<span class="dv">10</span>, <span class="dv">10</span>, <span class="fl">9.81</span>], dtype<span class="op">=</span>torch.float32)</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Design matrix X (m x n), with some data points omitted</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> torch.tensor([</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">1.0</span>, <span class="fl">0.1</span>, <span class="op">-</span><span class="fl">0.5</span> <span class="op">*</span> <span class="fl">0.1</span><span class="op">**</span><span class="dv">2</span>],</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">1.0</span>, <span class="fl">2.0</span>, <span class="op">-</span><span class="fl">0.5</span> <span class="op">*</span> <span class="fl">2.0</span><span class="op">**</span><span class="dv">2</span>],</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>], dtype<span class="op">=</span>torch.float32)</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Observation vector y (m-dimensional)</span></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> X <span class="op">@</span> w_true</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Add normal noise with mean 0 and standard deviation 1.0</span></span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(<span class="dv">42</span>)</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>noise <span class="op">=</span> torch.randn(<span class="bu">len</span>(y)) <span class="op">*</span> <span class="fl">1.0</span></span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>y_noisy <span class="op">=</span> y <span class="op">+</span> noise</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Regularisation parameter (lambda)</span></span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>lambda_reg <span class="op">=</span> torch.tensor(<span class="fl">0.1</span>, dtype<span class="op">=</span>torch.float32)</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a><span class="co"># Augment the design matrix and observation vector </span></span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>X_aug <span class="op">=</span> (torch.cat([X, torch.sqrt(lambda_reg) <span class="op">*</span> </span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>            torch.eye(X.shape[<span class="dv">1</span>])], dim<span class="op">=</span><span class="dv">0</span>))</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>y_aug <span class="op">=</span> torch.cat([y_noisy, torch.zeros(X.shape[<span class="dv">1</span>])])</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a><span class="co"># Solution using least squares with regularisation</span></span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>lstsq_result_reg <span class="op">=</span> torch.linalg.lstsq(X_aug, y_aug)</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>w_reg <span class="op">=</span> lstsq_result_reg.solution</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a><span class="co"># Output the regularised solution</span></span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Reg. least squares solution: </span><span class="sc">{</span>w_reg<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Reg. least squares solution: tensor([10.1896,  0.5805,  0.4094])</code></pre>
+</div>
+</div>
+<p>Fitted:</p>
+<div id="8e9eaa21" class="cell" data-execution_count="9">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="linear_models_files/figure-html/cell-10-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Note that we have sacrificed some data fit for a ‘simpler solution’. Here the result is not really so good, but the idea of engineering/physics-informed machine learning (that we will see next week) is to <strong>penalise towards physical/engineering models at the possible expense of some pure data fitting performance</strong>. The idea is that we can generalise <strong>beyond</strong> the training data in this way. </p>
+</section>
+<section id="solving-in-pytorch-with-gradient-descent" class="level2">
+<h2 class="anchored" data-anchor-id="solving-in-pytorch-with-gradient-descent">Solving in PyTorch with gradient descent</h2>
+<p>Nothing much is changed in our PyTorch implementation – we just use a different <span class="math inline">\(\lambda\)</span>.</p>
+<div id="565756ec" class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Solution using gradient descent</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>w <span class="op">=</span> torch.zeros(X.shape[<span class="dv">1</span>], requires_grad<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Loss function, sum square residuals + penalty</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>lam <span class="op">=</span> <span class="fl">0.1</span> <span class="co">#lambda param: not as small anymore</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> loss_fn(w):</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> (torch.norm(y_noisy <span class="op">-</span> X <span class="op">@</span> w) <span class="op">**</span> <span class="dv">2</span> <span class="op">+</span></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>                      lam<span class="op">*</span>torch.norm(w) <span class="op">**</span> <span class="dv">2</span>)</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Optimizer</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>learning_rate <span class="op">=</span> <span class="fl">0.0005</span> <span class="co">#had to play with</span></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>optimizer <span class="op">=</span> torch.optim.SGD([w], lr<span class="op">=</span>learning_rate)</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Gradient Descent Loop</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>num_iterations <span class="op">=</span> <span class="dv">10000</span> <span class="co">#quite large!</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(num_iterations):</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>    optimizer.zero_grad()</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>    loss <span class="op">=</span> loss_fn(w)</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    loss.backward()</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    optimizer.step()</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a tensor sharing w's data, without gradient tracking</span></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>w_gd <span class="op">=</span> w.detach()</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Print</span></span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">Using Gradient Descent:"</span>)</span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(w_gd)</span>
+<span id="cb8-28"><a href="#cb8-28" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"</span><span class="ch">\n</span><span class="st">True:"</span>)</span>
+<span id="cb8-29"><a href="#cb8-29" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(w_true)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Using Gradient Descent:
+tensor([10.1887,  0.5807,  0.4091])
+
+True:
+tensor([10.0000, 10.0000,  9.8100])</code></pre>
+</div>
+</div>
+<div id="d1440c3e" class="cell" data-execution_count="11">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="linear_models_files/figure-html/cell-12-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The result is very similar to what we found with the specialised solver.</p>
+</section>
+<section id="choosing-regularisation-parameter" class="level2">
+<h2 class="anchored" data-anchor-id="choosing-regularisation-parameter">Choosing regularisation parameter</h2>
+<p>One way to choose <span class="math inline">\(\lambda\)</span> is to fit the model for several values and compare prediction errors on <strong>validation data</strong> held out when fitting the weights. We choose the value with the lowest validation error. We discuss this approach in the next chapter.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+<div class="nav-page nav-page-previous">
+<a arrays,="" class="pagination-link aria-label=" href="./vectors_matrices_tensors.html" matrices,="" tensors"="" vectors,="">
+<i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Week 2: Tensors and PyTorch</span>
+</a>
+</div>
+<div class="nav-page nav-page-next">
+</div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+<div class="nav-footer">
+<div class="nav-footer-left">
+<p>ENGSCI 205 — Weeks 1–3 notes.</p>
+</div>
+<div class="nav-footer-center">
+       
+    </div>
+<div class="nav-footer-right">
+<p><a href="downloads/EML-Week-01.pdf">Week 1 PDF</a> · <a href="downloads/EML-Week-02.pdf">Week 2 PDF</a> · <a href="downloads/EML-Week-03.pdf">Week 3 PDF</a></p>
+</div>
+</div>
+</footer>
+</body></html>
