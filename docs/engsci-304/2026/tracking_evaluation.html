@@ -782,15 +782,15 @@ Figure&nbsp;12.1: Box IoU and the Jaccard detection score. Left: the IoU of two 
 </figcaption>
 </figure>
 </div>
-<p>To see how HOTA’s association score works, start with a box match between G1 and T1. HOTA compares <strong>all G1 annotation boxes with all T1 prediction boxes across the sequence</strong>, including frames where they do not match. In our eight-frame toy example:</p>
+<p>To see how HOTA’s association score works, start with a box match between G1 and T1. HOTA compares <strong>all G1 annotation boxes with all T1 prediction boxes across the sequence</strong>, including frames where they do not match. In our eight-frame toy example, the counts for this player–track pair are:</p>
 <ul>
-<li>Frames 1, 3, 4, 6 and 8 give five correct box matches.</li>
-<li>G1’s annotations in frames 2, 5 and 7 have no matching T1 prediction: three false negatives for this comparison.</li>
-<li>T1’s predictions in frames 2 and 7 are around the black player, so they have no matching G1 annotation: two false positives for this comparison.</li>
+<li>Frames 1, 3, 4, 6 and 8 give five correct box matches, called <strong>true positive associations</strong> (<span class="math inline">\(\mathrm{TPA}=5\)</span>).</li>
+<li>G1’s annotations in frames 2, 5 and 7 have no matching T1 prediction: three <strong>false negative associations</strong> (<span class="math inline">\(\mathrm{FNA}=3\)</span>).</li>
+<li>T1’s predictions in frames 2 and 7 are around the black player, so they have no matching G1 annotation: two <strong>false positive associations</strong> (<span class="math inline">\(\mathrm{FPA}=2\)</span>).</li>
 </ul>
-<p>We divide the number of matches by the matches plus both kinds of unmatched box. This gives the association score</p>
+<p>We divide the number of matches by the matches plus both kinds of unmatched box. This gives the association score, which is also a Jaccard index:</p>
 <p><span class="math display">\[
-\text{G1–T1 association score}=\frac{5}{5+3+2}=0.5.
+\text{G1–T1 association score}=\frac{\mathrm{TPA}}{\mathrm{TPA}+\mathrm{FNA}+\mathrm{FPA}}=\frac{5}{5+3+2}=0.5.
 \]</span></p>
 <div id="tracking-hota-g1-t1" class="tracking-metric-visual timeline">
 <table class="table">
@@ -1755,16 +1755,16 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <span id="cb1-231"><a href="#cb1-231" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-232"><a href="#cb1-232" aria-hidden="true" tabindex="-1"></a><span class="al">![Box IoU and the Jaccard detection score. Left: the IoU of two boxes divides their shared area by the area they cover together. Right: after matching, the 14 matched pairs form the intersection; adding the one unmatched prediction and two unmatched annotations gives a union of 17 items.](&lt;attachments/tracking/iou-jaccard-illustration.svg&gt;)</span>{#fig-tracking-iou-jaccard width=100% fig-alt="Left: two overlapping boxes; their shared area is the intersection and all coloured area is the union. Right: 14 matched pairs form the intersection, with one unmatched prediction and two unmatched annotations, giving 17 items in the union."}</span>
 <span id="cb1-233"><a href="#cb1-233" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-234"><a href="#cb1-234" aria-hidden="true" tabindex="-1"></a>To see how HOTA's association score works, start with a box match between G1 and T1. HOTA compares **all G1 annotation boxes with all T1 prediction boxes across the sequence**, including frames where they do not match. In our eight-frame toy example:</span>
+<span id="cb1-234"><a href="#cb1-234" aria-hidden="true" tabindex="-1"></a>To see how HOTA's association score works, start with a box match between G1 and T1. HOTA compares **all G1 annotation boxes with all T1 prediction boxes across the sequence**, including frames where they do not match. In our eight-frame toy example, the counts for this player–track pair are:</span>
 <span id="cb1-235"><a href="#cb1-235" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-236"><a href="#cb1-236" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Frames 1, 3, 4, 6 and 8 give five correct box matches.</span>
-<span id="cb1-237"><a href="#cb1-237" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>G1's annotations in frames 2, 5 and 7 have no matching T1 prediction: three false negatives for this comparison.</span>
-<span id="cb1-238"><a href="#cb1-238" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>T1's predictions in frames 2 and 7 are around the black player, so they have no matching G1 annotation: two false positives for this comparison.</span>
+<span id="cb1-236"><a href="#cb1-236" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Frames 1, 3, 4, 6 and 8 give five correct box matches, called **true positive associations** ($\mathrm{TPA}=5$).</span>
+<span id="cb1-237"><a href="#cb1-237" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>G1's annotations in frames 2, 5 and 7 have no matching T1 prediction: three **false negative associations** ($\mathrm{FNA}=3$).</span>
+<span id="cb1-238"><a href="#cb1-238" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>T1's predictions in frames 2 and 7 are around the black player, so they have no matching G1 annotation: two **false positive associations** ($\mathrm{FPA}=2$).</span>
 <span id="cb1-239"><a href="#cb1-239" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-240"><a href="#cb1-240" aria-hidden="true" tabindex="-1"></a>We divide the number of matches by the matches plus both kinds of unmatched box. This gives the association score</span>
+<span id="cb1-240"><a href="#cb1-240" aria-hidden="true" tabindex="-1"></a>We divide the number of matches by the matches plus both kinds of unmatched box. This gives the association score, which is also a Jaccard index:</span>
 <span id="cb1-241"><a href="#cb1-241" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-242"><a href="#cb1-242" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb1-243"><a href="#cb1-243" aria-hidden="true" tabindex="-1"></a>\text{G1–T1 association score}=\frac{5}{5+3+2}=0.5.</span>
+<span id="cb1-243"><a href="#cb1-243" aria-hidden="true" tabindex="-1"></a>\text{G1–T1 association score}=\frac{\mathrm{TPA}}{\mathrm{TPA}+\mathrm{FNA}+\mathrm{FPA}}=\frac{5}{5+3+2}=0.5.</span>
 <span id="cb1-244"><a href="#cb1-244" aria-hidden="true" tabindex="-1"></a>$$</span>
 <span id="cb1-245"><a href="#cb1-245" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-246"><a href="#cb1-246" aria-hidden="true" tabindex="-1"></a>::: {#tracking-hota-g1-t1 .tracking-metric-visual .timeline}</span>
