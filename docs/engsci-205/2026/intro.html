@@ -499,7 +499,13 @@ y(t) \approx F(y(t-1),y(t-2))
 </section>
 <section id="extrapolation-problem-simple-autoregressive-model-1" class="level2">
 <h2 class="anchored" data-anchor-id="extrapolation-problem-simple-autoregressive-model-1">Extrapolation problem: simple autoregressive model</h2>
-<p>In an autoregressive approach of order <span class="math inline">\(k\)</span> with <span class="math inline">\(m\)</span> realisations of our primary variable, we effectively have a smaple size of <span class="math inline">\(m-k\)</span>, i.e.&nbsp;the number of ‘(past, present)’ pairs in the data. E.g. for <span class="math inline">\(m=6\)</span> and <span class="math inline">\(k=2\)</span> we get four pairs: <img src="figures/auto.svg" class="img-fluid quarto-figure quarto-figure-center"> To carry out autoregression, we simply construct a target vector of present values, dropping the first <span class="math inline">\(k\)</span>, and <strong>delay feature vectors</strong>, each lagging the target vector by one additional increment.</p>
+<p>In an autoregressive approach of order <span class="math inline">\(k\)</span> with <span class="math inline">\(m\)</span> realisations of our primary variable, we effectively have a sample size of <span class="math inline">\(m-k\)</span>, i.e.&nbsp;the number of ‘(past, present)’ pairs in the data. E.g. for <span class="math inline">\(m=6\)</span> and <span class="math inline">\(k=2\)</span> we get four pairs:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figures/auto.svg" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+<p>To carry out autoregression, we simply construct a target vector of present values, dropping the first <span class="math inline">\(k\)</span>, and <strong>delay feature vectors</strong>, each lagging the target vector by one additional increment.</p>
 <p>E.g. <span class="math inline">\(\dots\)</span></p>
 </section>
 <section id="manual-lagged-features" class="level2">
@@ -577,7 +583,12 @@ A = \begin{bmatrix} a &amp; b\\1 &amp; 0
 </section>
 <section id="features-vs-architecture-vs-regularisation" class="level2">
 <h2 class="anchored" data-anchor-id="features-vs-architecture-vs-regularisation">Features vs architecture vs regularisation</h2>
-<p>In machine learning, people often talk about ‘inductive bias’ and related types of <strong>good</strong>, or at least <strong>necessary biases</strong>. E.g., from Karniadakis et. al (2021): <img src="figures/bias-extended.png" class="img-fluid quarto-figure quarto-figure-center" style="width:70.0%"></p>
+<p>In machine learning, people often talk about ‘inductive bias’ and related types of <strong>good</strong>, or at least <strong>necessary biases</strong>. E.g., from Karniadakis et. al (2021):</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figures/bias-extended.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
+</figure>
+</div>
 </section>
 <section id="regularisation-and-hybrid-models" class="level2">
 <h2 class="anchored" data-anchor-id="regularisation-and-hybrid-models">Regularisation and hybrid models</h2>
