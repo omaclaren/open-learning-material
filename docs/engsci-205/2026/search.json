@@ -768,5 +768,235 @@
     "crumbs": [
       "Linear models"
     ]
+  },
+  {
+    "objectID": "hybrid_linear.html",
+    "href": "hybrid_linear.html",
+    "title": "Hybrid models",
+    "section": "",
+    "text": "Linear data models: Using basis functions\nWe have already considered linear models in the previous section. As discussed there, linear models represent the response variable as a linear combination of columns of the design or feature matrix: \\[y \\approx Xw\\] for response vector \\(y\\), design matrix \\(X\\), and weight (parameter) vector \\(w\\).\nWhen dealing with dynamic, continuous-time physical systems it can be useful to use pre-chosen smooth functions as our features. When expanding our response as a linear combination of such functions we often refer to these as basis functions (as in e.g., Fourier series): \\[\ny(t) \\approx \\sum_{j=1}^n b_j(t)w_j.\n\\] Although these functions can in principle be evaluated for any time point, we typically assume we have a discrete set of observation times \\(t_i, i=1,\\dots,m\\). This leads to a system, defined at the observations, in the same form as our design matrix expression: \\[\ny \\approx Bw\n\\] where \\(y_i = y(t_i)\\), \\(w\\) is the weight vector with \\(j\\)th entry \\(w_j\\), and the \\(j\\)th column of \\(B\\) is a vector with entires \\(b_j(t_i)\\). That is, here our design matrix is \\(X = B\\).\nWe will consider an example of such basis functions shortly. Firstly, however, we need to consider two different ‘time grids’ of interest.",
+    "crumbs": [
+      "Hybrid models"
+    ]
+  },
+  {
+    "objectID": "hybrid_linear.html#underlying-time-grid-vs.-observation-time-grid",
+    "href": "hybrid_linear.html#underlying-time-grid-vs.-observation-time-grid",
+    "title": "Hybrid models",
+    "section": "Underlying time grid vs. observation time grid",
+    "text": "Underlying time grid vs. observation time grid\nIf we are dealing with a dynamic physical system it is often reasonable to suppose the underlying dynamics are either continuous in time or at least defined for a fine time grid that is finer than our observation time grid (similar ideas apply for spatial/spatiotemporal systems). For example, the underlying dynamics might be solved with an ODE solver that discretises time into a grid of \\(p\\) points. In contrast, we may only have actual data observations of the system at \\(m \\ll p\\) points. The observation grid may or may not be regular. See the figure below.\n\n\n\n\n\nWhen considering physics-based regularisation, it can be useful to introduce both grids explicitly, along with a linear mapping between them, represented by an observation matrix (or an observation operator).",
+    "crumbs": [
+      "Hybrid models"
+    ]
+  },
+  {
+    "objectID": "hybrid_linear.html#observation-matrix",
+    "href": "hybrid_linear.html#observation-matrix",
+    "title": "Hybrid models",
+    "section": "Observation matrix",
+    "text": "Observation matrix\nConsider a standard basis vector (not to be confused with our basis functions above!): \\[\ne_j = \\begin{bmatrix}0\\\\0\\\\ \\vdots\\\\1\\\\0\\\\ \\vdots\\\\0\\end{bmatrix} \\leftarrow j\\text{th entry}.\n\\] The effect of multiplying an \\(m\\) by \\(n\\) matrix \\(M\\) by \\(e^T_j\\) on the left is \\[\ne^T_j M = \\text{row}_j(M)\n\\] i.e. it picks out the \\(j\\)th row of \\(M\\). (Note: multiplying by \\(e_j\\) on the right picks out the \\(j\\)th column – recall the ‘linear combination of columns’ interpretation of matrix multiplication).\nIf we recall that, for design matrices, each row corresponds to an observation, we can model the process of taking a ‘coarser’ set of observations of a vector \\(y\\) defined on a fine time grid by \\[\ny_{\\text{obs}} = A_{\\text{obs}}y\n\\] where \\(y_{\\text{obs}}\\) is the vector of observed points and \\(A_{\\text{obs}}\\) is the ‘observation matrix’ that has a row \\(e^T_j\\) for any grid point \\(j\\) that we have an observation for.\nExample? Example!",
+    "crumbs": [
+      "Hybrid models"
+    ]
+  },
+  {
+    "objectID": "hybrid_linear.html#observation-matrix-example",
+    "href": "hybrid_linear.html#observation-matrix-example",
+    "title": "Hybrid models",
+    "section": "Observation matrix example",
+    "text": "Observation matrix example\n\nimport torch\ny = torch.arange(10,20, dtype=torch.float32)\nobs_indices = [0,4,9]\nA_obs = torch.eye(len(y),dtype=torch.float32)[obs_indices]\ny_obs = A_obs@y\nprint('Fine-scale y:')\nprint(y)\nprint('\\n')\nprint('Observation matrix:')\nprint(A_obs)\nprint('\\n')\nprint('Observed y:')\nprint(y_obs)\n\nFine-scale y:\ntensor([10., 11., 12., 13., 14., 15., 16., 17., 18., 19.])\n\n\nObservation matrix:\ntensor([[1., 0., 0., 0., 0., 0., 0., 0., 0., 0.],\n        [0., 0., 0., 0., 1., 0., 0., 0., 0., 0.],\n        [0., 0., 0., 0., 0., 0., 0., 0., 0., 1.]])\n\n\nObserved y:\ntensor([10., 14., 19.])",
+    "crumbs": [
+      "Hybrid models"
+    ]
+  },
+  {
+    "objectID": "hybrid_linear.html#observation-matrix-and-basisfeature-matrix",
+    "href": "hybrid_linear.html#observation-matrix-and-basisfeature-matrix",
+    "title": "Hybrid models",
+    "section": "Observation matrix and basis/feature matrix",
+    "text": "Observation matrix and basis/feature matrix\nIf our underlying fine-grid variable \\(y\\) is modelled as a finely-discretised basis function expansion \\[\ny \\approx Bw,\n\\] we can model our coarse-grid observations as \\[\ny_{\\text{obs}} = A_{\\text{obs}}y \\approx A_{\\text{obs}}Bw = B_{\\text{obs}}w\n\\] where \\(B_{\\text{obs}} = A_{\\text{obs}}B\\) is the matrix containing the basis functions evaluated at the observation points. That is, \\(A_{\\text{obs}}\\) picks out the rows of the matrix \\(B\\) corresponding to observations, just like it does with vectors.\nWhether or not we explicitly model the two different time grids depends on the application.\nFor standard, ‘pure’ data modelling we usually work with \\(B_{\\text{obs}}\\) directly and don’t worry about introducing an explicit observation matrix; however, when introducing a theory/physics/engineering-based model as well, we usually want to enforce this model on the fine-time grid rather than just the coarse observation grid.\nThe basic idea is that we typically assume theory-based model holds at all time points, not just those we’ve observed. This allows us to provide predictions for, or constraints on model behaviour at, points we haven’t observed. Of course, sometimes we take the grids to be the same for simplicity.",
+    "crumbs": [
+      "Hybrid models"
+    ]
+  },
+  {
+    "objectID": "hybrid_linear.html#example",
+    "href": "hybrid_linear.html#example",
+    "title": "Hybrid models",
+    "section": "Example",
+    "text": "Example\nSuppose our \\(B\\) matrix consists of two columns, \\(\\sin(t)\\) and \\(\\sin(2t)\\), evaluated on a fine time grid \\(t_i\\), of points between \\(t_1 = 0\\) and \\(t_p=12\\), for \\(p=100\\). This means \\(B\\) has 100 rows and 2 columns. Then, suppose we take as observations every 10th point, starting from the first, giving 10 observation indices.\n\nimport matplotlib.pyplot as plt\nt = torch.linspace(0,12,100, dtype=torch.float32)\nB = torch.stack([torch.sin(t),torch.sin(2*t)],dim=1)\nw = torch.tensor([2,3],dtype=torch.float32) # arbitrary choice\ny = B@w\nobs_indices = torch.arange(0,100,10, dtype=torch.int)\nA_obs = torch.eye(len(y),dtype=torch.float32)[obs_indices]\nt_obs = A_obs@t\ny_obs = A_obs@y # = A_obs@B@w\n\n\n\n\n\n\n\n\n\n\nHere red squares indicate the observed data points and blue dots (including at red square locations) indicate the ‘fine’ time grid points.",
+    "crumbs": [
+      "Hybrid models"
+    ]
+  },
+  {
+    "objectID": "hybrid_linear.html#b-spline-basis-functions",
+    "href": "hybrid_linear.html#b-spline-basis-functions",
+    "title": "Hybrid models",
+    "section": "B-Spline basis functions",
+    "text": "B-Spline basis functions\nWe can represent a range of smooth functions of time with splines, i.e. piecewise polynomials defined by various conditions such as the degree of the polynomials used and the properties at the ‘join’ points, where these join points are called knots. To construct a spline we can use basis functions; here we will use so-called B-Spline basis functions. For this course we don’t need to know much about these other than how to obtain them from a Python library. However the following facts may be useful:\n\nAny spline of made up of degree \\(d\\) polynomials (\\(d\\) being the highest power of the component polynomials) can be represented as a linear combination of B-Splines of the same degree.\n\nSplines are defined by the degree of the polynomials and the location of the internal knots where the polynomials join. The term ‘knot’ refers to internal knots in general (i.e. excluding boundary points).\n\nAt (non-repeated) knots the spline has \\(d-1\\) continuous derivatives. E.g. for a piecewise linear spline, i.e. \\(d=1\\), the first derivative is not continuous at the knots, though the value (‘zeroth derivative’) is (\\(d-1=0\\) if \\(d=1\\)).\n\nMany libraries for constructing spline bases take the polynomial degree and either the knot locations or a parameter called ‘degrees of freedom’, \\(\\nu\\). With the Patsy settings used below, setting df to \\(\\nu\\) gives \\(\\nu\\) spline columns, excluding the separately added constant. The number of internal knots is \\(\\nu-d\\). If their locations are unspecified, Patsy uses equally spaced quantiles of the supplied time values; these need not be equally spaced in time.\n\nMany libraries for constructing the ‘design matrices’ – matrices with basis functions as columns – automatically add a constant vector of all ones. We can explicitly add it with statistical formulae such as ‘1 \\(+\\) basis functions’, or remove it with formulae like ‘basis functions \\(-\\) 1’.",
+    "crumbs": [
+      "Hybrid models"
+    ]
+  },
+  {
+    "objectID": "hybrid_linear.html#b-spline-basis-functions-1",
+    "href": "hybrid_linear.html#b-spline-basis-functions-1",
+    "title": "Hybrid models",
+    "section": "B-Spline basis functions",
+    "text": "B-Spline basis functions\nMany languages such as R, Python, MATLAB, Julia etc have B-Splines available. Below is an example of how to obtain B-Spline bases of different sizes, along with an intercept/constant term, using the Python library Patsy. This is installed in Google Colab by default.\n\n# Four cubic basis functions \n# number of implied knots = 4-3 = 1, \n# as well as one constant function. \n# Number of columns of B is 4 + 1 = 5.\nfrom patsy import dmatrices, dmatrix\n# time grid\nt = torch.linspace(0., 5., 1000)\n# design matrix as tensor\nB1 = torch.tensor(\n    dmatrix(\"1 + bs(t, df=4, degree=3)\", {\"t\": t}))\n\n# Six cubic basis functions, \n# number of implied knots = 6-3 = 3, \n# as well as one constant function. \n# Number of columns of B is 6 + 1 = 7.\nB2 = torch.tensor(\n    dmatrix(\"1+bs(t, df=6, degree=3)\", {\"t\": t}))\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nprint(B1.shape)\nprint(B2.shape)\n\ntorch.Size([1000, 5])\ntorch.Size([1000, 7])",
+    "crumbs": [
+      "Hybrid models"
+    ]
+  },
+  {
+    "objectID": "hybrid_linear.html#example-fit",
+    "href": "hybrid_linear.html#example-fit",
+    "title": "Hybrid models",
+    "section": "Example fit",
+    "text": "Example fit\nSuppose our true data is a coarse, and noisy version of our sin combination used above. Let’s fit a B-Spline basis to it with linear least squares. First generate data:\n\nt = torch.linspace(0,12,100, dtype=torch.float32)\nB = torch.stack([torch.sin(t),torch.sin(2*t)],dim=1)\nw = torch.tensor([2,3],dtype=torch.float32)\ny = B@w \n# observation matrix for observed points\nobs_indices = torch.arange(0,100,10, dtype=torch.int)\nA_obs = torch.eye(len(y),dtype=torch.float32)[obs_indices]\n# noise\ntorch.manual_seed(44)\nnoise = torch.randn(A_obs.shape[0]) * 0.5\n# extract at observation points and add noise\ny_obs = A_obs@y + noise\nt_obs = A_obs@t",
+    "crumbs": [
+      "Hybrid models"
+    ]
+  },
+  {
+    "objectID": "hybrid_linear.html#example-fit-1",
+    "href": "hybrid_linear.html#example-fit-1",
+    "title": "Hybrid models",
+    "section": "Example fit",
+    "text": "Example fit\nNow, let’s fit a spline basis to the data.\n\n# 15 cubic basis functions, \n# number of implied knots = 15-3 = 12, \n# as well as one constant function. \n# Number of columns of B is 15 + 1 = 16.\nB = torch.tensor(\n    dmatrix(\"1+bs(t, df=15, degree=3)\", {\"t\": t}),\n    dtype=torch.float32)\n\n# Solution using lstsq. \n# We need to include A_obs as that's how we got the data\nlstsq_result = torch.linalg.lstsq(A_obs@B, y_obs)\nw_lstsq = lstsq_result.solution\n\n# We can then get the implied fit on the fine time grid \ny_fitted = B@w_lstsq\n\n\nplt.plot(t_obs,y_obs,'ro',label='obs')\nplt.plot(t,y,'b',label='fine scale')\nplt.plot(t,y_fitted,'r',label='fitted')\nplt.xlabel(r'$t$',fontsize=16)\nplt.ylabel(r'$y$',fontsize=16)\nplt.legend()\nplt.show()\n\n\n\n\n\n\n\n\nNote the red shows both the observed data points and the implied fitted model. We typically don’t observe the blue directly and the red curve is an estimate of the true blue curve. Here the B-Spline basis does a reasonable job given the data is both noisy and relatively sparse.\nThis model is a pure data model. There is no physics or engineering knowledge as such (other than smoothness). It also requires choosing a number of basis functions – not too many, not too few.\nHow can we include physical information? One way is \\(\\dots\\)",
+    "crumbs": [
+      "Hybrid models"
+    ]
+  },
+  {
+    "objectID": "hybrid_linear.html#derivative-matrices",
+    "href": "hybrid_linear.html#derivative-matrices",
+    "title": "Hybrid models",
+    "section": "Derivative matrices",
+    "text": "Derivative matrices\nSuppose we want to include physics- or engineering-based knowledge in the form of approximately-enforced differential equations into a data model like a spline basis approximation. We can represent derivatives on our fine time grid by using finite difference matrices. These map a vector defined on a fine grid (e.g. of points in time or space) to a new vector of derivatives of the input vector. For example: \\[D =\n\\frac{1}{\\Delta t}\\begin{bmatrix}-1 & 1& 0& 0& 0& \\ldots\\\\\n0& -1& 1& 0& 0& \\ldots\\\\\n\\vdots & \\vdots& \\vdots& \\vdots& \\vdots& \\vdots\\\\\n0 & 0 & \\ldots & 0& -1& 1 \\end{bmatrix}\\] Note that for a vector \\(y\\) containing values \\(y_1, y_2, \\dots, y_m\\) we have \\[Dy = \\frac{1}{\\Delta t}\\begin{bmatrix}y_2 - y_1\\\\y_3-y_2\\\\\\vdots\\\\y_m -y_{m-1}\\end{bmatrix} = \\begin{bmatrix}\\frac{y_2 - y_1}{\\Delta t}\\\\\\frac{y_3 - y_2}{\\Delta t}\\\\\\vdots\\\\\\frac{y_m - y_{m-1}}{\\Delta t}\\end{bmatrix} \\] which is a vector that contains backward difference approximations to the derivative at all time points starting from the second time point.\nThe vector here has dimension of one less than the input vector, which corresponds to the idea that a first order differential equation usually needs to be supplemented by an additional initial condition, and hence an additional entry in the vector. This is not so important here as the data will play the role of initial conditions.\nWe can define second and third (etc) order derivative matrices similarly, and can also obtain these by (carefully) multiplying the first derivative matrix by itself the corresponding number of times (we need to be careful of initial/boundary conditions and dimensions as usual). This represents repeated differentiation. We usually lose one row per application of the first derivative matrix, just as e.g. a second-order differential equation requires two initial/boundary conditions.",
+    "crumbs": [
+      "Hybrid models"
+    ]
+  },
+  {
+    "objectID": "hybrid_linear.html#example-1",
+    "href": "hybrid_linear.html#example-1",
+    "title": "Hybrid models",
+    "section": "Example",
+    "text": "Example\n\nt = torch.linspace(0,12,100, dtype=torch.float32)\ndt = t[1]-t[0]; N = len(t)\ny = torch.sin(t)\nD = torch.zeros(N-1, N)\n# Use 'fancy indexing' to assign values to diagonals\nD[torch.arange(0, N-1), torch.arange(0, N-1)] = -1/dt\nD[torch.arange(0, N-1), torch.arange(1, N)] = 1/dt\nprint(D*dt) #multiply by dt to get difference matrix part\n\ntensor([[-1.,  1.,  0.,  ...,  0.,  0.,  0.],\n        [ 0., -1.,  1.,  ...,  0.,  0.,  0.],\n        [ 0.,  0., -1.,  ...,  0.,  0.,  0.],\n        ...,\n        [ 0.,  0.,  0.,  ...,  1.,  0.,  0.],\n        [ 0.,  0.,  0.,  ..., -1.,  1.,  0.],\n        [ 0.,  0.,  0.,  ...,  0., -1.,  1.]])",
+    "crumbs": [
+      "Hybrid models"
+    ]
+  },
+  {
+    "objectID": "hybrid_linear.html#higher-derivative-matrices-example",
+    "href": "hybrid_linear.html#higher-derivative-matrices-example",
+    "title": "Hybrid models",
+    "section": "Higher derivative matrices: example",
+    "text": "Higher derivative matrices: example\n\n# first derivative, backward diff\nprint(D*dt)\n# second derivative, backward diff\nprint(D[1:,1:]@D*dt**2)\n# third derivative, backward diff\nprint(D[2:,2:]@D[1:,1:]@D*dt**3)\n\ntensor([[-1.,  1.,  0.,  ...,  0.,  0.,  0.],\n        [ 0., -1.,  1.,  ...,  0.,  0.,  0.],\n        [ 0.,  0., -1.,  ...,  0.,  0.,  0.],\n        ...,\n        [ 0.,  0.,  0.,  ...,  1.,  0.,  0.],\n        [ 0.,  0.,  0.,  ..., -1.,  1.,  0.],\n        [ 0.,  0.,  0.,  ...,  0., -1.,  1.]])\ntensor([[ 1., -2.,  1.,  ...,  0.,  0.,  0.],\n        [ 0.,  1., -2.,  ...,  0.,  0.,  0.],\n        [ 0.,  0.,  1.,  ...,  0.,  0.,  0.],\n        ...,\n        [ 0.,  0.,  0.,  ...,  1.,  0.,  0.],\n        [ 0.,  0.,  0.,  ..., -2.,  1.,  0.],\n        [ 0.,  0.,  0.,  ...,  1., -2.,  1.]])\ntensor([[-1.0000,  3.0000, -3.0000,  ...,  0.0000,  0.0000,  0.0000],\n        [ 0.0000, -1.0000,  3.0000,  ...,  0.0000,  0.0000,  0.0000],\n        [ 0.0000,  0.0000, -1.0000,  ...,  0.0000,  0.0000,  0.0000],\n        ...,\n        [ 0.0000,  0.0000,  0.0000,  ...,  1.0000,  0.0000,  0.0000],\n        [ 0.0000,  0.0000,  0.0000,  ..., -3.0000,  1.0000,  0.0000],\n        [ 0.0000,  0.0000,  0.0000,  ...,  3.0000, -3.0000,  1.0000]])",
+    "crumbs": [
+      "Hybrid models"
+    ]
+  },
+  {
+    "objectID": "hybrid_linear.html#including-derivatives-in-a-linear-model",
+    "href": "hybrid_linear.html#including-derivatives-in-a-linear-model",
+    "title": "Hybrid models",
+    "section": "Including derivatives in a linear model",
+    "text": "Including derivatives in a linear model\nGiven a simple differential equation \\[\\frac{dy}{dt} = 0,\\] this can be approximated by \\[Dy = DBw = 0\\] where \\(D\\) is the first-order derivative matrix, \\(B\\) is a basis matrix (e.g. B-Splines) and \\(w\\) is the vector of unknown parameters (weights), assuming \\(y \\approx Bw\\).\nRather than try to solve this exactly, we can now modify our least squares data loss function to take the form: \\[\n\\min_w ||y_{\\text{obs}} - A_{\\text{obs}}Bw||^2 + \\lambda ||DBw||^2.\n\\] where \\(A_{\\text{obs}}\\) is our observation matrix, \\(y_{\\text{obs}}\\) the observed data, and \\(\\lambda\\) is a regularisation (or penalty) parameter determining how strongly to enforce the differential equation. Higher \\(\\lambda\\) means higher penalty on deviations from \\(Dy = 0\\) and so the model is enforced more strongly; lower \\(\\lambda\\) works in the opposite direction, allowing the ‘pure data model’ to dominate the fitting.\nThe same idea generalises to higher-order differential equations by simply taking \\(D\\) to be a higher-order derivative matrix.\nNotes:\n- We have previously solved essentially this exact problem in the last section. Here the design matrix is \\(X = A_{\\text{obs}}B\\) and there is a penalty on \\(w\\) as before, except now the \\(w\\) in the penalty term is weighted by \\(DB\\). This is a minor difference that makes no real difference to implementation!\n- We can use a simple difference matrix and absorb the time-step scaling into the regularisation parameter. For a first-order derivative matrix \\(D\\), set \\(\\hat{D} = (\\Delta t)D\\). Since the penalty uses a squared norm, the equivalent coefficient is \\(\\hat{\\lambda} = \\lambda/(\\Delta t)^2\\). More generally, for an \\(r\\)th-order derivative, use \\(\\hat{D}_r = (\\Delta t)^r D_r\\) and \\(\\hat{\\lambda} = \\lambda/(\\Delta t)^{2r}\\).\nLet’s look at how to ‘stack and solve’ these problems!",
+    "crumbs": [
+      "Hybrid models"
+    ]
+  },
+  {
+    "objectID": "hybrid_linear.html#stacking",
+    "href": "hybrid_linear.html#stacking",
+    "title": "Hybrid models",
+    "section": "Stacking",
+    "text": "Stacking\nFollowing the ideas of the previous section, we can write \\[\n||y_{\\text{obs}}-A_{\\text{obs}}Bw||^2 + \\lambda ||DBw||^2 = \\Big|\\Big|\\begin{bmatrix} y_{\\text{obs}}-A_{\\text{obs}}Bw\\\\ \\sqrt{\\lambda}DBw\\end{bmatrix}\\Big|\\Big|^2\n\\] We can further write the right-hand side as the augmented system \\[\n\\Big|\\Big|\\begin{bmatrix} y_{\\text{obs}}-A_{\\text{obs}}Bw\\\\ \\sqrt{\\lambda}DBw\\end{bmatrix}\\Big|\\Big|^2 = \\Big|\\Big|\\begin{bmatrix} y_{\\text{obs}}\\\\ 0 \\end{bmatrix} - \\begin{bmatrix}A_{\\text{obs}}B\\\\\\sqrt{\\lambda}DB \\end{bmatrix}w\\Big|\\Big|^2\n\\] where \\(0\\) is a (sub)vector of zeros with length equal to the number of rows of \\(D\\). This gives a linear system of the form: \\[\n\\Big|\\Big| \\tilde{y} - \\tilde{X}w\\Big|\\Big|^2\n\\] where \\[\\tilde{y} = \\begin{bmatrix} y_{\\text{obs}}\\\\ 0 \\end{bmatrix}, \\ \\ \\ \\tilde{X} = \\begin{bmatrix}A_{\\text{obs}}B\\\\\\sqrt{\\lambda}DB \\end{bmatrix}\\] So to solve the penalised linear least squares problem we can solve the standard linear least squares problem in augmented form: \\[\n\\min_w \\Big|\\Big| \\tilde{y} - \\tilde{X}w\\Big|\\Big|^2\n\\] just as before!\nNotes:\n- This approach works for differential equations giving the discrete form \\(Dy = 0,\\), \\(Dy = \\text{constant}\\), or \\(Dy = Ay\\), for \\(D\\) an abitrary derivative matrix and \\(A\\) a known matrix.\n- Differential equations of the form \\(Dy = f(y)\\) lead to nonlinear systems of equations in this approach; if \\(A\\) is unknown then this is true even for \\(f(y) = Ay\\).\n- We can sometimes differentiate the system more times to get our equation in the desired form, however.",
+    "crumbs": [
+      "Hybrid models"
+    ]
+  },
+  {
+    "objectID": "hybrid_linear.html#example-2",
+    "href": "hybrid_linear.html#example-2",
+    "title": "Hybrid models",
+    "section": "Example",
+    "text": "Example\nConsider our projectile problem with observed data as shown:\n\n\n\n\n\n\n\n\n\nWe can fit a spline + ODE model by writing our ODE \\[\n\\frac{d^2y}{dt^2} = -g\n\\] as \\[\n\\frac{d^3y}{dt^3} = 0\n\\] which treats \\(g\\) as unknown. We can implement this as follows\\(\\dots\\)",
+    "crumbs": [
+      "Hybrid models"
+    ]
+  },
+  {
+    "objectID": "hybrid_linear.html#example-continued",
+    "href": "hybrid_linear.html#example-continued",
+    "title": "Hybrid models",
+    "section": "Example continued",
+    "text": "Example continued\n\nt_grid = torch.linspace(0,2.5,100)\nN = len(t_grid)\n# spline basis. Can use lots when have diff. eqn!\nB = torch.tensor(\n    dmatrix(\"1+bs(t, df=30, degree=3)\", {\"t\": t_grid}),\n    dtype=torch.float32)\n\n# observation matrix for observed points\nobs_indices = torch.arange(0,100,10, dtype=torch.int)\nA_obs = torch.eye(len(t_grid),dtype=torch.float32)[obs_indices]\n\n# first derivative matrix\nD = torch.zeros(N-1, N)\n# Use 'fancy indexing' to assign values to diagonals\nD[torch.arange(0, N-1), torch.arange(0, N-1)] = -1\nD[torch.arange(0, N-1), torch.arange(1, N)] = 1\n# get third difference matrix\nD3 = D[2:,2:]@D[1:,1:]@D\n\n# Augment the design matrix and observation vector \nlambda_reg = torch.tensor(1e5, dtype=torch.float32)\nX_aug = (torch.cat([A_obs@B, torch.sqrt(lambda_reg) * \n            D3@B], dim=0))\ny_aug = torch.cat([y_data, torch.zeros(D3.shape[0])])\n\n# solve\nlstsq_result = torch.linalg.lstsq(X_aug, y_aug)\nw_lstsq = lstsq_result.solution\n\n# Get the implied fit on the fine time grid \ny_fitted = B@w_lstsq",
+    "crumbs": [
+      "Hybrid models"
+    ]
+  },
+  {
+    "objectID": "hybrid_linear.html#example-continued-1",
+    "href": "hybrid_linear.html#example-continued-1",
+    "title": "Hybrid models",
+    "section": "Example continued",
+    "text": "Example continued\n\n\n\n\n\n\n\n\n\nCompare this to the pure spline fit with the same number of basis functions:",
+    "crumbs": [
+      "Hybrid models"
+    ]
+  },
+  {
+    "objectID": "hybrid_linear.html#notes",
+    "href": "hybrid_linear.html#notes",
+    "title": "Hybrid models",
+    "section": "Notes",
+    "text": "Notes\nNote that\n\nThe pure spline fit fits the training data better (it interpolates it), but fits the (unseen) test data worse.\nIn contrast, the ODE-penalised fit fits the training data worse but generalises to unseen data better.\n\nThis is a common phenomenon! For this and related reasons, statisticians and modellers have traditionally advised against exactly fitting the training data in the name of avoiding overfitting.\nHowever, the main concern is not so much having ‘too good’ of a fit to the training data, rather the concern that this may not be representative of the ability to fit the test data.\nOne of the more surprising observations of modern machine learning is there are models that exactly fit the training data and yet generalise well to new data. One perspective on this is that away from data points the regularisation or structural assumptions dominate, and that it is possible to both fit the training data well and generalise well, if we also have good regularisation/structural assumptions.\nIn the present course, however, we will typically see the traditional wisdom – of sacrificing some fit to the training data in order to get better fit to unseen data – hold up.\nThis relates to the topic of\\(\\dots\\)",
+    "crumbs": [
+      "Hybrid models"
+    ]
+  },
+  {
+    "objectID": "hybrid_linear.html#choosing-regularisation-parameters",
+    "href": "hybrid_linear.html#choosing-regularisation-parameters",
+    "title": "Hybrid models",
+    "section": "Choosing regularisation parameters",
+    "text": "Choosing regularisation parameters\nSo far we have pre-specified the regularisation parameter. In both the pseudo-inverse and physics-informed cases we have general guidelines for setting this: for the pseudo-inverse we set it to be ‘small but not zero’. For a physics model we set it to be ‘large’ if we think the model is correct. What about in general? Can we use the data to determine a ‘good’ value?\nOne issue is that \\(\\lambda\\) controls the ability to fit unseen data: it involves a loss term evaluated at points other than the training data (e.g. the fine time scale). If we fit its value based just on the training data, and the data model component is capable of fitting the training data exactly, the optimal value will be zero (why?)!\nA strategy around this, is to set regularisation/generalisation/hyperparameters like \\(\\lambda\\) based on the ability of the fitted model to predict data it wasn’t trained on. The simplest way to do this is to split our original training dataset into a smaller training data subset and a non-overlapping validation subset (you will have seen this idea already!). We fit the model on the training subset for various \\(\\lambda\\) values and use these models to predict the unfitted validation set. We use the \\(\\lambda\\) value that leads to the best predicting model. This mimics the process of fitting a model to training data and evaluating on test data, and hence provides information about ‘generalisation’ ability (under assumptions such as exchangeable or IID data, however!).\nThis approach falls under the umbrella of the family of techniques known as cross-validation. More sophisticated variations of cross-validation, such as \\(k\\)-fold cross-validation, repeatedly split the training data into training and validation data subsets and assess the average performance on the validation sets. Note that we typically still have a third, separate test set that we don’t see until the final model, including hyperparameters, is developed.\nOther approaches, popular in inverse problems (see ENGSCI 721), include L-curves and discrepancy principles.\n\nData splitting for choosing \\(\\lambda\\)\nThe same splitting schemes from the first half of the course apply here. The figure below compares a single training/validation split with five-fold cross-validation for choosing \\(\\lambda\\). We then consider how to form the splits to reflect the prediction task, including preserving subgroup proportions and using past and present observations to predict future values.\n\n\n\n\n\n\n\nFigure 1: As indicated in the figure, we use the training data to determine the weights for each candidate \\(\\lambda\\) (within-model inference), and the validation data to determine which \\(\\lambda\\) to use (model selection). We then keep the chosen \\(\\lambda\\) fixed and refit the weights using all the training and validation data, before evaluating the fitted model on the test set.\n\n\n\n\nKeeping subgroup proportions similar\nWe can form stratified folds so that chosen categories or subgroups appear in approximately the same proportions as in the data being split. Suppose we are predicting property prices from 100 sales: 80 detached houses and 20 apartments. A stratified five-fold split could put 16 houses and 4 apartments in each fold, so that we calculate validation errors on data with the same mixture of property types as the original dataset.\nThere is no universally best way to stratify, and the choice depends on the target population we wish to predict for and the type of prediction task we want to assess. Keeping subgroup proportions similar can make validation scores less sensitive to the particular split. However, when we interpret those scores as performance on the target population, we are assuming that our sample is representative. For example, our 80:20 mixture of houses and apartments might have arisen partly by chance and differ from the population we want to predict for. In this case, our validation scores would give more or less weight to the prediction errors for apartments vs. houses than they would in a more representative sample.\n\n\nPredicting future values\nThe figure below compares predicting new cases from the same population with predicting future values from earlier observations.\n\n\n\n\n\n\nFigure 2: For new cases, we fit using the blue observations and evaluate predictions on the held-out orange observations. For future prediction, we fit using observations available at the cutoff and evaluate predictions at later times. When choosing \\(\\lambda\\), we repeat the fitting and prediction for each candidate value and compare these validation errors.\n\n\n\nWhile a random or stratified split can suit independent observations from the same population, for time-series prediction we often want to represent the ‘online’ nature of the task, where we only have access to past and present observations when predicting the future. We therefore fit using earlier observations and validate at later times. In Lab 4, we use the held-out later part of the reference trajectory to choose \\(\\lambda\\). This explicitly checks our ability to predict beyond the fitting interval into the future, whereas withholding points within that interval can test interpolation or smoothing using observations on both sides.\nWe can repeat the early/later split as new observations become available. In rolling-origin evaluation, we move the prediction cutoff forward, refit using the observations then available, and predict the next interval. The figure below shows an expanding training window, with the same prediction horizon at each step.\n\n\n\n\n\n\nFigure 3: At each cutoff, we fit using the blue observations and predict the following orange interval. After those outcomes become available, we evaluate the predictions, advance the cutoff and refit. Observations used for validation in an earlier row can then be used for fitting in a later row. Grey blocks lie beyond the prediction interval for that row.\n\n\n\nLater fits in this scheme use more observations. The errors can change both because we have more training data and because we are predicting a different part of the series. Averaging the errors summarises performance across these cutoffs, rather than the performance of one final fit using all available observations.\nTo compare candidate \\(\\lambda\\) values, we use the same cutoffs and prediction horizon for every candidate and choose \\(\\lambda\\) using the average validation error. We choose the first cutoff so that there are enough earlier observations to fit the model. If a final test interval is reserved, it stays outside these repeated validation checks.\nIf the prediction task instead uses a fixed amount of recent history, we can move a fixed-width training window forward, so that each fit uses the same number of earlier observations.",
+    "crumbs": [
+      "Hybrid models"
+    ]
+  },
+  {
+    "objectID": "hybrid_linear.html#generalised-cross-validation-for-linear-models",
+    "href": "hybrid_linear.html#generalised-cross-validation-for-linear-models",
+    "title": "Hybrid models",
+    "section": "Generalised cross-validation for linear models",
+    "text": "Generalised cross-validation for linear models\nGenerally, the more complex the model (e.g. deep neural network vs linear model), the simpler the data splitting approach is, as it can be hard/computationally expensive to implement more sophisticated methods.\nFor linear models, however, there is a particularly simple approximation available: generalised cross-validation. This is somewhat of a misnomer: it is an approximation to what you would obtain by carrying out ‘leave-one-out’ cross-validation for a linear model.\nFor time-series data, a leave-one-out fit can use observations on both sides of the omitted point. The chronological splits above instead assess prediction into the future using only earlier observations.\nYou don’t need to know the details, but for completeness, it minimises the following formula (representing generalisation error) to estimate \\(\\lambda\\): \\[\n\\text{GCV}(\\lambda) = \\frac{1}{m} \\frac{\\| (I - H_{\\lambda}) y_{\\text{obs}} \\|^2}{\\left( 1 - \\frac{\\text{Tr}(H_{\\lambda})}{m} \\right)^2}\n\\] where \\(m\\) is the number of observations and \\(H_{\\lambda}\\) is the hat (smoothing) matrix associated with the regularised estimate. For our hybrid model, when the stacked system has full column rank, this is given by: \\[\nH_{\\lambda} = B_{\\text{obs}} \\left( B_{\\text{obs}}^T B_{\\text{obs}} + \\lambda B^T D^T D B \\right)^{-1} B_{\\text{obs}}^T\n\\] where \\(B_{\\text{obs}} = A_{\\text{obs}}B\\) and \\(D\\) is the matrix used in the penalty (\\(D_3\\) in the example below). In the code below, we calculate this matrix using the augmented least squares solver rather than forming the inverse.\nThe important point is that, although it may look intimidating, this is easy to calculate for linear models for each \\(\\lambda\\). We can simply evaluate this for a grid of \\(\\lambda\\) values and choose the one giving the smallest value.",
+    "crumbs": [
+      "Hybrid models"
+    ]
+  },
+  {
+    "objectID": "hybrid_linear.html#example-minus-details",
+    "href": "hybrid_linear.html#example-minus-details",
+    "title": "Hybrid models",
+    "section": "Example (minus details!)",
+    "text": "Example (minus details!)\nWe use the same projectile example, with 30 cubic spline basis functions and one constant column. The third-difference penalty favours quadratic trajectories, while the spline basis allows departures from that shape. As in the preceding example, the time-step factors are absorbed into \\(\\lambda\\).\n\n\n\n\n\n\n\n\n\nSelected lambda on this grid: 2.915e+06",
+    "crumbs": [
+      "Hybrid models"
+    ]
+  },
+  {
+    "objectID": "hybrid_linear.html#example-minus-details-continued",
+    "href": "hybrid_linear.html#example-minus-details-continued",
+    "title": "Hybrid models",
+    "section": "Example (minus details!) continued",
+    "text": "Example (minus details!) continued\n\n\n\n\n\n\n\n\n\nNotes:\n\nGCV selects a value of about \\(3\\times10^6\\) on this grid. The resulting fit sacrifices some agreement with the noisy observations and follows the underlying projectile trajectory more closely than the unpenalised spline.\n\nThe true trajectory is available here because we simulated the data. A larger penalty gives a closer fit to it in this example. GCV uses only the noisy observations to estimate prediction error, so it need not select the value that is best against the known trajectory.\n\nThe third-difference penalty agrees with the physics used to generate this example. When the physical model is approximate, stronger regularisation can worsen predictions, so the balance between data fit and model agreement needs to be checked.",
+    "crumbs": [
+      "Hybrid models"
+    ]
   }
 ]

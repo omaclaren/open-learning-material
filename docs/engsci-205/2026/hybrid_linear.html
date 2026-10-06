@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+
+<html lang="en" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml"><head>
+<meta charset="utf-8"/>
+<meta content="quarto-1.4.549" name="generator"/>
+<meta content="width=device-width, initial-scale=1.0, user-scalable=yes" name="viewport"/>
+<title>EngSci 205: Engineering-Centric Machine Learning - Hybrid models</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta content="./" name="quarto:offset"/>
+<link href="./linear_models.html" rel="prev"/>
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet"/>
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" id="quarto-text-highlighting-styles" rel="stylesheet"/>
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet"/>
+<link data-mode="light" href="site_libs/bootstrap/bootstrap.min.css" id="quarto-bootstrap" rel="stylesheet"/>
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+<link href="html-preview.css" rel="stylesheet"/>
+<link href="navigation-preview.css" rel="stylesheet"/><script defer="" src="navigation-preview.js"></script></head>
+<body class="nav-sidebar floating">
+<div id="quarto-search-results"></div>
+<header class="headroom fixed-top" id="quarto-header">
+<nav class="quarto-secondary-nav">
+<div class="container-fluid d-flex">
+<button aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" class="quarto-btn-toggle btn" data-bs-target=".quarto-sidebar-collapse-item" data-bs-toggle="collapse" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }" type="button">
+<i class="bi bi-layout-text-sidebar-reverse"></i>
+</button>
+<nav aria-label="breadcrumb" class="quarto-page-breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./hybrid_linear.html">Week 4: Hybrid linear models</a></li></ol></nav>
+<a aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" class="flex-grow-1" data-bs-target=".quarto-sidebar-collapse-item" data-bs-toggle="collapse" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }" role="button">
+</a>
+<button aria-label="" class="btn quarto-search-button" onclick="window.quartoOpenSearch();" type="button">
+<i class="bi bi-search"></i>
+</button>
+</div>
+</nav>
+</header>
+<!-- content -->
+<div class="quarto-container page-columns page-rows-contents page-layout-article" id="quarto-content">
+<!-- sidebar -->
+<nav class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto" id="quarto-sidebar">
+<div class="pt-lg-2 mt-2 text-left sidebar-header">
+<div class="sidebar-title mb-0 py-0">
+<a href="./">ENGSCI 205: Engineering-Centric Machine Learning</a>
+</div>
+</div>
+<div class="mt-2 flex-shrink-0 align-items-center">
+<div class="sidebar-search">
+<div class="" id="quarto-search" title="Search"></div>
+</div>
+</div>
+<div class="sidebar-menu-container">
+<ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./index.html">
+<span class="menu-text">Preface</span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./intro.html">
+<span class="menu-text">Week 1: Key ideas</span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./vectors_matrices_tensors.html">
+<span class="menu-text">Week 2: Tensors and PyTorch</span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./linear_models.html">
+<span class="menu-text">Week 3: Linear models</span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link active" href="./hybrid_linear.html">
+<span class="menu-text">Week 4: Hybrid linear models</span></a>
+</div>
+</li>
+</ul>
+</div>
+</nav>
+<div class="quarto-sidebar-collapse-item" data-bs-target=".quarto-sidebar-collapse-item" data-bs-toggle="collapse" id="quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+<div class="sidebar margin-sidebar" id="quarto-margin-sidebar">
+<nav class="engsci205-toc" id="TOC" role="doc-toc"><h2 id="toc-title">Table of contents</h2><ul class="toc-groups"><li class="toc-group-item"><details data-sections="title-block-header linear-data-models-using-basis-functions"><summary>Hybrid models and basis functions</summary><ul class="toc-group-links"><li><a data-section="title-block-header" href="#title-block-header">Overview</a></li><li><a data-section="linear-data-models-using-basis-functions" href="#linear-data-models-using-basis-functions">Linear data models: Using basis functions</a></li></ul></details></li><li class="toc-group-item"><details data-sections="underlying-time-grid-vs.-observation-time-grid observation-matrix observation-matrix-example observation-matrix-and-basisfeature-matrix example"><summary>Fine and observed time grids</summary><ul class="toc-group-links"><li><a data-section="underlying-time-grid-vs.-observation-time-grid" href="#underlying-time-grid-vs.-observation-time-grid">Underlying time grid vs. observation time grid</a></li><li><a data-section="observation-matrix" href="#observation-matrix">Observation matrix</a></li><li><a data-section="observation-matrix-example" href="#observation-matrix-example">Observation matrix example</a></li><li><a data-section="observation-matrix-and-basisfeature-matrix" href="#observation-matrix-and-basisfeature-matrix">Observation matrix and basis/feature matrix</a></li></ul></details></li><li class="toc-group-item"><details data-sections="b-spline-basis-functions b-spline-basis-functions-1 example-fit example-fit-1"><summary>Spline basis functions</summary><ul class="toc-group-links"><li><a data-section="b-spline-basis-functions" href="#b-spline-basis-functions">B-Spline basis functions</a></li><li><a data-section="example-fit" href="#example-fit">Example fit</a></li></ul></details></li><li class="toc-group-item"><details data-sections="derivative-matrices example-1 higher-derivative-matrices-example"><summary>Derivative matrices</summary><ul class="toc-group-links"><li><a data-section="derivative-matrices" href="#derivative-matrices">Derivative matrices</a></li><li><a data-section="higher-derivative-matrices-example" href="#higher-derivative-matrices-example">Higher derivative matrices: example</a></li></ul></details></li><li class="toc-group-item"><details data-sections="including-derivatives-in-a-linear-model stacking example-2 example-continued example-continued-1 notes"><summary>ODE penalties and stacking</summary><ul class="toc-group-links"><li><a data-section="including-derivatives-in-a-linear-model" href="#including-derivatives-in-a-linear-model">Including derivatives in a linear model</a></li><li><a data-section="stacking" href="#stacking">Stacking</a></li><li><a data-section="example-continued" href="#example-continued">Projectile example</a></li><li><a data-section="notes" href="#notes">Notes</a></li></ul></details></li><li class="toc-group-item"><details data-sections="choosing-regularisation-parameters data-splitting-for-choosing-lambda keeping-subgroup-proportions-similar predicting-future-values generalised-cross-validation-for-linear-models example-minus-details example-minus-details-continued"><summary>Choosing the penalty weight</summary><ul class="toc-group-links"><li><a data-section="choosing-regularisation-parameters" href="#choosing-regularisation-parameters">Choosing regularisation parameters</a></li><li><a data-section="data-splitting-for-choosing-lambda" href="#data-splitting-for-choosing-lambda">Data splitting for choosing \(\lambda\)</a></li><li><a data-section="keeping-subgroup-proportions-similar" href="#keeping-subgroup-proportions-similar">Keeping subgroup proportions similar</a></li><li><a data-section="predicting-future-values" href="#predicting-future-values">Predicting future values</a></li><li><a data-section="generalised-cross-validation-for-linear-models" href="#generalised-cross-validation-for-linear-models">Generalised cross-validation for linear models</a></li><li><a data-section="example-minus-details" href="#example-minus-details">Example (minus details!)</a></li><li><a data-section="example-minus-details-continued" href="#example-minus-details-continued">Example (minus details!) continued</a></li></ul></details></li></ul></nav>
+</div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Hybrid models</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p><strong>Hybrid models</strong> combine <strong>data-driven</strong> models with <strong>theory-based</strong> (e.g., scientific/engineering) models to improve overall model performance and generalisation beyond the training data. Here we consider hybrid models with losses of the form: <span class="math display">\[\text{overall loss} = \text{data loss} + \lambda\times \text{model loss}.\]</span></p>
+<p>The ‘data loss’ term is a standard (training) data fit term such as sum of squared errors. The ‘model loss’ term measures the distance of a proposed model from some theoretical (engineering, physics, biology etc.) model. The <strong>regularisation parameter</strong> <span class="math inline">\(\lambda\)</span>, a type of <strong>hyperparameter</strong>, determines the balance between agreement with the data and agreement with the theoretical model. The term <strong>‘regularisation’</strong> in this context essentially refers to a form of <strong>soft constraint</strong> that (deliberately) <em>biases</em> the model towards desirable solutions (stable, physical, interesting etc.) in a way that <strong>goes beyond the available data</strong>. Hence here it contributes to the overall loss above and beyond the data loss. Unlike a hard constraint, which strictly enforces a condition, a soft constraint allows for some deviation but discourages larger deviations.</p>
+<p><strong><em>Note:</em></strong> Here we are looking at <strong>explicit regularisation</strong> via a penalty term. A common assumption in standard machine learning, in contrast, is that <strong>implicit</strong> regularisation via the training method, in particular forms of <strong>stochastic gradient descent</strong>, typically provides sufficient regularisation even for very large models like deep neural networks, and that more traditional penalty terms are often not required. The downside is that we have no guarantees on the types of bias we are introducing. Areas such as <strong>scientific/engineering/physics-informed machine learning</strong> hence still typically (at least currently) use explicit regularisation to ensure the biases are of the desired type.</p>
+<section id="linear-data-models-using-basis-functions" class="level2">
+<h2 class="anchored" data-anchor-id="linear-data-models-using-basis-functions">Linear data models: Using basis functions</h2>
+<p>We have already considered linear models in the previous section. As discussed there, linear models represent the response variable as a <strong>linear combination</strong> of columns of the <strong>design</strong> or <strong>feature matrix</strong>: <span class="math display">\[y \approx Xw\]</span> for response vector <span class="math inline">\(y\)</span>, design matrix <span class="math inline">\(X\)</span>, and weight (parameter) vector <span class="math inline">\(w\)</span>.</p>
+<p>When dealing with <strong>dynamic</strong>, continuous-time physical systems it can be useful to use pre-chosen <strong>smooth functions</strong> as our features. When expanding our response as a linear combination of such functions we often refer to these as <strong>basis functions</strong> (as in e.g., Fourier series): <span class="math display">\[
+y(t) \approx \sum_{j=1}^n b_j(t)w_j.
+\]</span> Although these functions can in principle be evaluated for any time point, we typically assume we have a discrete set of observation times <span class="math inline">\(t_i, i=1,\dots,m\)</span>. This leads to a system, defined at the observations, in the same form as our design matrix expression: <span class="math display">\[
+y \approx Bw
+\]</span> where <span class="math inline">\(y_i = y(t_i)\)</span>, <span class="math inline">\(w\)</span> is the weight vector with <span class="math inline">\(j\)</span>th entry <span class="math inline">\(w_j\)</span>, and the <span class="math inline">\(j\)</span>th column of <span class="math inline">\(B\)</span> is a vector with entires <span class="math inline">\(b_j(t_i)\)</span>. That is, here our design matrix is <span class="math inline">\(X = B\)</span>.</p>
+<p>We will consider an example of such basis functions shortly. Firstly, however, we need to consider two different ‘time grids’ of interest.</p>
+</section>
+<section id="underlying-time-grid-vs.-observation-time-grid" class="level2">
+<h2 class="anchored" data-anchor-id="underlying-time-grid-vs.-observation-time-grid">Underlying time grid vs.&nbsp;observation time grid</h2>
+<p>If we are dealing with a dynamic physical system it is often reasonable to suppose the underlying dynamics are either continuous in time or at least defined for a <strong>fine time grid</strong> that is finer than our <strong>observation time grid</strong> (similar ideas apply for spatial/spatiotemporal systems). For example, the underlying dynamics might be solved with an ODE solver that discretises time into a grid of <span class="math inline">\(p\)</span> points. In contrast, we may only have actual data <strong>observations</strong> of the system at <span class="math inline">\(m \ll p\)</span> points. The observation grid may or may not be regular. See the figure below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figures/time-grids.svg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:75.0%"></p>
+</figure>
+</div>
+<p>When considering physics-based regularisation, it can be useful to introduce both grids explicitly, along with a <strong>linear</strong> mapping between them, represented by an <strong>observation matrix</strong> (or an observation operator).</p>
+</section>
+<section id="observation-matrix" class="level2">
+<h2 class="anchored" data-anchor-id="observation-matrix">Observation matrix</h2>
+<p>Consider a <strong>standard basis vector</strong> (not to be confused with our basis functions above!): <span class="math display">\[
+e_j = \begin{bmatrix}0\\0\\ \vdots\\1\\0\\ \vdots\\0\end{bmatrix} \leftarrow j\text{th entry}.
+\]</span> The effect of multiplying an <span class="math inline">\(m\)</span> by <span class="math inline">\(n\)</span> matrix <span class="math inline">\(M\)</span> by <span class="math inline">\(e^T_j\)</span> on the left is <span class="math display">\[
+e^T_j M = \text{row}_j(M)
+\]</span> i.e.&nbsp;it picks out the <span class="math inline">\(j\)</span>th row of <span class="math inline">\(M\)</span>. (Note: multiplying by <span class="math inline">\(e_j\)</span> on the right picks out the <span class="math inline">\(j\)</span>th column – recall the ‘linear combination of columns’ interpretation of matrix multiplication).</p>
+<p>If we recall that, for design matrices, <strong>each row corresponds to an observation</strong>, we can model the process of taking a ‘coarser’ set of observations of a vector <span class="math inline">\(y\)</span> defined on a fine time grid by <span class="math display">\[
+y_{\text{obs}} = A_{\text{obs}}y
+\]</span> where <span class="math inline">\(y_{\text{obs}}\)</span> is the vector of observed points and <span class="math inline">\(A_{\text{obs}}\)</span> is the ‘observation matrix’ that has a row <span class="math inline">\(e^T_j\)</span> for any grid point <span class="math inline">\(j\)</span> that we have an observation for.</p>
+<p>Example? Example!</p>
+</section>
+<section id="observation-matrix-example" class="level2">
+<h2 class="anchored" data-anchor-id="observation-matrix-example">Observation matrix example</h2>
+<div id="1fec7bd8" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> torch.arange(<span class="dv">10</span>,<span class="dv">20</span>, dtype<span class="op">=</span>torch.float32)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>obs_indices <span class="op">=</span> [<span class="dv">0</span>,<span class="dv">4</span>,<span class="dv">9</span>]</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a>A_obs <span class="op">=</span> torch.eye(<span class="bu">len</span>(y),dtype<span class="op">=</span>torch.float32)[obs_indices]</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>y_obs <span class="op">=</span> A_obs<span class="op">@</span>y</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Fine-scale y:'</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(y)</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'</span><span class="ch">\n</span><span class="st">'</span>)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Observation matrix:'</span>)</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(A_obs)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'</span><span class="ch">\n</span><span class="st">'</span>)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'Observed y:'</span>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(y_obs)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Fine-scale y:
+tensor([10., 11., 12., 13., 14., 15., 16., 17., 18., 19.])
+
+
+Observation matrix:
+tensor([[1., 0., 0., 0., 0., 0., 0., 0., 0., 0.],
+        [0., 0., 0., 0., 1., 0., 0., 0., 0., 0.],
+        [0., 0., 0., 0., 0., 0., 0., 0., 0., 1.]])
+
+
+Observed y:
+tensor([10., 14., 19.])</code></pre>
+</div>
+</div>
+</section>
+<section id="observation-matrix-and-basisfeature-matrix" class="level2">
+<h2 class="anchored" data-anchor-id="observation-matrix-and-basisfeature-matrix">Observation matrix and basis/feature matrix</h2>
+<p>If our underlying fine-grid variable <span class="math inline">\(y\)</span> is modelled as a finely-discretised basis function expansion <span class="math display">\[
+y \approx Bw,
+\]</span> we can model our coarse-grid observations as <span class="math display">\[
+y_{\text{obs}} = A_{\text{obs}}y \approx A_{\text{obs}}Bw = B_{\text{obs}}w
+\]</span> where <span class="math inline">\(B_{\text{obs}} = A_{\text{obs}}B\)</span> is the matrix containing the basis functions evaluated at the observation points. That is, <span class="math inline">\(A_{\text{obs}}\)</span> picks out the rows of the <em>matrix</em> <span class="math inline">\(B\)</span> corresponding to observations, just like it does with vectors.</p>
+<p>Whether or not we explicitly model the two different time grids depends on the application.</p>
+<p>For standard, ‘pure’ data modelling we usually work with <span class="math inline">\(B_{\text{obs}}\)</span> directly and don’t worry about introducing an explicit observation matrix; however, <strong>when introducing a theory/physics/engineering-based model as well, we usually want to enforce this model on the fine-time grid</strong> rather than just the coarse observation grid.</p>
+<p>The basic idea is that <strong>we typically assume theory-based model holds at all time points, not just those we’ve observed</strong>. This allows us to provide predictions for, or constraints on model behaviour at, points we haven’t observed. Of course, sometimes we take the grids to be the same for simplicity.</p>
+</section>
+<section id="example" class="level2">
+<h2 class="anchored" data-anchor-id="example">Example</h2>
+<p>Suppose our <span class="math inline">\(B\)</span> matrix consists of two columns, <span class="math inline">\(\sin(t)\)</span> and <span class="math inline">\(\sin(2t)\)</span>, evaluated on a fine time grid <span class="math inline">\(t_i\)</span>, of points between <span class="math inline">\(t_1 = 0\)</span> and <span class="math inline">\(t_p=12\)</span>, for <span class="math inline">\(p=100\)</span>. This means <span class="math inline">\(B\)</span> has 100 rows and 2 columns. Then, suppose we take as observations every 10th point, starting from the first, giving 10 observation indices.</p>
+<div id="d6a7a887" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> torch.linspace(<span class="dv">0</span>,<span class="dv">12</span>,<span class="dv">100</span>, dtype<span class="op">=</span>torch.float32)</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>B <span class="op">=</span> torch.stack([torch.sin(t),torch.sin(<span class="dv">2</span><span class="op">*</span>t)],dim<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>w <span class="op">=</span> torch.tensor([<span class="dv">2</span>,<span class="dv">3</span>],dtype<span class="op">=</span>torch.float32) <span class="co"># arbitrary choice</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> B<span class="op">@</span>w</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>obs_indices <span class="op">=</span> torch.arange(<span class="dv">0</span>,<span class="dv">100</span>,<span class="dv">10</span>, dtype<span class="op">=</span>torch.<span class="bu">int</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>A_obs <span class="op">=</span> torch.eye(<span class="bu">len</span>(y),dtype<span class="op">=</span>torch.float32)[obs_indices]</span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>t_obs <span class="op">=</span> A_obs<span class="op">@</span>t</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>y_obs <span class="op">=</span> A_obs<span class="op">@</span>y <span class="co"># = A_obs@B@w</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="f3a5236a" class="cell" data-execution_count="3">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="hybrid_linear_files/figure-html/cell-4-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Here red squares indicate the observed data points and blue dots (including at red square locations) indicate the ‘fine’ time grid points. </p>
+</section>
+<section id="b-spline-basis-functions" class="level2">
+<h2 class="anchored" data-anchor-id="b-spline-basis-functions">B-Spline basis functions</h2>
+<p>We can represent a range of smooth functions of time with <strong>splines</strong>, i.e.&nbsp;piecewise polynomials defined by various conditions such as the degree of the polynomials used and the properties at the ‘join’ points, where these join points are called <em>knots</em>. To construct a spline we can use basis functions; here we will use so-called B-Spline basis functions. <strong>For this course we don’t need to know much about these other than how to obtain them from a Python library</strong>. However the following facts may be useful:</p>
+<ul>
+<li>Any spline of made up of degree <span class="math inline">\(d\)</span> polynomials (<span class="math inline">\(d\)</span> being the highest power of the component polynomials) can be represented as a linear combination of B-Splines of the same degree.<br>
+</li>
+<li>Splines are defined by the degree of the polynomials and the location of the internal knots where the polynomials join. The term ‘knot’ refers to internal knots in general (i.e.&nbsp;excluding boundary points).<br>
+</li>
+<li>At (non-repeated) knots the spline has <span class="math inline">\(d-1\)</span> continuous derivatives. E.g. for a piecewise linear spline, i.e.&nbsp;<span class="math inline">\(d=1\)</span>, the first derivative is not continuous at the knots, though the value (‘zeroth derivative’) is (<span class="math inline">\(d-1=0\)</span> if <span class="math inline">\(d=1\)</span>).<br>
+</li>
+<li>Many libraries for constructing spline bases take the polynomial degree and either the knot <em>locations</em> or a parameter called ‘degrees of freedom’, <span class="math inline">\(\nu\)</span>. With the Patsy settings used below, setting <code>df</code> to <span class="math inline">\(\nu\)</span> gives <span class="math inline">\(\nu\)</span> spline columns, excluding the separately added constant. The number of internal knots is <span class="math inline">\(\nu-d\)</span>. If their locations are unspecified, Patsy uses equally spaced quantiles of the supplied time values; these need not be equally spaced in time.<br>
+</li>
+<li>Many libraries for constructing the ‘design matrices’ – matrices with basis functions as columns – automatically add a constant vector of all ones. We can explicitly add it with statistical formulae such as ‘1 <span class="math inline">\(+\)</span> basis functions’, or remove it with formulae like ‘basis functions <span class="math inline">\(-\)</span> 1’.</li>
+</ul>
+</section>
+<section id="b-spline-basis-functions-1" class="level2">
+<h2 class="anchored" data-anchor-id="b-spline-basis-functions-1">B-Spline basis functions</h2>
+<p>Many languages such as R, Python, MATLAB, Julia etc have B-Splines available. Below is an example of how to obtain B-Spline bases of different sizes, along with an intercept/constant term, using the <strong>Python library Patsy</strong>. This is installed in Google Colab by default.</p>
+<div id="97b0103e" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Four cubic basis functions </span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># number of implied knots = 4-3 = 1, </span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># as well as one constant function. </span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Number of columns of B is 4 + 1 = 5.</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> patsy <span class="im">import</span> dmatrices, dmatrix</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co"># time grid</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> torch.linspace(<span class="fl">0.</span>, <span class="fl">5.</span>, <span class="dv">1000</span>)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="co"># design matrix as tensor</span></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>B1 <span class="op">=</span> torch.tensor(</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    dmatrix(<span class="st">"1 + bs(t, df=4, degree=3)"</span>, {<span class="st">"t"</span>: t}))</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Six cubic basis functions, </span></span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a><span class="co"># number of implied knots = 6-3 = 3, </span></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a><span class="co"># as well as one constant function. </span></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Number of columns of B is 6 + 1 = 7.</span></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>B2 <span class="op">=</span> torch.tensor(</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    dmatrix(<span class="st">"1+bs(t, df=6, degree=3)"</span>, {<span class="st">"t"</span>: t}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="f00bf7ed" class="cell" data-execution_count="5">
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hybrid_linear_files/figure-html/cell-6-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hybrid_linear_files/figure-html/cell-6-output-2.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<div id="1af5aa9e" class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(B1.shape)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(B2.shape)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>torch.Size([1000, 5])
+torch.Size([1000, 7])</code></pre>
+</div>
+</div>
+</section>
+<section id="example-fit" class="level2">
+<h2 class="anchored" data-anchor-id="example-fit">Example fit</h2>
+<p>Suppose our true data is a coarse, and noisy version of our <code>sin</code> combination used above. Let’s fit a B-Spline basis to it with linear least squares. First generate data:</p>
+<div id="9e71a1ce" class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> torch.linspace(<span class="dv">0</span>,<span class="dv">12</span>,<span class="dv">100</span>, dtype<span class="op">=</span>torch.float32)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>B <span class="op">=</span> torch.stack([torch.sin(t),torch.sin(<span class="dv">2</span><span class="op">*</span>t)],dim<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>w <span class="op">=</span> torch.tensor([<span class="dv">2</span>,<span class="dv">3</span>],dtype<span class="op">=</span>torch.float32)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> B<span class="op">@</span>w </span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="co"># observation matrix for observed points</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>obs_indices <span class="op">=</span> torch.arange(<span class="dv">0</span>,<span class="dv">100</span>,<span class="dv">10</span>, dtype<span class="op">=</span>torch.<span class="bu">int</span>)</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>A_obs <span class="op">=</span> torch.eye(<span class="bu">len</span>(y),dtype<span class="op">=</span>torch.float32)[obs_indices]</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="co"># noise</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(<span class="dv">44</span>)</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>noise <span class="op">=</span> torch.randn(A_obs.shape[<span class="dv">0</span>]) <span class="op">*</span> <span class="fl">0.5</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="co"># extract at observation points and add noise</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>y_obs <span class="op">=</span> A_obs<span class="op">@</span>y <span class="op">+</span> noise</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>t_obs <span class="op">=</span> A_obs<span class="op">@</span>t</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="30769cb1" class="cell" data-execution_count="8">
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hybrid_linear_files/figure-html/cell-9-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="example-fit-1" class="level2">
+<h2 class="anchored" data-anchor-id="example-fit-1">Example fit</h2>
+<p>Now, let’s fit a spline basis to the data.</p>
+<div id="5704721e" class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 15 cubic basis functions, </span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># number of implied knots = 15-3 = 12, </span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># as well as one constant function. </span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Number of columns of B is 15 + 1 = 16.</span></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>B <span class="op">=</span> torch.tensor(</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    dmatrix(<span class="st">"1+bs(t, df=15, degree=3)"</span>, {<span class="st">"t"</span>: t}),</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    dtype<span class="op">=</span>torch.float32)</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Solution using lstsq. </span></span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="co"># We need to include A_obs as that's how we got the data</span></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>lstsq_result <span class="op">=</span> torch.linalg.lstsq(A_obs<span class="op">@</span>B, y_obs)</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>w_lstsq <span class="op">=</span> lstsq_result.solution</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="co"># We can then get the implied fit on the fine time grid </span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>y_fitted <span class="op">=</span> B<span class="op">@</span>w_lstsq</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="7abe2830" class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>plt.plot(t_obs,y_obs,<span class="st">'ro'</span>,label<span class="op">=</span><span class="st">'obs'</span>)</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>plt.plot(t,y,<span class="st">'b'</span>,label<span class="op">=</span><span class="st">'fine scale'</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>plt.plot(t,y_fitted,<span class="st">'r'</span>,label<span class="op">=</span><span class="st">'fitted'</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="vs">r'$t$'</span>,fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="vs">r'$y$'</span>,fontsize<span class="op">=</span><span class="dv">16</span>)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hybrid_linear_files/figure-html/cell-11-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Note the red shows both the observed data points and the implied fitted model. We typically don’t observe the blue directly and the red curve is an <em>estimate</em> of the true blue curve. Here the B-Spline basis does a reasonable job given the data is both noisy and relatively sparse.</p>
+<p>This model is a <strong>pure data model</strong>. There is no physics or engineering knowledge as such (other than smoothness). It also requires choosing a number of basis functions – not too many, not too few.</p>
+<p><strong>How can we include physical information?</strong> One way is <span class="math inline">\(\dots\)</span></p>
+</section>
+<section id="derivative-matrices" class="level2">
+<h2 class="anchored" data-anchor-id="derivative-matrices">Derivative matrices</h2>
+<p>Suppose we want to include physics- or engineering-based knowledge in the form of <strong>approximately-enforced differential equations</strong> into a data model like a spline basis approximation. We can represent derivatives on our fine time grid by using <strong>finite difference</strong> matrices. These map a vector defined on a fine grid (e.g.&nbsp;of points in time or space) to a new vector of <strong>derivatives</strong> of the input vector. For example: <span class="math display">\[D =
+\frac{1}{\Delta t}\begin{bmatrix}-1 &amp; 1&amp; 0&amp; 0&amp; 0&amp; \ldots\\
+0&amp; -1&amp; 1&amp; 0&amp; 0&amp; \ldots\\
+\vdots &amp; \vdots&amp; \vdots&amp; \vdots&amp; \vdots&amp; \vdots\\
+0 &amp; 0 &amp; \ldots &amp; 0&amp; -1&amp; 1 \end{bmatrix}\]</span> Note that for a vector <span class="math inline">\(y\)</span> containing values <span class="math inline">\(y_1, y_2, \dots, y_m\)</span> we have <span class="math display">\[Dy = \frac{1}{\Delta t}\begin{bmatrix}y_2 - y_1\\y_3-y_2\\\vdots\\y_m -y_{m-1}\end{bmatrix} = \begin{bmatrix}\frac{y_2 - y_1}{\Delta t}\\\frac{y_3 - y_2}{\Delta t}\\\vdots\\\frac{y_m - y_{m-1}}{\Delta t}\end{bmatrix} \]</span> which is a vector that contains backward difference approximations to the derivative at all time points starting from the <em>second</em> time point.</p>
+<p>The vector here has <strong>dimension of one less than the input vector</strong>, which corresponds to the idea that a first order differential equation usually needs to be supplemented by an additional <strong>initial condition</strong>, and hence an additional entry in the vector. This is not so important here as the data will play the role of initial conditions.</p>
+<p>We can define <strong>second</strong> and <strong>third</strong> (etc) order derivative matrices similarly, and can also obtain these by (carefully) <strong>multiplying the first derivative matrix by itself</strong> the corresponding number of times (we need to be careful of initial/boundary conditions and dimensions as usual). This represents repeated differentiation. We usually lose one row per application of the first derivative matrix, just as e.g.&nbsp;a second-order differential equation requires two initial/boundary conditions.</p>
+</section>
+<section id="example-1" class="level2">
+<h2 class="anchored" data-anchor-id="example-1">Example</h2>
+<div id="5560d8d9" class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> torch.linspace(<span class="dv">0</span>,<span class="dv">12</span>,<span class="dv">100</span>, dtype<span class="op">=</span>torch.float32)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>dt <span class="op">=</span> t[<span class="dv">1</span>]<span class="op">-</span>t[<span class="dv">0</span>]<span class="op">;</span> N <span class="op">=</span> <span class="bu">len</span>(t)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> torch.sin(t)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>D <span class="op">=</span> torch.zeros(N<span class="op">-</span><span class="dv">1</span>, N)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Use 'fancy indexing' to assign values to diagonals</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>D[torch.arange(<span class="dv">0</span>, N<span class="op">-</span><span class="dv">1</span>), torch.arange(<span class="dv">0</span>, N<span class="op">-</span><span class="dv">1</span>)] <span class="op">=</span> <span class="op">-</span><span class="dv">1</span><span class="op">/</span>dt</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>D[torch.arange(<span class="dv">0</span>, N<span class="op">-</span><span class="dv">1</span>), torch.arange(<span class="dv">1</span>, N)] <span class="op">=</span> <span class="dv">1</span><span class="op">/</span>dt</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(D<span class="op">*</span>dt) <span class="co">#multiply by dt to get difference matrix part</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>tensor([[-1.,  1.,  0.,  ...,  0.,  0.,  0.],
+        [ 0., -1.,  1.,  ...,  0.,  0.,  0.],
+        [ 0.,  0., -1.,  ...,  0.,  0.,  0.],
+        ...,
+        [ 0.,  0.,  0.,  ...,  1.,  0.,  0.],
+        [ 0.,  0.,  0.,  ..., -1.,  1.,  0.],
+        [ 0.,  0.,  0.,  ...,  0., -1.,  1.]])</code></pre>
+</div>
+</div>
+<div id="bb8ef683" class="cell" data-execution_count="12">
+<div class="cell-output cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="hybrid_linear_files/figure-html/cell-13-output-1.png" class="img-fluid figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="higher-derivative-matrices-example" class="level2">
+<h2 class="anchored" data-anchor-id="higher-derivative-matrices-example">Higher derivative matrices: example</h2>
+<div id="4771434f" class="cell" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># first derivative, backward diff</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(D<span class="op">*</span>dt)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co"># second derivative, backward diff</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(D[<span class="dv">1</span>:,<span class="dv">1</span>:]<span class="op">@</span>D<span class="op">*</span>dt<span class="op">**</span><span class="dv">2</span>)</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co"># third derivative, backward diff</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(D[<span class="dv">2</span>:,<span class="dv">2</span>:]<span class="op">@</span>D[<span class="dv">1</span>:,<span class="dv">1</span>:]<span class="op">@</span>D<span class="op">*</span>dt<span class="op">**</span><span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>tensor([[-1.,  1.,  0.,  ...,  0.,  0.,  0.],
+        [ 0., -1.,  1.,  ...,  0.,  0.,  0.],
+        [ 0.,  0., -1.,  ...,  0.,  0.,  0.],
+        ...,
+        [ 0.,  0.,  0.,  ...,  1.,  0.,  0.],
+        [ 0.,  0.,  0.,  ..., -1.,  1.,  0.],
+        [ 0.,  0.,  0.,  ...,  0., -1.,  1.]])
+tensor([[ 1., -2.,  1.,  ...,  0.,  0.,  0.],
+        [ 0.,  1., -2.,  ...,  0.,  0.,  0.],
+        [ 0.,  0.,  1.,  ...,  0.,  0.,  0.],
+        ...,
+        [ 0.,  0.,  0.,  ...,  1.,  0.,  0.],
+        [ 0.,  0.,  0.,  ..., -2.,  1.,  0.],
+        [ 0.,  0.,  0.,  ...,  1., -2.,  1.]])
+tensor([[-1.0000,  3.0000, -3.0000,  ...,  0.0000,  0.0000,  0.0000],
+        [ 0.0000, -1.0000,  3.0000,  ...,  0.0000,  0.0000,  0.0000],
+        [ 0.0000,  0.0000, -1.0000,  ...,  0.0000,  0.0000,  0.0000],
+        ...,
+        [ 0.0000,  0.0000,  0.0000,  ...,  1.0000,  0.0000,  0.0000],
+        [ 0.0000,  0.0000,  0.0000,  ..., -3.0000,  1.0000,  0.0000],
+        [ 0.0000,  0.0000,  0.0000,  ...,  3.0000, -3.0000,  1.0000]])</code></pre>
+</div>
+</div>
+</section>
+<section id="including-derivatives-in-a-linear-model" class="level2">
+<h2 class="anchored" data-anchor-id="including-derivatives-in-a-linear-model">Including derivatives in a linear model</h2>
+<p>Given a simple differential equation <span class="math display">\[\frac{dy}{dt} = 0,\]</span> this can be approximated by <span class="math display">\[Dy = DBw = 0\]</span> where <span class="math inline">\(D\)</span> is the first-order derivative matrix, <span class="math inline">\(B\)</span> is a basis matrix (e.g.&nbsp;B-Splines) and <span class="math inline">\(w\)</span> is the vector of unknown parameters (weights), assuming <span class="math inline">\(y \approx Bw\)</span>.</p>
+<p>Rather than try to solve this exactly, we can now modify our least squares data loss function to take the form: <span class="math display">\[
+\min_w ||y_{\text{obs}} - A_{\text{obs}}Bw||^2 + \lambda ||DBw||^2.
+\]</span> where <span class="math inline">\(A_{\text{obs}}\)</span> is our observation matrix, <span class="math inline">\(y_{\text{obs}}\)</span> the observed data, and <span class="math inline">\(\lambda\)</span> is a regularisation (or penalty) parameter determining <strong>how strongly to enforce the differential equation</strong>. Higher <span class="math inline">\(\lambda\)</span> means higher penalty on deviations from <span class="math inline">\(Dy = 0\)</span> and so the model is enforced more strongly; lower <span class="math inline">\(\lambda\)</span> works in the opposite direction, allowing the ‘pure data model’ to dominate the fitting.</p>
+<p>The same idea generalises to higher-order differential equations by simply <strong>taking <span class="math inline">\(D\)</span> to be a higher-order derivative matrix</strong>.</p>
+<p><strong><em>Notes:</em></strong><br>
+- We have previously solved essentially this exact problem in the last section. Here the design matrix is <span class="math inline">\(X = A_{\text{obs}}B\)</span> and there is a penalty on <span class="math inline">\(w\)</span> as before, except now the <span class="math inline">\(w\)</span> in the penalty term is weighted by <span class="math inline">\(DB\)</span>. This is a minor difference that makes no real difference to implementation!<br>
+- We can use a simple difference matrix and absorb the time-step scaling into the regularisation parameter. For a first-order derivative matrix <span class="math inline">\(D\)</span>, set <span class="math inline">\(\hat{D} = (\Delta t)D\)</span>. Since the penalty uses a squared norm, the equivalent coefficient is <span class="math inline">\(\hat{\lambda} = \lambda/(\Delta t)^2\)</span>. More generally, for an <span class="math inline">\(r\)</span>th-order derivative, use <span class="math inline">\(\hat{D}_r = (\Delta t)^r D_r\)</span> and <span class="math inline">\(\hat{\lambda} = \lambda/(\Delta t)^{2r}\)</span>.</p>
+<p>Let’s look at how to ‘stack and solve’ these problems!</p>
+</section>
+<section id="stacking" class="level2">
+<h2 class="anchored" data-anchor-id="stacking">Stacking</h2>
+<p>Following the ideas of the previous section, we can write <span class="math display">\[
+||y_{\text{obs}}-A_{\text{obs}}Bw||^2 + \lambda ||DBw||^2 = \Big|\Big|\begin{bmatrix} y_{\text{obs}}-A_{\text{obs}}Bw\\ \sqrt{\lambda}DBw\end{bmatrix}\Big|\Big|^2
+\]</span> We can further write the right-hand side as the <strong>augmented</strong> system <span class="math display">\[
+\Big|\Big|\begin{bmatrix} y_{\text{obs}}-A_{\text{obs}}Bw\\ \sqrt{\lambda}DBw\end{bmatrix}\Big|\Big|^2 = \Big|\Big|\begin{bmatrix} y_{\text{obs}}\\ 0 \end{bmatrix} - \begin{bmatrix}A_{\text{obs}}B\\\sqrt{\lambda}DB \end{bmatrix}w\Big|\Big|^2
+\]</span> where <span class="math inline">\(0\)</span> is a <strong>(sub)vector of zeros</strong> with length equal to the number of rows of <span class="math inline">\(D\)</span>. This gives a linear system of the form: <span class="math display">\[
+\Big|\Big| \tilde{y} - \tilde{X}w\Big|\Big|^2
+\]</span> where <span class="math display">\[\tilde{y} = \begin{bmatrix} y_{\text{obs}}\\ 0 \end{bmatrix}, \ \ \ \tilde{X} = \begin{bmatrix}A_{\text{obs}}B\\\sqrt{\lambda}DB \end{bmatrix}\]</span> So to solve the penalised linear least squares problem we can solve the standard linear least squares problem in <strong>augmented</strong> form: <span class="math display">\[
+\min_w \Big|\Big| \tilde{y} - \tilde{X}w\Big|\Big|^2
+\]</span> just as before!</p>
+<p><strong>Notes:</strong><br>
+- This approach works for differential equations giving the discrete form <span class="math inline">\(Dy = 0,\)</span>, <span class="math inline">\(Dy = \text{constant}\)</span>, or <span class="math inline">\(Dy = Ay\)</span>, for <span class="math inline">\(D\)</span> an abitrary derivative matrix and <span class="math inline">\(A\)</span> a <em>known</em> matrix.<br>
+- Differential equations of the form <span class="math inline">\(Dy = f(y)\)</span> lead to nonlinear systems of equations in this approach; if <span class="math inline">\(A\)</span> is unknown then this is true even for <span class="math inline">\(f(y) = Ay\)</span>.<br>
+- We can sometimes differentiate the system more times to get our equation in the desired form, however. </p>
+</section>
+<section id="example-2" class="level2">
+<h2 class="anchored" data-anchor-id="example-2">Example</h2>
+<p>Consider our projectile problem with observed data as shown:</p>
+<div id="919f64c0" class="cell" data-execution_count="14">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="hybrid_linear_files/figure-html/cell-15-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>We can fit a spline + ODE model by writing our ODE <span class="math display">\[
+\frac{d^2y}{dt^2} = -g
+\]</span> as <span class="math display">\[
+\frac{d^3y}{dt^3} = 0
+\]</span> which treats <span class="math inline">\(g\)</span> as unknown. We can implement this as follows<span class="math inline">\(\dots\)</span> </p>
+</section>
+<section id="example-continued" class="level2">
+<h2 class="anchored" data-anchor-id="example-continued">Example continued</h2>
+<div id="7431bef1" class="cell" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>t_grid <span class="op">=</span> torch.linspace(<span class="dv">0</span>,<span class="fl">2.5</span>,<span class="dv">100</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>N <span class="op">=</span> <span class="bu">len</span>(t_grid)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co"># spline basis. Can use lots when have diff. eqn!</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>B <span class="op">=</span> torch.tensor(</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    dmatrix(<span class="st">"1+bs(t, df=30, degree=3)"</span>, {<span class="st">"t"</span>: t_grid}),</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    dtype<span class="op">=</span>torch.float32)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co"># observation matrix for observed points</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>obs_indices <span class="op">=</span> torch.arange(<span class="dv">0</span>,<span class="dv">100</span>,<span class="dv">10</span>, dtype<span class="op">=</span>torch.<span class="bu">int</span>)</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>A_obs <span class="op">=</span> torch.eye(<span class="bu">len</span>(t_grid),dtype<span class="op">=</span>torch.float32)[obs_indices]</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a><span class="co"># first derivative matrix</span></span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>D <span class="op">=</span> torch.zeros(N<span class="op">-</span><span class="dv">1</span>, N)</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Use 'fancy indexing' to assign values to diagonals</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>D[torch.arange(<span class="dv">0</span>, N<span class="op">-</span><span class="dv">1</span>), torch.arange(<span class="dv">0</span>, N<span class="op">-</span><span class="dv">1</span>)] <span class="op">=</span> <span class="op">-</span><span class="dv">1</span></span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>D[torch.arange(<span class="dv">0</span>, N<span class="op">-</span><span class="dv">1</span>), torch.arange(<span class="dv">1</span>, N)] <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="co"># get third difference matrix</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>D3 <span class="op">=</span> D[<span class="dv">2</span>:,<span class="dv">2</span>:]<span class="op">@</span>D[<span class="dv">1</span>:,<span class="dv">1</span>:]<span class="op">@</span>D</span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Augment the design matrix and observation vector </span></span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>lambda_reg <span class="op">=</span> torch.tensor(<span class="fl">1e5</span>, dtype<span class="op">=</span>torch.float32)</span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>X_aug <span class="op">=</span> (torch.cat([A_obs<span class="op">@</span>B, torch.sqrt(lambda_reg) <span class="op">*</span> </span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>            D3<span class="op">@</span>B], dim<span class="op">=</span><span class="dv">0</span>))</span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>y_aug <span class="op">=</span> torch.cat([y_data, torch.zeros(D3.shape[<span class="dv">0</span>])])</span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a><span class="co"># solve</span></span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>lstsq_result <span class="op">=</span> torch.linalg.lstsq(X_aug, y_aug)</span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>w_lstsq <span class="op">=</span> lstsq_result.solution</span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a><span class="co"># Get the implied fit on the fine time grid </span></span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a>y_fitted <span class="op">=</span> B<span class="op">@</span>w_lstsq</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="example-continued-1" class="level2">
+<h2 class="anchored" data-anchor-id="example-continued-1">Example continued</h2>
+<div id="fee813b0" class="cell" data-execution_count="16">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="hybrid_linear_files/figure-html/cell-17-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Compare this to the pure spline fit with the same number of basis functions:</p>
+<div id="1d6bc9ef" class="cell" data-execution_count="17">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="hybrid_linear_files/figure-html/cell-18-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="notes" class="level2">
+<h2 class="anchored" data-anchor-id="notes">Notes</h2>
+<p>Note that</p>
+<ul>
+<li><p>The pure spline fit <strong>fits the training data better</strong> (it interpolates it), but <strong>fits the (unseen) test data worse</strong>.</p></li>
+<li><p>In contrast, the ODE-penalised fit <strong>fits the training data worse but generalises to unseen data better</strong>.</p></li>
+</ul>
+<p>This is a common phenomenon! For this and related reasons, statisticians and modellers have <strong>traditionally advised against exactly fitting the training data</strong> in the name of avoiding overfitting.</p>
+<p><strong>However</strong>, the main concern is not so much having ‘too good’ of a fit to the training data, rather the concern that this <strong>may not be representative of the ability to fit the test data</strong>.</p>
+<p>One of the more surprising observations of modern machine learning is there <strong>are</strong> models that <strong>exactly fit the training data and yet generalise well to new data</strong>. One perspective on this is that away from data points the regularisation or structural assumptions dominate, and that it is possible to both fit the training data well and generalise well, if we also have good regularisation/structural assumptions.</p>
+<p>In the present course, however, we will typically see the traditional wisdom – of sacrificing some fit to the training data in order to get better fit to unseen data – hold up.</p>
+<p>This relates to the topic of<span class="math inline">\(\dots\)</span></p>
+</section>
+<section id="choosing-regularisation-parameters" class="level2">
+<h2 class="anchored" data-anchor-id="choosing-regularisation-parameters">Choosing regularisation parameters</h2>
+<p>So far we have pre-specified the regularisation parameter. In both the pseudo-inverse and physics-informed cases we have general guidelines for setting this: for the pseudo-inverse we set it to be ‘small but not zero’. For a physics model we set it to be ‘large’ if we think the model is correct. What about in general? <strong>Can we use the data</strong> to determine a ‘good’ value?</p>
+<p>One issue is that <span class="math inline">\(\lambda\)</span> controls the ability to fit <strong>unseen</strong> data: it involves a loss term evaluated at points <strong>other than the training data</strong> (e.g.&nbsp;the fine time scale). If we fit its value based just on the training data, and the data model component is capable of fitting the training data exactly, the optimal value will be zero (why?)!</p>
+<p>A strategy around this, is to set regularisation/generalisation/hyperparameters like <span class="math inline">\(\lambda\)</span> based on the ability of the fitted model to <strong>predict data it wasn’t trained on</strong>. The simplest way to do this is to <strong>split</strong> our original training dataset into a smaller training data subset and a non-overlapping <strong>validation</strong> subset (you will have seen this idea already!). We fit the model on the training subset for various <span class="math inline">\(\lambda\)</span> values and use these models to predict the unfitted validation set. We use the <span class="math inline">\(\lambda\)</span> value that leads to the best predicting model. This <strong>mimics the process of fitting a model to training data and evaluating on test data</strong>, and hence provides information about ‘generalisation’ ability (under assumptions such as exchangeable or IID data, however!).</p>
+<p>This approach falls under the umbrella of the family of techniques known as <strong>cross-validation</strong>. More sophisticated variations of cross-validation, such as <span class="math inline">\(k\)</span>-fold cross-validation, repeatedly split the training data into training and validation data subsets and assess the average performance on the validation sets. Note that we typically still have a third, separate <strong>test set</strong> that we don’t see until the final model, including hyperparameters, is developed.</p>
+<p>Other approaches, popular in <strong>inverse problems</strong> (see ENGSCI 721), include <strong>L-curves</strong> and <strong>discrepancy principles</strong>.</p>
+<section id="data-splitting-for-choosing-lambda" class="level3">
+<h3 class="anchored" data-anchor-id="data-splitting-for-choosing-lambda">Data splitting for choosing <span class="math inline">\(\lambda\)</span></h3>
+<p>The same splitting schemes from the first half of the course apply here. The figure below compares a single training/validation split with five-fold cross-validation for choosing <span class="math inline">\(\lambda\)</span>. We then consider how to form the splits to reflect the prediction task, including preserving subgroup proportions and using past and present observations to predict future values.</p>
+<style>
+#fig-validation-splits img { width:80% !important; height:auto; }
+@media(max-width:600px) { #fig-validation-splits img { width:100% !important; } }
+</style>
+<div id="fig-validation-splits" class="compact-validation quarto-figure quarto-figure-center quarto-float anchored" data-fig-pos="H" data-fig-align="center" alt="A single training-validation split, and five-fold cross-validation using the same five groups in every row. Each group is used once for validation. For each candidate lambda, refit the weights in each fold and average the validation errors. For both approaches, keep the chosen lambda fixed and refit weights using all training and validation observations before evaluating on the test set. A separate test set stays outside all folds and is used for final evaluation only.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-validation-splits-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="figures/validation-splits.svg" class="compact-validation img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%" data-fig-pos="H" alt="A single training-validation split, and five-fold cross-validation using the same five groups in every row. Each group is used once for validation. For each candidate lambda, refit the weights in each fold and average the validation errors. For both approaches, keep the chosen lambda fixed and refit weights using all training and validation observations before evaluating on the test set. A separate test set stays outside all folds and is used for final evaluation only.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-validation-splits-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;1: As indicated in the figure, we use the training data to determine the weights for each candidate <span class="math inline">\(\lambda\)</span> (within-model inference), and the validation data to determine which <span class="math inline">\(\lambda\)</span> to use (model selection). We then keep the chosen <span class="math inline">\(\lambda\)</span> fixed and refit the weights using all the training and validation data, before evaluating the fitted model on the test set.
+</figcaption>
+</figure>
+</div>
+<section id="keeping-subgroup-proportions-similar" class="level4">
+<h4 class="anchored" data-anchor-id="keeping-subgroup-proportions-similar">Keeping subgroup proportions similar</h4>
+<p>We can form <strong>stratified folds</strong> so that chosen categories or subgroups appear in approximately the same proportions as in the data being split. Suppose we are predicting property prices from 100 sales: 80 detached houses and 20 apartments. A stratified five-fold split could put 16 houses and 4 apartments in each fold, so that we calculate validation errors on data with the same mixture of property types as the original dataset.</p>
+<p>There is no universally best way to stratify, and the choice depends on the target population we wish to predict for and the type of prediction task we want to assess. Keeping subgroup proportions similar can make validation scores less sensitive to the particular split. However, when we interpret those scores as performance on the target population, we are assuming that our sample is representative. For example, our 80:20 mixture of houses and apartments might have arisen partly by chance and differ from the population we want to predict for. In this case, our validation scores would give more or less weight to the prediction errors for apartments vs.&nbsp;houses than they would in a more representative sample.</p>
+</section>
+<section id="predicting-future-values" class="level4">
+<h4 class="anchored" data-anchor-id="predicting-future-values">Predicting future values</h4>
+<p>The figure below compares predicting new cases from the same population with predicting future values from earlier observations.</p>
+<div id="fig-prediction-task" class="quarto-figure quarto-figure-center quarto-float anchored" data-fig-pos="H" data-fig-align="center" alt="Two prediction tasks. New-case prediction holds out scattered cases with no time ordering. Future prediction fits only earlier observations and holds out later values beyond a cutoff. Blue blocks are used for fitting; orange blocks are used for validation when selecting lambda.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-prediction-task-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="figures/prediction-task-splits.svg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" data-fig-pos="H" alt="Two prediction tasks. New-case prediction holds out scattered cases with no time ordering. Future prediction fits only earlier observations and holds out later values beyond a cutoff. Blue blocks are used for fitting; orange blocks are used for validation when selecting lambda.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-prediction-task-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;2: For new cases, we fit using the blue observations and evaluate predictions on the held-out orange observations. For future prediction, we fit using observations available at the cutoff and evaluate predictions at later times. When choosing <span class="math inline">\(\lambda\)</span>, we repeat the fitting and prediction for each candidate value and compare these validation errors.
+</figcaption>
+</figure>
+</div>
+<p>While a random or stratified split can suit independent observations from the same population, for time-series prediction we often want to represent the ‘online’ nature of the task, where we only have access to past and present observations when predicting the future. We therefore fit using earlier observations and validate at later times. In Lab 4, we use the held-out later part of the reference trajectory to choose <span class="math inline">\(\lambda\)</span>. This explicitly checks our ability to predict beyond the fitting interval into the future, whereas withholding points within that interval can test interpolation or smoothing using observations on both sides.</p>
+<p>We can repeat the early/later split as new observations become available. In <strong>rolling-origin evaluation</strong>, we move the prediction cutoff forward, refit using the observations then available, and predict the next interval. The figure below shows an <strong>expanding training window</strong>, with the same prediction horizon at each step.</p>
+<div id="fig-rolling-origin" class="quarto-figure quarto-figure-center quarto-float anchored" data-fig-pos="H" data-fig-align="center" alt="Three fits with cutoffs advancing through time. Each fit uses all earlier observations and predicts the next two time blocks. The prediction horizons have the same length; the training sets grow. Earlier held-out outcomes are available before joining a later training set. This is a general extension of the single-cutoff idea. Lab 4 itself uses one cutoff and a later reference trajectory.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-rolling-origin-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="figures/rolling-origin.svg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" data-fig-pos="H" alt="Three fits with cutoffs advancing through time. Each fit uses all earlier observations and predicts the next two time blocks. The prediction horizons have the same length; the training sets grow. Earlier held-out outcomes are available before joining a later training set. This is a general extension of the single-cutoff idea. Lab 4 itself uses one cutoff and a later reference trajectory.">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-rolling-origin-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figure&nbsp;3: At each cutoff, we fit using the blue observations and predict the following orange interval. After those outcomes become available, we evaluate the predictions, advance the cutoff and refit. Observations used for validation in an earlier row can then be used for fitting in a later row. Grey blocks lie beyond the prediction interval for that row.
+</figcaption>
+</figure>
+</div>
+<p>Later fits in this scheme use more observations. The errors can change both because we have more training data and because we are predicting a different part of the series. Averaging the errors summarises performance across these cutoffs, rather than the performance of one final fit using all available observations.</p>
+<p>To compare candidate <span class="math inline">\(\lambda\)</span> values, we use the same cutoffs and prediction horizon for every candidate and choose <span class="math inline">\(\lambda\)</span> using the average validation error. We choose the first cutoff so that there are enough earlier observations to fit the model. If a final test interval is reserved, it stays outside these repeated validation checks.</p>
+<p>If the prediction task instead uses a fixed amount of recent history, we can move a <strong>fixed-width training window</strong> forward, so that each fit uses the same number of earlier observations.</p>
+</section>
+</section>
+</section>
+<section id="generalised-cross-validation-for-linear-models" class="level2">
+<h2 class="anchored" data-anchor-id="generalised-cross-validation-for-linear-models">Generalised cross-validation for linear models</h2>
+<p>Generally, the more complex the model (e.g.&nbsp;deep neural network vs linear model), the simpler the data splitting approach is, as it can be hard/computationally expensive to implement more sophisticated methods.</p>
+<p>For <strong>linear models</strong>, however, there is a particularly simple approximation available: <strong>generalised cross-validation</strong>. This is somewhat of a misnomer: it is an <em>approximation</em> to what you would obtain by carrying out ‘leave-one-out’ cross-validation for a linear model.</p>
+<p>For time-series data, a leave-one-out fit can use observations on both sides of the omitted point. The chronological splits above instead assess prediction into the future using only earlier observations.</p>
+<p>You <strong>don’t need to know the details</strong>, but for completeness, it minimises the following formula (representing generalisation error) to estimate <span class="math inline">\(\lambda\)</span>: <span class="math display">\[
+\text{GCV}(\lambda) = \frac{1}{m} \frac{\| (I - H_{\lambda}) y_{\text{obs}} \|^2}{\left( 1 - \frac{\text{Tr}(H_{\lambda})}{m} \right)^2}
+\]</span> where <span class="math inline">\(m\)</span> is the number of observations and <span class="math inline">\(H_{\lambda}\)</span> is the <strong>hat (smoothing) matrix</strong> associated with the regularised estimate. For our hybrid model, when the stacked system has full column rank, this is given by: <span class="math display">\[
+H_{\lambda} = B_{\text{obs}} \left( B_{\text{obs}}^T B_{\text{obs}} + \lambda B^T D^T D B \right)^{-1} B_{\text{obs}}^T
+\]</span> where <span class="math inline">\(B_{\text{obs}} = A_{\text{obs}}B\)</span> and <span class="math inline">\(D\)</span> is the matrix used in the penalty (<span class="math inline">\(D_3\)</span> in the example below). In the code below, we calculate this matrix using the augmented least squares solver rather than forming the inverse.</p>
+<p>The important point is that, although it may look intimidating, <strong>this is easy to calculate for linear models</strong> for each <span class="math inline">\(\lambda\)</span>. We can simply evaluate this for a <strong>grid</strong> of <span class="math inline">\(\lambda\)</span> values and choose the one giving the smallest value.</p>
+</section>
+<section id="example-minus-details" class="level2">
+<h2 class="anchored" data-anchor-id="example-minus-details">Example (minus details!)</h2>
+<p>We use the same projectile example, with 30 cubic spline basis functions and one constant column. The third-difference penalty favours quadratic trajectories, while the spline basis allows departures from that shape. As in the preceding example, the time-step factors are absorbed into <span class="math inline">\(\lambda\)</span>.</p>
+<div id="86c008a5" class="cell" data-execution_count="18">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="hybrid_linear_files/figure-html/cell-19-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Selected lambda on this grid: 2.915e+06</code></pre>
+</div>
+</div>
+</section>
+<section id="example-minus-details-continued" class="level2">
+<h2 class="anchored" data-anchor-id="example-minus-details-continued">Example (minus details!) continued</h2>
+<div id="8f51950e" class="cell" data-execution_count="19">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="hybrid_linear_files/figure-html/cell-20-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p><strong><em>Notes:</em></strong></p>
+<ul>
+<li>GCV selects a value of about <span class="math inline">\(3\times10^6\)</span> on this grid. The resulting fit sacrifices some agreement with the noisy observations and follows the underlying projectile trajectory more closely than the unpenalised spline.<br>
+</li>
+<li>The true trajectory is available here because we simulated the data. A larger penalty gives a closer fit to it in this example. GCV uses only the noisy observations to estimate prediction error, so it need not select the value that is best against the known trajectory.<br>
+</li>
+<li>The third-difference penalty agrees with the physics used to generate this example. When the physical model is approximate, stronger regularisation can worsen predictions, so the balance between data fit and model agreement needs to be checked.</li>
+</ul>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+<div class="nav-page nav-page-previous">
+<a class="pagination-link aria-label=" href="./linear_models.html" linear="" models"="">
+<i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Week 3: Linear models</span>
+</a>
+</div>
+<div class="nav-page nav-page-next">
+</div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+<div class="nav-footer">
+<div class="nav-footer-left">
+<p>ENGSCI 205 — Weeks 1–4 notes.</p>
+</div>
+<div class="nav-footer-center">
+       
+    </div>
+<div class="nav-footer-right">
+<p><a href="downloads/EML-Week-01.pdf">Week 1 PDF</a> · <a href="downloads/EML-Week-02.pdf">Week 2 PDF</a> · <a href="downloads/EML-Week-03.pdf">Week 3 PDF</a> · <a href="downloads/EML-Week-04.pdf">Week 4 PDF</a></p>
+</div>
+</div>
+</footer>
+</body></html>

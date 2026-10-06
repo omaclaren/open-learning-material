@@ -1,5 +1,11 @@
 /* HTML-only compatibility; never loaded by the authoring PDF build. */
 main { min-width: 0; }
+/* Retain the checked narrow-screen author-metadata fix. */
+@media (max-width: 600px) {
+  #title-block-header.quarto-title-block.default .quarto-title-meta {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
 main mjx-container[display="true"] {
   display: block;
   max-width: 100%;
