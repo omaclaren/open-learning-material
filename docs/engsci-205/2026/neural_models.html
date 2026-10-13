@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+
+<html lang="en" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml"><head>
+<meta charset="utf-8"/>
+<meta content="quarto-1.4.549" name="generator"/>
+<meta content="width=device-width, initial-scale=1.0, user-scalable=yes" name="viewport"/>
+<title>EngSci 205: Engineering-Centric Machine Learning - Neural networks</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta content="./" name="quarto:offset"/>
+<link href="./hybrid_linear.html" rel="prev"/>
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet"/>
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" id="quarto-text-highlighting-styles" rel="stylesheet"/>
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet"/>
+<link data-mode="light" href="site_libs/bootstrap/bootstrap.min.css" id="quarto-bootstrap" rel="stylesheet"/>
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+<link href="html-preview.css" rel="stylesheet"/>
+<link href="navigation-preview.css" rel="stylesheet"/><script defer="" src="navigation-preview.js"></script></head>
+<body class="nav-sidebar floating">
+<div id="quarto-search-results"></div>
+<header class="headroom fixed-top" id="quarto-header">
+<nav class="quarto-secondary-nav">
+<div class="container-fluid d-flex">
+<button aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" class="quarto-btn-toggle btn" data-bs-target=".quarto-sidebar-collapse-item" data-bs-toggle="collapse" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }" type="button">
+<i class="bi bi-layout-text-sidebar-reverse"></i>
+</button>
+<nav aria-label="breadcrumb" class="quarto-page-breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./neural_models.html">Week 5: Neural networks</a></li></ol></nav>
+<a aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" class="flex-grow-1" data-bs-target=".quarto-sidebar-collapse-item" data-bs-toggle="collapse" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }" role="button">
+</a>
+<button aria-label="" class="btn quarto-search-button" onclick="window.quartoOpenSearch();" type="button">
+<i class="bi bi-search"></i>
+</button>
+</div>
+</nav>
+</header>
+<!-- content -->
+<div class="quarto-container page-columns page-rows-contents page-layout-article" id="quarto-content">
+<!-- sidebar -->
+<nav class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto" id="quarto-sidebar">
+<div class="pt-lg-2 mt-2 text-left sidebar-header">
+<div class="sidebar-title mb-0 py-0">
+<a href="./">ENGSCI 205: Engineering-Centric Machine Learning</a>
+</div>
+</div>
+<div class="mt-2 flex-shrink-0 align-items-center">
+<div class="sidebar-search">
+<div class="" id="quarto-search" title="Search"></div>
+</div>
+</div>
+<div class="sidebar-menu-container">
+<ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./index.html">
+<span class="menu-text">Preface</span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./intro.html">
+<span class="menu-text">Week 1: Key ideas</span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./vectors_matrices_tensors.html">
+<span class="menu-text">Week 2: Tensors and PyTorch</span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./linear_models.html">
+<span class="menu-text">Week 3: Linear models</span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./hybrid_linear.html">
+<span class="menu-text">Week 4: Hybrid linear models</span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link active" href="./neural_models.html">
+<span class="menu-text">Week 5: Neural networks</span></a>
+</div>
+</li>
+</ul>
+</div>
+</nav>
+<div class="quarto-sidebar-collapse-item" data-bs-target=".quarto-sidebar-collapse-item" data-bs-toggle="collapse" id="quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+<div class="sidebar margin-sidebar" id="quarto-margin-sidebar">
+<nav class="engsci205-toc" id="TOC" role="doc-toc"><h2 id="toc-title">Table of contents</h2><ul class="toc-groups"><li class="toc-group-item"><details data-sections="title-block-header artificial-intelligence-and-neural-networks-brief-history artificial-intelligence-and-neural-networks-brief-history-continued"><summary>Neural networks: history</summary><ul class="toc-group-links"><li><a data-section="title-block-header" href="#title-block-header">Overview</a></li><li><a data-section="artificial-intelligence-and-neural-networks-brief-history" href="#artificial-intelligence-and-neural-networks-brief-history">Artificial intelligence and neural networks: brief history</a></li><li><a data-section="artificial-intelligence-and-neural-networks-brief-history-continued" href="#artificial-intelligence-and-neural-networks-brief-history-continued">Artificial intelligence and neural networks: brief history continued</a></li></ul></details></li><li class="toc-group-item"><details data-sections="neural-networks-vs-linear-models neural-networks-vs-linear-models-1 activation-functions"><summary>From linear models to neurons</summary><ul class="toc-group-links"><li><a data-section="neural-networks-vs-linear-models" href="#neural-networks-vs-linear-models">Neural networks vs linear models</a></li><li><a data-section="activation-functions" href="#activation-functions">Activation functions</a></li></ul></details></li><li class="toc-group-item"><details data-sections="multiple-neurons-and-multiple-layers architecture how-many-layers-deep-learning-and-feature-engineering"><summary>Layers and architecture</summary><ul class="toc-group-links"><li><a data-section="multiple-neurons-and-multiple-layers" href="#multiple-neurons-and-multiple-layers">Multiple neurons and multiple layers</a></li><li><a data-section="architecture" href="#architecture">Architecture</a></li><li><a data-section="how-many-layers-deep-learning-and-feature-engineering" href="#how-many-layers-deep-learning-and-feature-engineering">How many layers? Deep learning and feature engineering</a></li></ul></details></li><li class="toc-group-item"><details data-sections="building-neural-networks-in-pytorch model-summary terminology input-layer hidden-layers output-layer"><summary>Networks in PyTorch</summary><ul class="toc-group-links"><li><a data-section="building-neural-networks-in-pytorch" href="#building-neural-networks-in-pytorch">Building neural networks in PyTorch</a></li><li><a data-section="model-summary" href="#model-summary">Model summary</a></li><li><a data-section="terminology" href="#terminology">Terminology</a></li><li><a data-section="input-layer" href="#input-layer">Input layer</a></li><li><a data-section="hidden-layers" href="#hidden-layers">Hidden layers</a></li><li><a data-section="output-layer" href="#output-layer">Output layer</a></li></ul></details></li><li class="toc-group-item"><details data-sections="loading-data-in-pytorch inspecting-the-data inspecting-the-data-1 what-totensor-does normalising-the-data validation-splits-and-our-own-data mini-batching-the-data"><summary>Data and minibatches</summary><ul class="toc-group-links"><li><a data-section="loading-data-in-pytorch" href="#loading-data-in-pytorch">Loading data in PyTorch</a></li><li><a data-section="inspecting-the-data" href="#inspecting-the-data">Inspecting the data</a></li><li><a data-section="what-totensor-does" href="#what-totensor-does">What ToTensor does</a></li><li><a data-section="normalising-the-data" href="#normalising-the-data">Normalising the data</a></li><li><a data-section="validation-splits-and-our-own-data" href="#validation-splits-and-our-own-data">Validation splits and our own data</a></li><li><a data-section="mini-batching-the-data" href="#mini-batching-the-data">Mini-batching the data</a></li></ul></details></li><li class="toc-group-item"><details data-sections="batch-minibatch-and-stochastic-gradient-descent batch-minibatch-and-stochastic-gradient-descent-1 training-the-neural-network-in-pytorch what-next"><summary>Training and evaluation</summary><ul class="toc-group-links"><li><a data-section="batch-minibatch-and-stochastic-gradient-descent" href="#batch-minibatch-and-stochastic-gradient-descent">Batch, minibatch and stochastic gradient descent</a></li><li><a data-section="training-the-neural-network-in-pytorch" href="#training-the-neural-network-in-pytorch">Training the neural network in PyTorch</a></li><li><a data-section="what-next" href="#what-next">What next?</a></li></ul></details></li><li class="toc-group-item"><details data-sections="example-architecture-improvements-convolutional-neural-networks manual-convolution convolutional-layers-in-pytorch pooling-and-a-small-cnn physics-informed-neural-networks-hybrid-neural-models"><summary>Convolutional networks</summary><ul class="toc-group-links"><li><a data-section="example-architecture-improvements-convolutional-neural-networks" href="#example-architecture-improvements-convolutional-neural-networks">Example architecture improvements: convolutional neural networks</a></li><li><a data-section="manual-convolution" href="#manual-convolution">Manual convolution</a></li><li><a data-section="convolutional-layers-in-pytorch" href="#convolutional-layers-in-pytorch">Convolutional layers in PyTorch</a></li><li><a data-section="pooling-and-a-small-cnn" href="#pooling-and-a-small-cnn">Pooling and a small CNN</a></li><li><a data-section="physics-informed-neural-networks-hybrid-neural-models" href="#physics-informed-neural-networks-hybrid-neural-models">Physics-informed neural networks: hybrid neural models</a></li></ul></details></li></ul></nav>
+</div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Neural networks</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>Finally we reach the most hyped model class of today (as of 2026) – <strong>(artificial) neural networks</strong>! Artificial neural networks have been around since at least 1958, when Rosenblatt presented a computer implementation of the <strong>perceptron</strong>, a simple ‘single-layer’ neural network, based on earlier work by McCulloch and Pitts (1943). These were inspired by the neurons of the brain, hence the term artificial neural network. Even then the excitement was real:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figures/perceptron.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:70.0%"></p>
+<figcaption>Article from the New York Times on Rosenblatt’s work on the Perceptron.</figcaption>
+</figure>
+</div>
+<section id="artificial-intelligence-and-neural-networks-brief-history" class="level2">
+<h2 class="anchored" data-anchor-id="artificial-intelligence-and-neural-networks-brief-history">Artificial intelligence and neural networks: brief history</h2>
+<p><strong>Artificial intelligence</strong> (AI), of which ‘machine learning’ is a subfield, has undergone numerous ‘booms’ and ‘busts’ since around 1950. The term <strong>AI winter</strong> has been used for several of the ‘bust’ cycles in AI, where funding and interest dropped after failures to live up to the hype. This includes ‘bust’ periods such as 1974-1980 and 1987-2000. The current ‘boom’ period (as of 2026) roughly started around 2012. (See e.g.&nbsp;the Wikipedia article <a href="https://en.wikipedia.org/wiki/AI_winter">AI Winter</a> for further reading and references.)</p>
+<p>Within AI, neural networks have undergone their own boom and bust periods. For example, after their initial hype (see NY Times article!), Minsky and Papert published a book <em>Perceptrons</em> in 1969 containing several criticisms of neural networks. Famously, they showed that <em>single-layer</em> neural nets are unable to compute the basic logical operation XOR (exclusive OR). It was known that multiple-layer networks (called <em>multilayer networks</em> or <em>multilayer perceptrons</em>) were not subject to this limitation, but feasible training methods for these were not known. In contrast, many AI researchers between the 1950s and 1980s focused on <strong>expert systems</strong> and <strong>symbolic AI</strong>, in which <em>explicit rules</em> are encoded rather than learned from data (note the similarity to encoding ‘engineering knowledge’!)</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figures/perceptrons-book.jpg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:20.0%"></p>
+<figcaption>The book that (briefly) killed neural networks??</figcaption>
+</figure>
+</div>
+</section>
+<section id="artificial-intelligence-and-neural-networks-brief-history-continued" class="level2">
+<h2 class="anchored" data-anchor-id="artificial-intelligence-and-neural-networks-brief-history-continued">Artificial intelligence and neural networks: brief history continued</h2>
+<p>Development of the <strong>backpropagation</strong> algorithm for training multilayer neural networks helped lead to renewed interest in neural networks in the 1980s. Backpropagation – essentially <em>efficiently and automatically</em> using the chain rule to compute gradients and hence carry out optimisation – was popularised in the 1980s, for example in the 1986 paper <em>Learning representations by back-propagating errors</em> by Rumelhart, Hinton, and Williams. However, it wasn’t until around 2012 that the availability of cheap and powerful computer hardware like <strong>GPUs</strong>, the availability of <strong>large datasets</strong>, and better <strong>architectures</strong> and training methods for older ideas such as <strong>convolutional neural networks (CNNs)</strong> and <strong>recurrent neural networks (RNNs)</strong>, enabled the current explosion of interest (currently the ‘hot’ architecture is the <strong>transformer</strong>, the ‘T’ in ChatGPT!). These advances have led to a resurgence in machine learning and the use of neural networks with many- (many, many-) layers, often referred to as <strong>deep neural networks</strong>. Training such networks is known as <strong>deep learning</strong>.</p>
+<p>Machine learning is an opposing but complementary approach to rule-based AI – a <em>yin and yang</em>! The idea is to <strong>learn</strong> approximate, statistical, rules from the data, rather than impose them <em>a priori</em>. As we have seen, this has strengths and weaknesses in engineering applications! For now, engineers appear to need to continue to learn the ‘rules’ of Newton’s Laws of motion alongside machine learning and statistics. Perhaps, however, we will see the machine learning approach continue to supplant traditional approaches? Or perhaps various <strong>hybrid methods</strong>, such as those we looked at in the previous section, will come to dominate? Exciting times!</p>
+<p>So far we have fitted models to time series, such as a pendulum’s angle over time, including hybrid models that build in physics. In this chapter we introduce neural networks through basic <strong>image classification</strong>: recognising handwritten digits. In the next chapter we return to <strong>time series prediction</strong> and <strong>hybrid modelling</strong>, with a neural network as the data model.</p>
+</section>
+<section id="neural-networks-vs-linear-models" class="level2">
+<h2 class="anchored" data-anchor-id="neural-networks-vs-linear-models">Neural networks vs linear models</h2>
+<p>What is a neural network? First consider a simple <strong>linear model</strong> for observations <span class="math inline">\((x_i,y_i)\)</span>, <span class="math inline">\(i=1,\dots,m\)</span>, <span class="math display">\[y_i \approx b + x_i w \]</span></p>
+<p>where <span class="math inline">\(w\)</span> is a <strong>weight parameter</strong> and <span class="math inline">\(b\)</span> is called a <strong>bias parameter</strong> (or <em>intercept</em> in linear regression). This can also be written as<br>
+<span class="math display">\[y_i \approx 1 b + x_i w = \begin{bmatrix}1 &amp; x_i\end{bmatrix}\begin{bmatrix}b\\ w\end{bmatrix}\]</span> where we include the ‘constant feature’ 1. For <span class="math inline">\(m\)</span> observations we get the vector equation</p>
+<p><span class="math display">\[
+y = \bar{X} \bar{w}
+\]</span> where <span class="math display">\[
+\bar{X} =
+\begin{bmatrix}
+1 &amp; x_1\\
+1 &amp; x_2\\
+\vdots &amp; \vdots\\
+1 &amp; x_m
+\end{bmatrix}
+\]</span> and <span class="math display">\[\bar{w} = \begin{bmatrix}b\\ w\end{bmatrix}.\]</span> We’ve used a ‘bar’ over the <span class="math inline">\(X\)</span> and <span class="math inline">\(w\)</span> to indicate the constant/bias terms are included. For various reasons, neural network folk often keep the weights and bias terms separate, and instead write e.g.&nbsp; <span class="math display">\[
+y = 1_mb + Xw
+\]</span> where here <span class="math display">\[
+X =
+\begin{bmatrix}
+x_1\\
+x_2\\
+\vdots\\
+x_m
+\end{bmatrix}
+\]</span> and <span class="math inline">\(1_m\)</span> is a <em>ones vector</em> of length <span class="math inline">\(m\)</span>.</p>
+</section>
+<section id="neural-networks-vs-linear-models-1" class="level2">
+<h2 class="anchored" data-anchor-id="neural-networks-vs-linear-models-1">Neural networks vs linear models</h2>
+<p>So far we have a standard linear model. This can obviously be extended to multiple input features, e.g.&nbsp;if we denote the <span class="math inline">\(i\)</span>th measurement of the <span class="math inline">\(j\)</span>th feature as <span class="math inline">\(x_{ij}\)</span> we have a design/feature matrix of the form: <span class="math display">\[
+X = [x_{ij}]_{i=1:m,j=1:n}
+\]</span> and linear model <span class="math display">\[
+y \approx b1_m +  Xw
+\]</span> for feature weights <span class="math display">\[
+w = \begin{bmatrix}w_1\\w_2\\\vdots\\w_n\end{bmatrix}
+\]</span> The neural network folk like to represent this model with diagrams like the below: <img src="figures/neuron.svg" class="img-fluid quarto-figure quarto-figure-center" style="width:30.0%" alt="Neuron?"></p>
+<p>The <strong>bias</strong> term is sometimes depicted explicitly but <strong>often left implicit</strong>. We almost have a simple neural network! We just need one more element that is normally implied by diagrams like the above<span class="math inline">\(\dots\)</span> </p>
+</section>
+<section id="activation-functions" class="level2">
+<h2 class="anchored" data-anchor-id="activation-functions">Activation functions</h2>
+<p>The main element distinguishing a neural network from a standard linear model is a <strong>nonlinearity</strong> introduced by an <strong>activation function</strong> applied to the output of a linear component before the final output is produced. This means our model for a single output has the general form: <span class="math display">\[
+y \approx f(Xw + 1_mb)
+\]</span> where <span class="math inline">\(f\)</span> is a <strong>nonlinear function</strong> called an <strong>activation function</strong> that is (usually) applied <strong>elementwise</strong>, i.e.&nbsp;to each sample realisation, so that <span class="math display">\[
+y_i \approx f(\text{row}_i(X)w + b)
+\]</span> where <span class="math inline">\(\text{row}_i(X)\)</span> is the <span class="math inline">\(i\)</span>th row of <span class="math inline">\(X\)</span>. Activation functions were originally inspired by the behaviour of biological neurons, which typically only ‘fire’ (send a signal) when a threshold signal is reached. Thus, typical activation functions generally have a <strong>threshold</strong> or <strong>switch-like</strong> shape, with varying degrees of smoothness and saturation properties, e.g.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figures/activation.svg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:90.0%"></p>
+<figcaption>Typical activation functions, where <span class="math inline">\(z\)</span> is the output of the linear component.</figcaption>
+</figure>
+</div>
+<p>Although originally inspired by biology, <strong>mathematically</strong>, the important thing is that <strong>introducing nonlinearities</strong> allows us to represent more complex classes of functions: so-called <strong>universal approximation theorems</strong> state, roughly, that sufficiently complex neural networks, with nonlinear activation functions, can approximate any continuous function on a bounded range of inputs as closely as we like, given enough neurons. These theorems say that suitable weights exist; they don’t say that training will find them, or how much data that takes.</p>
+</section>
+<section id="multiple-neurons-and-multiple-layers" class="level2">
+<h2 class="anchored" data-anchor-id="multiple-neurons-and-multiple-layers">Multiple neurons and multiple layers</h2>
+<p>So far we have a single ‘regression’ style equation that represents a single output given multiple features, a weight for each feature, a single bias term, and a nonlinearity applied to the output of the linear component. This is called an <strong>artificial neuron</strong>, or just <strong>neuron</strong> for short. Similar models occur in statistics, for example this class of models essentially corresponds to so-called <strong>generalised linear models</strong> in statistics. What else distinguishes neural networks from standard statistical models?</p>
+<p>Another key element in neural networks is that we typically consider <strong>multiple neurons</strong>, arranged in <strong>layers</strong>, as in the below diagram. There are three <em>types</em> of layers: <strong>input</strong>, <strong>output</strong>, and the intermediate <strong>hidden</strong> layers. Note, however, that we can have <strong>as many hidden layers as we want</strong>!</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figures/neural-network.svg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:45.0%"></p>
+<figcaption>Neural network with <em>one</em> hidden layer</figcaption>
+</figure>
+</div>
+<p>Thus we have a collection of regression-like equations that in turn form the features for another collection of regression-like equations, and so on, until we reach the output. Note, though: <strong>without nonlinear activation functions this would still just be a big linear model!</strong></p>
+</section>
+<section id="architecture" class="level2">
+<h2 class="anchored" data-anchor-id="architecture">Architecture</h2>
+<p>The term <strong>architecture</strong> refers to the structural design of the neural network: how many <strong>layers</strong>, how many <strong>neurons</strong> – also called <strong>nodes</strong> or <strong>units</strong> – in each layer, etc. The number of layers is referred to as the <strong>depth</strong>, while the number of neurons in a layer is referred to as the (layer) <strong>width</strong>.</p>
+<p>A <strong>feedforward neural network</strong> is the archetypal neural network where information moves in only one direction – from the <strong>input</strong> nodes, through the <strong>hidden</strong> layers, and finally to the <strong>output</strong> nodes (as in the diagram above). There are <strong>no loops or feedback connections</strong> between nodes in the network. Hence its general architecture consists of an input layer, one or more hidden layers, and an output layer:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figures/feedforward.svg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:60.0%"></p>
+</figure>
+</div>
+<p><strong>Recurrent neural networks</strong> include ‘recurrent connections’ or <strong>loops</strong> and are hence no longer feedforward neural networks. For simplicity we only focus on very simple <strong>feedforward</strong> neural networks here. It is relatively simple to experiment with different architectures in PyTorch on your own, however! </p>
+</section>
+<section id="how-many-layers-deep-learning-and-feature-engineering" class="level2">
+<h2 class="anchored" data-anchor-id="how-many-layers-deep-learning-and-feature-engineering">How many layers? Deep learning and feature engineering</h2>
+<p>Since around 2012 there has been a large shift towards increasing <strong>deep</strong> architectures with <strong>many layers</strong>. Why? What’s the goal? The following image from <a href="https://github.com/deep-learning-with-pytorch/dlwpt-code"><em>‘Deep Learning with PyTorch’</em> by Stevens, Antiga, and Viehmann (2020)</a> illustrates the conceptual shift associated with deep learning vs.&nbsp;more ‘traditional’ machine learning/data science:</p>
+<div>
+
+</div>
+<div class="quarto-layout-panel" data-layout-ncol="2">
+<div class="quarto-layout-row">
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figures/paradigm-feature-learning.png" class="img-fluid figure-img" alt="Traditional pipeline: hand-crafted features are passed to a learning algorithm, which predicts the outcome."></p>
+<figcaption>Feature engineering</figcaption>
+</figure>
+</div>
+</div>
+<div class="quarto-layout-cell" style="flex-basis: 50.0%;justify-content: flex-start;">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figures/paradigm-deep-learning.png" class="img-fluid figure-img" alt="Deep learning pipeline: raw data go into a deep network, which learns its own representations and predicts the outcome."></p>
+<figcaption>Deep learning</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</div>
+<p>That is, in <em>theory</em>, the goal of deep learning is to <strong>automatically learn</strong> as much of the data-to-outcome pipeline as possible, reducing the reliance on hand-crafted components. Note, however, that this diagram just illustrates the <strong>general conceptual orientation</strong> of different approaches, and is not a prescription of what to do. <strong>As engineers</strong>, we have professional and ethical obligations in terms of safety and reliability, as well as a pragmatic orientation on timely results. <strong>Current deep learning pipelines may not be the safest/most reliable/timely approach for many engineering applications!</strong></p>
+</section>
+<section id="building-neural-networks-in-pytorch" class="level2">
+<h2 class="anchored" data-anchor-id="building-neural-networks-in-pytorch">Building neural networks in PyTorch</h2>
+<p>So far we’ve mainly just used the tensor data structures available in PyTorch, and a little of its autodiff capabilities. <em>In theory, we could build neural networks from these components</em>. However, the main <code>torch</code> module of PyTorch also contains a submodule <code>torch.nn</code> dedicated to helping us build neural networks more easily.</p>
+<p>There are two main ways to build neural networks in PyTorch. The <em>simplest</em> is to use the further submodule of <code>nn</code>, <code>torch.nn.Sequential</code>, which allows us to simply specify a <em>sequence</em> of ‘layers’ to define a neural network model. While we can use this to do familiar things like predict the motion of a pendulum or projectile, we can also use this approach to make a simple neural network for <strong>image classification</strong>. For example, here is <strong>a simple neural network designed to classify <span class="math inline">\(28 \times 28\)</span> pixel grayscale images into one of five classes</strong>:</p>
+<div id="9ac95b46" class="cell" data-execution_count="1">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch.nn <span class="im">as</span> nn</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Define the model</span></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> nn.Sequential(</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>    nn.Flatten(),</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>    nn.Linear(<span class="dv">28</span> <span class="op">*</span> <span class="dv">28</span>, <span class="dv">128</span>),</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>    nn.ReLU(),</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>    nn.Linear(<span class="dv">128</span>, <span class="dv">5</span>),</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>    nn.Softmax(dim<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>That’s it! Sort of<span class="math inline">\(\dots\)</span> we still need to obtain our training data and train our model. But first, let’s consider what’s happening in our model.</p>
+</section>
+<section id="model-summary" class="level2">
+<h2 class="anchored" data-anchor-id="model-summary">Model summary</h2>
+<p>We can use <code>torchsummary</code> (available in Colab) to summarise the model:</p>
+<div id="c814f539" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torchsummary <span class="im">import</span> summary</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>summary(model, input_size<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">28</span>, <span class="dv">28</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>----------------------------------------------------------------
+        Layer (type)               Output Shape         Param #
+================================================================
+           Flatten-1                  [-1, 784]               0
+            Linear-2                  [-1, 128]         100,480
+              ReLU-3                  [-1, 128]               0
+            Linear-4                    [-1, 5]             645
+           Softmax-5                    [-1, 5]               0
+================================================================
+Total params: 101,125
+Trainable params: 101,125
+Non-trainable params: 0
+----------------------------------------------------------------
+Input size (MB): 0.00
+Forward/backward pass size (MB): 0.01
+Params size (MB): 0.39
+Estimated Total Size (MB): 0.40
+----------------------------------------------------------------</code></pre>
+</div>
+</div>
+<p>We can also count the learnable parameters directly:</p>
+<div id="f11d308a" class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># numel() is the number of entries in a tensor;</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># add them up over all parameters</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>n_params <span class="op">=</span> <span class="bu">sum</span>(p.numel() <span class="cf">for</span> p <span class="kw">in</span> model.parameters())</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(n_params)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>101125</code></pre>
+</div>
+</div>
+<p>The first <code>nn.Linear</code> layer accounts for 100,480 of these, as counted below; the output layer has the remaining <span class="math inline">\(128 \times 5 + 5 = 645\)</span>.</p>
+</section>
+<section id="terminology" class="level2">
+<h2 class="anchored" data-anchor-id="terminology">Terminology</h2>
+<p>Note on <strong>terminology</strong>: <code>Flatten</code>, <code>ReLU</code> and <code>Softmax</code> are considered ‘layers’ in the <em>PyTorch</em> model, but these are <strong>not parameterised</strong>. They instead represent <strong>data reshaping</strong>, <strong>data transformations</strong>, and <strong>activation functions</strong>. In <strong>standard, mathematical neural network terminology</strong> we usually only use the term ‘layer’ for what we would call <strong>parameterised layers</strong> in PyTorch (other than the input/data layer which is not parameterised).</p>
+<p>Furthermore, in a PyTorch ‘layer’ like <code>nn.Linear(28 * 28, 128)</code>, its mathematical/diagrammatic counterpart is associated with the <em>output</em> nodes (128) of the PyTorch layer. So the <strong>width</strong> of the layer in the mathematical/diagrammatic sense is 128. Here we have five PyTorch ‘layers’ corresponding, in standard neural network terms, to <strong>one input layer</strong> and <strong>two (parameterised) layers</strong>. That is, we have one (non-parameterised) input layer, one (parameterised) hidden layer, and one (parameterised) output layer. There are also multiple output classes.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figures/neural-network-simple.svg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:45.0%"></p>
+<figcaption>Neural network predicting multiple class probabilities.</figcaption>
+</figure>
+</div>
+</section>
+<section id="input-layer" class="level2">
+<h2 class="anchored" data-anchor-id="input-layer">Input layer</h2>
+<p>The first ‘layer’ (in PyTorch terms) is <code>nn.Flatten</code>. This turns each <strong>image into a vector</strong> by ‘flattening’ the image <em>row-wise</em> into a long vector:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figures/flatten.svg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:45.0%"></p>
+<figcaption>Turning an image into a vector.</figcaption>
+</figure>
+</div>
+<p>Note that a common mathematical convention (and the Fortran convention) is to flatten <em>column-wise</em>, but NumPy and PyTorch, following C, <strong>flatten row-wise</strong> by default.</p>
+<p>This step is needed because <code>nn.Linear</code> acts on the last dimension of its input. Flattening puts all <span class="math inline">\(28 \times 28 = 784\)</span> pixel values of each image in that dimension, so a minibatch becomes a tensor of shape <code>[batch_size, 784]</code>, with one row per image and the pixel values as its ‘features’. Note though, that other, more advanced image-handling layers (such as <em>convolutional layers</em>) do not require images to be flattened, and can work directly with multi-dimensional tensors.</p>
+<p>This is a non-parameterised layer and is essentially our input layer.</p>
+</section>
+<section id="hidden-layers" class="level2">
+<h2 class="anchored" data-anchor-id="hidden-layers">Hidden layers</h2>
+<p>The <code>nn.Linear</code> PyTorch layer is the first parameterised layer of the neural network and is a <strong>hidden</strong> layer because its <em>output</em> nodes are not directly observed outputs.</p>
+<p>This layer has <span class="math inline">\(28 \times 28 = 784\)</span> input nodes and 128 output nodes. That is, we are representing 128 ‘regressions’, each taking 784 input variables with their own weights! Each regression also has a bias term, so we get <span class="math inline">\(128 \times 784 + 128 = 100480\)</span> learnable parameters. The width of this layer is 128, i.e.&nbsp;the number of <em>output</em> nodes in the layer.</p>
+<p>The layer’s weights form a <span class="math inline">\(784\times128\)</span> matrix <span class="math inline">\(W\)</span>, with one row per input pixel and one column per neuron, and its biases a vector <span class="math inline">\(b\)</span> of length 128. Each column of <span class="math inline">\(W\)</span> holds one neuron’s 784 weights, like the weight vector <span class="math inline">\(w\)</span> in the linear models chapter: placing the 128 regressions side by side gives <span class="math inline">\(W\)</span>. As in that chapter, observations go in rows, so for a minibatch <span class="math inline">\(X\)</span> with one flattened image per row the layer computes <span class="math inline">\(XW+b\)</span> (the convention of Goodfellow, Bengio and Courville’s <em>Deep Learning</em>):</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figures/weight-matrix.svg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:90.0%"></p>
+<figcaption>The weights of <code>nn.Linear(784, 128)</code> for a minibatch <span class="math inline">\(X\)</span> of <span class="math inline">\(n\)</span> flattened images: entry <span class="math inline">\((i,j)\)</span> of the output is image <span class="math inline">\(i\)</span> times neuron <span class="math inline">\(j\)</span>’s weights, plus entry <span class="math inline">\(j\)</span> of <span class="math inline">\(b\)</span>.</figcaption>
+</figure>
+</div>
+<p>Each output row comes from one image, just as each row of <span class="math inline">\(Xw\)</span> came from one observation in the linear models chapter. PyTorch stores the transpose: <code>layer.weight</code> is <span class="math inline">\(W^T\)</span>, with shape <code>[128, 784]</code>, and the layer computes <code>X @ layer.weight.T + layer.bias</code>.</p>
+<p>Mathematically, the subsequent <code>nn.ReLU</code> <strong>activation function</strong> is part of this layer. Separating the specification of the activation function from the linear component <em>in code</em>, however, gives greater flexibility.</p>
+</section>
+<section id="output-layer" class="level2">
+<h2 class="anchored" data-anchor-id="output-layer">Output layer</h2>
+<p>The <code>nn.Linear(128, 5)</code> layer is the <strong>output layer</strong>. It maps the 128 hidden neurons to five output classes. Mathematically, the <code>nn.Softmax(dim=1)</code> <strong>activation function</strong> is also part of this layer.</p>
+<p>What does <code>nn.Softmax</code> do? It normalises, in a particular way, an input <strong>vector</strong> <span class="math inline">\(z\)</span> (represented as a tensor of course) into a discrete probability distribution <strong>vector</strong> <span class="math inline">\(p\)</span> of the same dimension: <span class="math display">\[
+\text{Softmax}: z \mapsto p
+\]</span> where <span class="math inline">\(z\)</span> and <span class="math inline">\(p\)</span> are vectors of the same length, and <span class="math inline">\(p\)</span> sums to one. Hence here we get a probability vector with five entries. Note that our <span class="math inline">\(z\)</span> vector (tensor) here has a <em>column</em> for each output class, and hence we normalise over the column dimension, dim=1 (see e.g.&nbsp;torchsummary).</p>
+<p>Interestingly, in contrast to most activation functions, this function is <strong>not</strong> applied separately to each pre-activation neuron value. Instead, the softmax function depends on the values of <strong>all</strong> elements of the vector given, as its job is to ensure the values <strong>together</strong> sum to one. It is defined by: <span class="math display">\[
+\text{Softmax}(z)_i = \frac{\exp(z_i)}{\sum_j{\exp(z_j)}}
+\]</span></p>
+<p>Softmax is usually only used for <strong>output layers</strong>, to provide a <strong>final probability distribution over a collection of discrete classes</strong>. It is rarely used ‘inside’ neural networks, i.e.&nbsp;in hidden layers, where elementwise activation functions are common.</p>
+<p>Finally, although Softmax is <em>conceptually</em> important, it turns out that, for <strong>multi-class classification</strong>, it is generally better practice to use the LogSoftmax function, <code>nn.LogSoftmax(dim=1)</code>, instead of Softmax. And rather than a sum of squared errors, for multi-class classification this last output layer is usually used with a so-called <strong>negative log likelihood loss</strong>, <code>nn.NLLLoss()</code> that takes in log-probabilities. Equivalently, we can leave out the final activation and use <code>nn.CrossEntropyLoss</code>, which combines <code>LogSoftmax</code> and <code>NLLLoss</code>; most PyTorch examples do this.</p>
+<p>Why this loss? The labels are categories, so a squared error on the label numbers doesn’t make sense: it would treat a 7 as closer to an 8 than to a 1. Instead we choose the weights that make the observed labels most probable. The <strong>likelihood</strong> is the probability the model gives the labels we observed. Treating the images as independent, it is the product <span class="math inline">\(L=\prod_i p_i\)</span>, where <span class="math inline">\(p_i\)</span> is the predicted probability of image <span class="math inline">\(i\)</span>’s correct class; for example, probabilities 0.9, 0.6 and 0.2 for three images give <span class="math inline">\(L=0.108\)</span>. Choosing the weights to maximise <span class="math inline">\(L\)</span> is <strong>maximum likelihood</strong> estimation. In practice we minimise the negative log-likelihood, <span class="math inline">\(-\log L=-\sum_i\log p_i\)</span> (natural log), averaged over the images:</p>
+<ul>
+<li>the log turns the product into a sum, so the loss is an average over images, like the mean squared error, and a minibatch’s average estimates it;</li>
+<li>a product of many probabilities underflows to zero in floating point (for example <span class="math inline">\(0.9^{60\,000}\)</span>), while the sum of their logs does not;</li>
+<li>the log is increasing, so the same weights maximise <span class="math inline">\(L\)</span> and minimise <span class="math inline">\(-\log L\)</span>.</li>
+</ul>
+<p>Each image contributes <span class="math inline">\(-\log p_i\)</span>, which is zero when <span class="math inline">\(p_i=1\)</span> and grows without bound as <span class="math inline">\(p_i\to0\)</span>, so giving the correct class a low probability costs the most. (Least squares is also maximum likelihood, for independent Gaussian errors with constant variance.)</p>
+</section>
+<section id="loading-data-in-pytorch" class="level2">
+<h2 class="anchored" data-anchor-id="loading-data-in-pytorch">Loading data in PyTorch</h2>
+<p>Let’s look at an example. The machine learning and computer vision communities have collected many benchmark datasets over the years, and have run numerous competitions based on such datasets. (Interestingly, <a href="https://www.tandfonline.com/doi/full/10.1080/10618600.2017.1384734">Donoho</a> has argued that such practices have been central to the successes of data science and machine learning).</p>
+<p>A classic example dataset is the handwritten digit-recognition dataset called <strong>MNIST</strong>. This is a dataset of <span class="math inline">\(28 \times 28\)</span> images of handwritten digits with 60,000 training images and 10,000 testing images. <a href="https://yann.lecun.com/exdb/mnist/">LeCun et al.</a> describe this as</p>
+<blockquote class="blockquote">
+<p>a good database for people who want to try learning techniques and pattern recognition methods on real-world data while spending minimal efforts on preprocessing and formatting.</p>
+</blockquote>
+<p>The PyTorch module <code>torchvision</code> contains useful datasets, models, and image transformations for <strong>computer vision</strong> (image/video machine learning) applications. There are ‘built-in’ datasets in the module <code>torchvision.datasets</code>, which also contains tools (functions, classes etc.) for working with custom datasets. We can load the MNIST dataset as follows:</p>
+<div id="9de46693" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torchvision <span class="im">import</span> datasets, transforms</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Define transformations to be applied to loaded images</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Here just a conversion to tensor format.</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>transform <span class="op">=</span> transforms.ToTensor()</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Load training and test datasets</span></span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>train_dataset <span class="op">=</span> datasets.MNIST(root<span class="op">=</span><span class="st">'./data'</span>, train<span class="op">=</span><span class="va">True</span>, </span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>                transform<span class="op">=</span>transform, download<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>test_dataset <span class="op">=</span> datasets.MNIST(root<span class="op">=</span><span class="st">'./data'</span>, train<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>                transform<span class="op">=</span>transform, download<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The above looks for a local ‘data’ folder. If it doesn’t exist it creates this and downloads the dataset from public sources.</p>
+</section>
+<section id="inspecting-the-data" class="level2">
+<h2 class="anchored" data-anchor-id="inspecting-the-data">Inspecting the data</h2>
+<p>The returned objects are MNIST dataset objects, a kind of <code>torch.utils.data.Dataset</code>.</p>
+<div id="05c294ed" class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(train_dataset)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Dataset MNIST
+    Number of datapoints: 60000
+    Root location: ./data
+    Split: Train
+    StandardTransform
+Transform: ToTensor()</code></pre>
+</div>
+</div>
+<p>We can access (image, label) pairs of the dataset using standard indexing:</p>
+<div id="68085dc2" class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>img, label <span class="op">=</span> train_dataset[<span class="dv">0</span>]</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'image shape:'</span>)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(img.shape)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'</span><span class="ch">\n</span><span class="st">'</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">'image label:'</span>)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(label)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>image shape:
+torch.Size([1, 28, 28])
+
+
+image label:
+5</code></pre>
+</div>
+</div>
+<p>Let’s look at the image! </p>
+</section>
+<section id="inspecting-the-data-1" class="level2">
+<h2 class="anchored" data-anchor-id="inspecting-the-data-1">Inspecting the data</h2>
+<div id="d7c9a071" class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co"># need to permute tensor to matplotlib layout</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>plt.imshow(torch.permute(img,[<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">0</span>]),cmap<span class="op">=</span><span class="st">'gray'</span>)</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="neural_models_files/figure-html/cell-8-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="what-totensor-does" class="level2">
+<h2 class="anchored" data-anchor-id="what-totensor-does">What <code>ToTensor</code> does</h2>
+<p>Different libraries store images in different layouts (see the tensors chapter):</p>
+<table class="table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>Dimensions</th>
+<th>Values</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Image files, NumPy, Matplotlib</td>
+<td>(height, width, channels)</td>
+<td>integers 0 to 255 (<code>uint8</code>)</td>
+</tr>
+<tr class="even">
+<td>PyTorch</td>
+<td>(channels, height, width)</td>
+<td>floats, often in <span class="math inline">\([0,1]\)</span> (<code>float32</code>)</td>
+</tr>
+<tr class="odd">
+<td>A PyTorch minibatch</td>
+<td>(images, channels, height, width)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>A grayscale image has one channel and a colour image three (red, green, blue). MNIST stores its training images as integers in <code>train_dataset.data</code>, with no channel dimension:</p>
+<div id="3fabb5ae" class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># MNIST as stored</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(train_dataset.data.shape, train_dataset.data.dtype)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>torch.Size([60000, 28, 28]) torch.uint8</code></pre>
+</div>
+</div>
+<p>In the tensors chapter we converted the cat image to a PyTorch tensor by hand, with <code>torch.from_numpy</code>, division by 255 and <code>permute</code>. The transform <code>transforms.ToTensor()</code>, which takes no arguments, does the same in one step:</p>
+<div id="faa2d609" class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> imageio.v3 <span class="im">as</span> iio</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>img_arr <span class="op">=</span> iio.imread(<span class="st">'./data/cat3.png'</span>)  <span class="co"># height, width, channels</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co"># by hand: floats in [0, 1], then channels first</span></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>cat <span class="op">=</span> torch.from_numpy(img_arr).<span class="bu">float</span>() <span class="op">/</span> <span class="dv">255</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>cat <span class="op">=</span> torch.permute(cat, (<span class="dv">2</span>, <span class="dv">0</span>, <span class="dv">1</span>))</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>to_tensor <span class="op">=</span> transforms.ToTensor()  <span class="co"># no arguments</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(img_arr.shape, to_tensor(img_arr).shape)</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(torch.equal(to_tensor(img_arr), cat))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>(256, 256, 3) torch.Size([3, 256, 256])
+True</code></pre>
+</div>
+</div>
+<p><code>ToTensor</code> takes a NumPy array or a PIL image (the image format MNIST passes to it), of shape (height, width, channels) or just (height, width), and returns a <code>float32</code> tensor of shape (channels, height, width), dividing <code>uint8</code> values by 255. Each MNIST image therefore becomes a tensor of shape <code>[1, 28, 28]</code> with values between 0 and 1:</p>
+<div id="9ca12080" class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># one image after ToTensor</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(img.shape, img.dtype, img.<span class="bu">min</span>().item(), img.<span class="bu">max</span>().item())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>torch.Size([1, 28, 28]) torch.float32 0.0 1.0</code></pre>
+</div>
+</div>
+<p>Here <code>.item()</code> turns a one-element tensor into a plain Python number. A <code>Dataset</code> like this can be indexed, <code>train_dataset[i]</code>, and has a length, <code>len(train_dataset)</code>. That is all a <code>DataLoader</code> needs to produce minibatches.</p>
+</section>
+<section id="normalising-the-data" class="level2">
+<h2 class="anchored" data-anchor-id="normalising-the-data">Normalising the data</h2>
+<p>It is common to <strong>normalise</strong> the inputs, for example to have zero mean and unit standard deviation. <code>transforms.Normalize</code> does this, but we supply the mean and standard deviation ourselves, computed beforehand from the <strong>training</strong> images only:</p>
+<div id="26de662d" class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>pixels <span class="op">=</span> train_dataset.data.<span class="bu">float</span>() <span class="op">/</span> <span class="dv">255</span>  <span class="co"># scaled to [0, 1]</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="bu">round</span>(pixels.mean().item(), <span class="dv">4</span>), <span class="bu">round</span>(pixels.std().item(), <span class="dv">4</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>0.1307 0.3081</code></pre>
+</div>
+</div>
+<p><code>transforms.Normalize(mean, std)</code> subtracts <code>mean</code> and divides by <code>std</code>, with one value per channel. It goes in the <code>transform</code> argument of <code>datasets.MNIST</code>, combined with <code>ToTensor</code> by <code>transforms.Compose</code>:</p>
+<div id="b20bd0de" class="cell" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># first convert to a tensor, then compute (x - mean) / std</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>transform <span class="op">=</span> transforms.Compose([</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    transforms.ToTensor(),</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    transforms.Normalize((<span class="fl">0.1307</span>,), (<span class="fl">0.3081</span>,))])</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>train_normalised <span class="op">=</span> datasets.MNIST(root<span class="op">=</span><span class="st">'./data'</span>, train<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>                                  transform<span class="op">=</span>transform)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p><code>Compose</code> applies the transforms in the order listed. <code>Normalize</code> works on tensors, so it must come after <code>ToTensor</code>. Across the training images, the normalised pixels then have mean 0 and standard deviation 1.</p>
+<p>Using only the training images follows the same rule as data splitting for choosing <span class="math inline">\(\lambda\)</span> in the previous chapter: the validation and test data should not inform how we fit the model. In this chapter we skip normalisation for simplicity.</p>
+</section>
+<section id="validation-splits-and-our-own-data" class="level2">
+<h2 class="anchored" data-anchor-id="validation-splits-and-our-own-data">Validation splits and our own data</h2>
+<p>To choose hyperparameters such as the learning rate or the number of epochs, we hold out part of the training data as a validation set, for example with <code>torch.utils.data.random_split</code>:</p>
+<div id="4fe32955" class="cell" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>train_part, val_part <span class="op">=</span> torch.utils.data.random_split(</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    train_dataset, [<span class="dv">50000</span>, <span class="dv">10000</span>])</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="bu">len</span>(train_part), <span class="bu">len</span>(val_part))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>50000 10000</code></pre>
+</div>
+</div>
+<p>For data we already have as tensors, such as inputs <code>X</code> and targets <code>y</code> from an experiment, <code>torch.utils.data.TensorDataset(X, y)</code> makes a dataset that a <code>DataLoader</code> can use in the same way.</p>
+</section>
+<section id="mini-batching-the-data" class="level2">
+<h2 class="anchored" data-anchor-id="mini-batching-the-data">Mini-batching the data</h2>
+<p>For various reasons, modern neural network models usually process data in small batches called <strong>minibatches</strong> rather than all at once. Each step then needs only part of the data in memory, and in practice minibatch training has often been found to <strong>generalise well</strong>; the randomness in each minibatch’s gradient is one suggested reason.</p>
+<p>Terminology can be inconsistent, but in general, we call the full dataset the batch, and subsets of the dataset minibatches. PyTorch, though, uses ‘batch’ for the minibatch being processed, as in the <code>batch_size</code> argument of <code>DataLoader</code> below. Given an original indexing <span class="math inline">\(i\)</span> of data points, we shuffle them into a new order <span class="math inline">\(i'\)</span> and cut this into a <strong>partition</strong> <span class="math inline">\(\mathcal{B}\)</span> of <strong>minibatches</strong> <span class="math inline">\(B_1,\dots,B_{mb}\)</span>, where <span class="math inline">\(mb\)</span> is the number of minibatches. For example:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figures/batch.svg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:60.0%"></p>
+</figure>
+</div>
+<p>The module <code>torch.utils.data</code> has a tool <code>DataLoader</code> that feeds a dataset to the training loop one minibatch at a time. A <code>Dataset</code> says how to get item <span class="math inline">\(i\)</span>; a <code>DataLoader</code> decides which items, in what order and how many at a time. It takes a dataset, a <code>batch_size</code> and a <code>shuffle</code> option.</p>
+<div id="75127bae" class="cell" data-execution_count="14">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>train_loader <span class="op">=</span> torch.utils.data.DataLoader(train_dataset,</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>                                batch_size<span class="op">=</span><span class="dv">64</span>,shuffle<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The returned object <code>train_loader</code> is a Python iterable – an object that can return its members (here, minibatches) one at a time, and hence be ‘iterated over’, e.g.:</p>
+<div id="4e778459" class="cell" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> mb_imgs, mb_labels <span class="kw">in</span> train_loader:</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>If <code>shuffle</code> is true, the dataset is shuffled once at the beginning of each new iteration over the DataLoader. For large datasets, such as images read from disk, the <code>num_workers</code> option lets it prepare minibatches in parallel while the model trains.</p>
+<p>A small example shows what a <code>DataLoader</code> does. Each time round a <code>for</code> loop it takes the next few items and stacks them into tensors; the last minibatch holds what is left over:</p>
+<div id="e668aae2" class="cell" data-execution_count="16">
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch.utils.data <span class="im">import</span> DataLoader</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> torch.tensor([<span class="dv">10</span>, <span class="dv">11</span>, <span class="dv">12</span>, <span class="dv">13</span>, <span class="dv">14</span>, <span class="dv">15</span>, <span class="dv">16</span>])  <span class="co"># 7 data points</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>loader <span class="op">=</span> DataLoader(data, batch_size<span class="op">=</span><span class="dv">3</span>)</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> minibatch <span class="kw">in</span> loader:</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(minibatch)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>tensor([10, 11, 12])
+tensor([13, 14, 15])
+tensor([16])</code></pre>
+</div>
+</div>
+<p>For MNIST each item is an (image, label) pair, so each minibatch is a pair too: a tensor of 64 images and a tensor of their 64 labels. Here we look at just the first minibatch:</p>
+<div id="0dd5dfe9" class="cell" data-execution_count="17">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> images, labels <span class="kw">in</span> train_loader:</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(images.shape, labels.shape, labels.dtype)</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">break</span>  <span class="co"># just look at the first minibatch</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>torch.Size([64, 1, 28, 28]) torch.Size([64]) torch.int64</code></pre>
+</div>
+</div>
+<p>The labels are integer class indices, the form the classification loss below expects.</p>
+</section>
+<section id="batch-minibatch-and-stochastic-gradient-descent" class="level2">
+<h2 class="anchored" data-anchor-id="batch-minibatch-and-stochastic-gradient-descent">Batch, minibatch and stochastic gradient descent</h2>
+<p>The above leads to three variations of <strong>gradient descent</strong>:</p>
+<ul>
+<li>Batch (full-batch) gradient descent<br>
+</li>
+<li>Minibatch gradient descent<br>
+</li>
+<li>Stochastic gradient descent</li>
+</ul>
+<p>The first uses the full dataset at each iteration of gradient descent, the second uses a minibatch for each iteration of gradient descent, and the last uses a single data point. Note: PyTorch uses <code>optim.SGD</code> for all versions of gradient descent; the difference comes from what data you pass it at each iteration.</p>
+<p>The basic training process is to randomly divide the training set into minibatches (possibly being the full batch or single data points). Then we fix the shuffled order and iterate through the batches until all data points have been seen. This is called an <strong>epoch</strong>. We then re-shuffle the data and divide into new minibatches and continue for some number of epochs. The full dataset will hence be ‘seen’ the same number of times as there are epochs. The total number of gradient descent steps will be the number of epochs times the number of minibatches the dataset is divided into at each epoch.</p>
+<p>For example, MNIST has 60,000 training images. With <code>batch_size=32</code> there are <span class="math inline">\(60\,000/32=1875\)</span> minibatches per epoch, so 10 epochs take <span class="math inline">\(10\times1875=18\,750\)</span> steps. If the minibatch size does not divide the number of points, round up: with <code>batch_size=64</code>, <span class="math inline">\(60\,000/64=937.5\)</span>, giving 938 minibatches per epoch (937 full and one of 32), which is <code>len(train_loader)</code>.</p>
+<p>This is illustrated below <span class="math inline">\(\dots\)</span></p>
+</section>
+<section id="batch-minibatch-and-stochastic-gradient-descent-1" class="level2">
+<h2 class="anchored" data-anchor-id="batch-minibatch-and-stochastic-gradient-descent-1">Batch, minibatch and stochastic gradient descent</h2>
+<p>Here is simple <em>pseudocode</em> (won’t run!) for the above:</p>
+<div id="6cd1d3b4" class="cell" data-execution_count="18">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>initialise model parameters</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>create train_loader <span class="cf">with</span> batch_size </span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> epoch <span class="kw">in</span> <span class="bu">range</span>(num_epochs):</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>    epoch_loss <span class="op">=</span> <span class="fl">0.0</span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> mb_inputs, mb_labels <span class="kw">in</span> train_loader:</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>        <span class="co"># zero out gradients.</span></span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>        optimizer.zero_grad()</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>        <span class="co"># forward pass: compute predictions</span></span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>        mb_outputs <span class="op">=</span> model(mb_inputs)</span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>        <span class="co"># compute loss between predictions and true labels</span></span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>        mb_loss <span class="op">=</span> loss_function(mb_outputs, mb_labels)</span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Accumulate epoch loss (use .item() to get scalar)</span></span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>        epoch_loss <span class="op">+=</span> mb_loss.item()</span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a>        <span class="co"># backward pass: compute gradients</span></span>
+<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a>        mb_loss.backward()</span>
+<span id="cb29-21"><a href="#cb29-21" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb29-22"><a href="#cb29-22" aria-hidden="true" tabindex="-1"></a>        <span class="co"># update model parameters</span></span>
+<span id="cb29-23"><a href="#cb29-23" aria-hidden="true" tabindex="-1"></a>        optimizer.step()</span>
+<span id="cb29-24"><a href="#cb29-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-25"><a href="#cb29-25" aria-hidden="true" tabindex="-1"></a><span class="co"># For</span></span>
+<span id="cb29-26"><a href="#cb29-26" aria-hidden="true" tabindex="-1"></a><span class="co"># - Batch GD, batch_size = size of training dataset</span></span>
+<span id="cb29-27"><a href="#cb29-27" aria-hidden="true" tabindex="-1"></a><span class="co"># - Minibatch GD, batch_size = 32, 64, etc.</span></span>
+<span id="cb29-28"><a href="#cb29-28" aria-hidden="true" tabindex="-1"></a><span class="co"># - Stochastic GD, batch_size = 1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+<section id="training-the-neural-network-in-pytorch" class="level2">
+<h2 class="anchored" data-anchor-id="training-the-neural-network-in-pytorch">Training the neural network in PyTorch</h2>
+<p>Let’s put it all together!</p>
+<div id="c40623d1" class="cell" data-execution_count="19">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch.nn <span class="im">as</span> nn</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch.optim <span class="im">as</span> optim</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torchvision <span class="im">import</span> datasets, transforms</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch.utils.data <span class="im">import</span> DataLoader</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Define the model with explicit LogSoftmax</span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>num_classes <span class="op">=</span> <span class="dv">10</span>  <span class="co"># For MNIST dataset</span></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> nn.Sequential(</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>    nn.Flatten(),</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>    nn.Linear(<span class="dv">28</span> <span class="op">*</span> <span class="dv">28</span>, <span class="dv">128</span>),</span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>    nn.ReLU(),</span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>    nn.Linear(<span class="dv">128</span>, num_classes),</span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>    nn.LogSoftmax(dim<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Define transformations (simple conversion to tensor)</span></span>
+<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a>transform <span class="op">=</span> transforms.ToTensor()</span>
+<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-19"><a href="#cb30-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Load datasets</span></span>
+<span id="cb30-20"><a href="#cb30-20" aria-hidden="true" tabindex="-1"></a>train_dataset <span class="op">=</span> datasets.MNIST(root<span class="op">=</span><span class="st">'data'</span>, train<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb30-21"><a href="#cb30-21" aria-hidden="true" tabindex="-1"></a>                        transform<span class="op">=</span>transform, download<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb30-22"><a href="#cb30-22" aria-hidden="true" tabindex="-1"></a>test_dataset <span class="op">=</span> datasets.MNIST(root<span class="op">=</span><span class="st">'data'</span>, train<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb30-23"><a href="#cb30-23" aria-hidden="true" tabindex="-1"></a>                        transform<span class="op">=</span>transform)</span>
+<span id="cb30-24"><a href="#cb30-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-25"><a href="#cb30-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Data loaders</span></span>
+<span id="cb30-26"><a href="#cb30-26" aria-hidden="true" tabindex="-1"></a>batch_size <span class="op">=</span> <span class="dv">32</span>  <span class="co"># Adjust as needed</span></span>
+<span id="cb30-27"><a href="#cb30-27" aria-hidden="true" tabindex="-1"></a>train_loader <span class="op">=</span> DataLoader(dataset<span class="op">=</span>train_dataset, </span>
+<span id="cb30-28"><a href="#cb30-28" aria-hidden="true" tabindex="-1"></a>                            batch_size<span class="op">=</span>batch_size, shuffle<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb30-29"><a href="#cb30-29" aria-hidden="true" tabindex="-1"></a>test_loader <span class="op">=</span> DataLoader(dataset<span class="op">=</span>test_dataset, </span>
+<span id="cb30-30"><a href="#cb30-30" aria-hidden="true" tabindex="-1"></a>                            batch_size<span class="op">=</span>batch_size, shuffle<span class="op">=</span><span class="va">False</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="1fef0bc4" class="cell" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Loss function and optimiser</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>criterion <span class="op">=</span> nn.NLLLoss()</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>optimizer <span class="op">=</span> optim.SGD(model.parameters(), lr<span class="op">=</span><span class="fl">0.01</span>)</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Training loop</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>num_epochs <span class="op">=</span> <span class="dv">10</span>  <span class="co"># Adjust as needed</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> epoch <span class="kw">in</span> <span class="bu">range</span>(num_epochs):</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>    epoch_loss <span class="op">=</span> <span class="fl">0.0</span></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> mb_data, mb_targets <span class="kw">in</span> train_loader:</span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Zero the gradients</span></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>        optimizer.zero_grad()</span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Forward pass</span></span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>        outputs <span class="op">=</span> model(mb_data)</span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Compute minibatch loss</span></span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>        mb_loss <span class="op">=</span> criterion(outputs, mb_targets)</span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Accumulate epoch loss (use .item() to get scalar)</span></span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a>        epoch_loss <span class="op">+=</span> mb_loss.item()</span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Backward pass and optimization</span></span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a>        mb_loss.backward()</span>
+<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a>        optimizer.step()</span>
+<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Compute average loss per minibatch</span></span>
+<span id="cb31-21"><a href="#cb31-21" aria-hidden="true" tabindex="-1"></a>    avg_epoch_loss <span class="op">=</span> epoch_loss <span class="op">/</span> <span class="bu">len</span>(train_loader)</span>
+<span id="cb31-22"><a href="#cb31-22" aria-hidden="true" tabindex="-1"></a>    <span class="co"># display</span></span>
+<span id="cb31-23"><a href="#cb31-23" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="ss">f'Epoch [</span><span class="sc">{</span>epoch<span class="op">+</span><span class="dv">1</span><span class="sc">}</span><span class="ss">/</span><span class="sc">{</span>num_epochs<span class="sc">}</span><span class="ss">], '</span></span>
+<span id="cb31-24"><a href="#cb31-24" aria-hidden="true" tabindex="-1"></a>          <span class="ss">f'Average (Per Minibatch) Loss: </span><span class="sc">{</span>avg_epoch_loss<span class="sc">:.4f}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Epoch [1/10], Average (Per Minibatch) Loss: 0.8704
+Epoch [2/10], Average (Per Minibatch) Loss: 0.3758
+Epoch [3/10], Average (Per Minibatch) Loss: 0.3239
+Epoch [4/10], Average (Per Minibatch) Loss: 0.2948
+Epoch [5/10], Average (Per Minibatch) Loss: 0.2723
+Epoch [6/10], Average (Per Minibatch) Loss: 0.2530
+Epoch [7/10], Average (Per Minibatch) Loss: 0.2360
+Epoch [8/10], Average (Per Minibatch) Loss: 0.2209
+Epoch [9/10], Average (Per Minibatch) Loss: 0.2077
+Epoch [10/10], Average (Per Minibatch) Loss: 0.1957</code></pre>
+</div>
+</div>
+<div id="2657a51b" class="cell" data-execution_count="21">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Evaluation on test set</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>correct <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>total <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> torch.no_grad():  <span class="co"># Disable gradient calculation</span></span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> data, targets <span class="kw">in</span> test_loader:</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>        outputs <span class="op">=</span> model(data)</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>        _, predicted <span class="op">=</span> torch.<span class="bu">max</span>(outputs.detach(), <span class="dv">1</span>)</span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>        total <span class="op">+=</span> targets.size(<span class="dv">0</span>)</span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>        correct <span class="op">+=</span> (predicted <span class="op">==</span> targets).<span class="bu">sum</span>().item()</span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>accuracy <span class="op">=</span> <span class="dv">100</span> <span class="op">*</span> correct <span class="op">/</span> total</span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'Accuracy on test set: </span><span class="sc">{</span>accuracy<span class="sc">:.2f}</span><span class="ss">%'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Accuracy on test set: 94.51%</code></pre>
+</div>
+</div>
+</section>
+<section id="what-next" class="level2">
+<h2 class="anchored" data-anchor-id="what-next">What next?</h2>
+<p>Note: there are many, many more difficulties and subtleties that we won’t go into here (see future courses??)</p>
+<p>In general we need to preprocess the data (despite the ‘Deep Learning vs Feature Engineering’ picture!), define appropriate architectures, use the right training methods (including various ‘tricks of the trade’), handle training, testing and validation splits carefully, etc etc.</p>
+<p>Furthermore, more complex models are usually constructed by <em>subclassing</em> the <code>nn.Module</code> class rather than using <code>nn.Sequential</code>. We have only just scratched the surface of neural networks and PyTorch. However, hopefully now you can start exploring yourself!</p>
+<p>Another useful way to explore is to download <strong>pre-trained models</strong>. For classic computer-vision models, <code>torchvision.models</code> provides both the architectures and their trained weights:</p>
+<div id="4f58f2b5" class="cell" data-execution_count="22">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torchvision.models <span class="im">import</span> resnet18</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> resnet18(weights<span class="op">=</span><span class="st">'DEFAULT'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Many more pretrained models, including language models, are shared on the <a href="https://huggingface.co/models">Hugging Face Hub</a> and loaded with libraries such as <code>transformers</code> and <code>timm</code>.</p>
+</section>
+<section id="example-architecture-improvements-convolutional-neural-networks" class="level2">
+<h2 class="anchored" data-anchor-id="example-architecture-improvements-convolutional-neural-networks">Example architecture improvements: convolutional neural networks</h2>
+<p>We have previously mentioned <strong>convolutional neural networks</strong> (CNNs) as a biology/physics-inspired neural network architecture. <em>Briefly</em>, a <strong>convolution kernel</strong> is a small ‘patch shaped’ tensor of weights that can be applied to local <strong>patches</strong> of an image (or video or time-series, for appropriate definitions of ‘patch’) by multiplying the weights of the kernel with the values of each patch, illustrated in the below figure: <img src="figures/convolution.png" class="img-fluid quarto-figure quarto-figure-center" style="width:75.0%" alt="From ‘Deep Learning with PyTorch’ by Stevens, Antiga, and Viehmann (2020)!"> This is a special type of <strong>linear</strong> operation, to be passed into subsequent nonlinear activation functions. For example, the below snippet manually applies an edge-detection kernel of dimensions 3 by 3, which responds to horizontal edges, to the patches of a cat image using <code>torch.einsum</code> (which can apply linear operations like convolution to tensors without flattening).</p>
+</section>
+<section id="manual-convolution" class="level2">
+<h2 class="anchored" data-anchor-id="manual-convolution">Manual convolution</h2>
+<div id="ddf440f8" class="cell" data-execution_count="24">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># kernel for vertical changes in brightness (horizontal edges)</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>kernel <span class="op">=</span> torch.tensor([[ <span class="op">-</span><span class="dv">1</span>,<span class="op">-</span><span class="dv">2</span>,  <span class="op">-</span><span class="dv">1</span>],</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>                       [ <span class="dv">0</span>,  <span class="dv">0</span>,   <span class="dv">0</span>],</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>                       [ <span class="dv">1</span>,  <span class="dv">2</span>,   <span class="dv">1</span>]],dtype<span class="op">=</span>torch.float32)</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>padded_cat <span class="op">=</span> F.pad(cat, pad<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>), </span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>                    mode<span class="op">=</span><span class="st">'constant'</span>, value<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>patches <span class="op">=</span> padded_cat.unfold(<span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">1</span>).unfold(<span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">1</span>)</span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>filtered_cat <span class="op">=</span> torch.<span class="bu">abs</span>(torch.einsum(<span class="st">'cijkl,kl-&gt;cij'</span>, </span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>                                       patches, kernel))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="0975ca4d" class="cell" data-execution_count="25">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="neural_models_files/figure-html/cell-26-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>In deep learning, the above result is called the <strong>convolution</strong> of the image and the kernel (strictly, it is a cross-correlation, since the kernel isn’t flipped; <code>nn.Conv2d</code> computes the same thing). PyTorch implements convolution directly, as we see next.</p>
+</section>
+<section id="convolutional-layers-in-pytorch" class="level2">
+<h2 class="anchored" data-anchor-id="convolutional-layers-in-pytorch">Convolutional layers in PyTorch</h2>
+<p>Each output pixel is the sum of the kernel weights multiplied by the <span class="math inline">\(3\times3\)</span> patch of the padded image around that pixel, exactly as our <code>unfold</code> and <code>einsum</code> code computed. Each output depends only on nearby pixels (<strong>locality</strong>), and the same kernel weights are used at every position (<strong>weight sharing</strong>), so a pattern is detected wherever it appears in the image. These are assumptions about images built into the architecture: an <strong>inductive bias</strong>, in the terms of the first chapter.</p>
+<p><code>nn.Conv2d</code>, and its function form <code>F.conv2d</code>, compute this directly. <code>F.conv2d</code> expects a minibatch of images with shape (batch, channels, height, width) and kernels with shape (output channels, input channels, height, width). The cat has shape (3, height, width), so <code>cat.unsqueeze(1)</code> inserts a channel dimension of size 1, treating each colour channel as a separate grayscale image, and <code>kernel.view(1, 1, 3, 3)</code> gives the kernel one input and one output channel. <code>squeeze(1)</code> removes the extra dimension again, and <code>torch.allclose</code> checks that two tensors agree to within a small tolerance. The result matches the patch-based calculation above, up to rounding error:</p>
+<div id="0bfb7cf5" class="cell" data-execution_count="26">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>same <span class="op">=</span> F.conv2d(cat.unsqueeze(<span class="dv">1</span>), kernel.view(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">3</span>), padding<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(torch.allclose(same.squeeze(<span class="dv">1</span>).<span class="bu">abs</span>(), filtered_cat, atol<span class="op">=</span><span class="fl">1e-6</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>True</code></pre>
+</div>
+</div>
+<p>In a network the kernels are learned. A layer <code>nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding)</code> takes:</p>
+<ul>
+<li><code>in_channels</code>: the number of channels in each input image, 1 for grayscale and 3 for colour;</li>
+<li><code>out_channels</code>: the number of output channels (often called feature maps), each from its own learned kernel;</li>
+<li><code>kernel_size</code>: the height and width of each kernel, e.g.&nbsp;3 for <span class="math inline">\(3\times3\)</span>;</li>
+<li><code>stride</code>: the step between kernel positions (default 1);</li>
+<li><code>padding</code>: the number of zero rows and columns added around the border (default 0).</li>
+</ul>
+<p>It has one kernel for each pair of input and output channels, plus a bias for each output channel:</p>
+<div id="4e5c7dc8" class="cell" data-execution_count="27">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>conv <span class="op">=</span> nn.Conv2d(<span class="dv">1</span>, <span class="dv">8</span>, kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(conv.weight.shape, <span class="bu">sum</span>(p.numel() <span class="cf">for</span> p <span class="kw">in</span> conv.parameters()))</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(conv(torch.rand(<span class="dv">64</span>, <span class="dv">1</span>, <span class="dv">28</span>, <span class="dv">28</span>)).shape)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>torch.Size([8, 1, 3, 3]) 80
+torch.Size([64, 8, 28, 28])</code></pre>
+</div>
+</div>
+<p>Eight <span class="math inline">\(3\times3\)</span> kernels and their biases make 80 parameters, whereas an <code>nn.Linear</code> layer from the 784 pixels to 784 outputs has <span class="math inline">\(784\times784+784=615\,440\)</span>. For an input of height <span class="math inline">\(H\)</span>, a kernel of size <span class="math inline">\(k\)</span>, padding <span class="math inline">\(p\)</span> and stride <span class="math inline">\(s\)</span>, the output height is <span class="math inline">\(\lfloor(H+2p-k)/s\rfloor+1\)</span>, and similarly for the width; here <span class="math inline">\((28+2-3)/1+1=28\)</span>.</p>
+</section>
+<section id="pooling-and-a-small-cnn" class="level2">
+<h2 class="anchored" data-anchor-id="pooling-and-a-small-cnn">Pooling and a small CNN</h2>
+<p>A <strong>pooling</strong> layer summarises each small block of a feature map by a single number. <strong>Max pooling</strong>, <code>nn.MaxPool2d(2)</code>, keeps the largest value in each <span class="math inline">\(2\times2\)</span> block, while average pooling, <code>nn.AvgPool2d(2)</code>, keeps the mean. By default the blocks don’t overlap (the stride equals the block size), so the height and width halve:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figures/maxpool.svg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:65.0%" alt="A four by four grid of numbers divided into four shaded two by two blocks. An arrow labelled max leads to a two by two grid holding the largest value of each block: 4, 2, 3 and 8."></p>
+<figcaption>Max pooling with <span class="math inline">\(2\times2\)</span> blocks: each shaded block of the feature map is replaced by its largest value, shown in bold.</figcaption>
+</figure>
+</div>
+<div id="26b15fee" class="cell" data-execution_count="28">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># one image, one channel, 4 x 4</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> torch.tensor([[[[<span class="fl">1.</span>, <span class="fl">3.</span>, <span class="fl">2.</span>, <span class="fl">0.</span>],</span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>                    [<span class="fl">4.</span>, <span class="fl">2.</span>, <span class="fl">1.</span>, <span class="fl">1.</span>],</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>                    [<span class="fl">0.</span>, <span class="fl">1.</span>, <span class="fl">5.</span>, <span class="fl">6.</span>],</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>                    [<span class="fl">3.</span>, <span class="fl">2.</span>, <span class="fl">7.</span>, <span class="fl">8.</span>]]]])</span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(nn.MaxPool2d(<span class="dv">2</span>)(x))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>tensor([[[[4., 2.],
+          [3., 8.]]]])</code></pre>
+</div>
+</div>
+<p>Pooling has no parameters. It makes the feature maps smaller, so later layers need fewer weights, and it makes the output less sensitive to a feature moving by a pixel within its block.</p>
+<p>Stacking convolution, activation and pooling, then flattening into a linear layer, gives a small <strong>convolutional neural network</strong> (CNN) for MNIST:</p>
+<div id="e0976adf" class="cell" data-execution_count="29">
+<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>cnn <span class="op">=</span> nn.Sequential(</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>    nn.Conv2d(<span class="dv">1</span>, <span class="dv">8</span>, <span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>), nn.ReLU(),</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>    nn.MaxPool2d(<span class="dv">2</span>),                            <span class="co"># 8 x 14 x 14</span></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>    nn.Conv2d(<span class="dv">8</span>, <span class="dv">16</span>, <span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>), nn.ReLU(),</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>    nn.MaxPool2d(<span class="dv">2</span>),                            <span class="co"># 16 x 7 x 7</span></span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>    nn.Flatten(), nn.Linear(<span class="dv">16</span> <span class="op">*</span> <span class="dv">7</span> <span class="op">*</span> <span class="dv">7</span>, <span class="dv">10</span>), nn.LogSoftmax(dim<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="bu">sum</span>(p.numel() <span class="cf">for</span> p <span class="kw">in</span> cnn.parameters()))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>9098</code></pre>
+</div>
+</div>
+<p>Because the convolutions share their weights, this network has 9,098 parameters, against 101,770 for the fully connected network we trained above. In Lab 5 we build and train LeNet-5, an early CNN for digit recognition, and compare it with the fully connected network.</p>
+</section>
+<section id="physics-informed-neural-networks-hybrid-neural-models" class="level2">
+<h2 class="anchored" data-anchor-id="physics-informed-neural-networks-hybrid-neural-models">Physics-informed neural networks: hybrid neural models</h2>
+<p>In the next chapter, we combine a neural network with a physics-based loss term, giving a hybrid neural model, or physics-informed neural network.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+<div class="nav-page nav-page-previous">
+<a class="pagination-link aria-label=" href="./hybrid_linear.html" hybrid="" models"="">
+<i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Week 4: Hybrid linear models</span>
+</a>
+</div>
+<div class="nav-page nav-page-next">
+</div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+<div class="nav-footer">
+<div class="nav-footer-left">
+<p>ENGSCI 205 — Weeks 1–5 notes.</p>
+</div>
+<div class="nav-footer-center">
+       
+    </div>
+<div class="nav-footer-right">
+<p><a href="downloads/EML-Week-01.pdf">Week 1 PDF</a> · <a href="downloads/EML-Week-02.pdf">Week 2 PDF</a> · <a href="downloads/EML-Week-03.pdf">Week 3 PDF</a> · <a href="downloads/EML-Week-04.pdf">Week 4 PDF</a> · <a href="downloads/EML-Week-05.pdf">Week 5 PDF</a></p>
+</div>
+</div>
+</footer>
+</body></html>

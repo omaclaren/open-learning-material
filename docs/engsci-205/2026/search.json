@@ -374,7 +374,7 @@
     "href": "vectors_matrices_tensors.html#arraystensors-storage-vs-access",
     "title": "Vectors, matrices, arrays, tensors",
     "section": "Arrays/tensors: storage vs access",
-    "text": "Arrays/tensors: storage vs access\nAlthough we interact with tensors as multi-dimensional arrays, for efficient computation, tensor values are actually stored in memory in linear, contiguous chunks (i.e. continuous sequence of memory locations). When working with tensors, we typically just change how we access or index the underlying chunk of memory rather than copying the stored values, saving memory. This idea is represented by a view, a ‘virtual’ tensor that accesses the same memory but with a different shape or indexing.\nSome operations, like slicing or permuting (swapping or rearranging) dimensions, change how we index (refer to) the stored data without rearranging it in memory (where it is actually stored). The order we read elements of the tensor in terms of indices, e.g. row by row for a matrix (2D tensor) in PyTorch, might then not correspond to consecutively stored elements in memory. This is a non-contiguous layout. For example, flattening a transposed matrix while preserving its row-by-row order can require a copy, so attempting this with the no-copy view method can give an error.\nThe contiguous() method returns a tensor whose elements are stored consecutively in indexing order. It makes a copy if needed; otherwise it returns the original tensor. The result looks the same to us: the tensor’s shape and the values at its indices do not change. What may change is how those values are arranged in memory.\nThe reshape operation creates a view if the requested shape can be represented as a view using the existing layout in memory; otherwise it makes a copy with a compatible memory layout. The view method never copies the data, and gives an error if the requested shape cannot be represented as a view.\nIt can be important to know whether a tensor operation copies the underlying data or just returns a new view of the same data; e.g. modifying values via a view modifies the results of all other views of the same data, while modifying a copy doesn’t. However, making a copy means twice the memory! In general, check the documentation of the given operation if you need to know what’s happening! You can manually check by using .untyped_storage().data_ptr() on two tensors to check if they point to the same memory or not.\n\n# same memory location (same pointer)!\nprint(cat_red.untyped_storage().data_ptr())\nprint(cat.untyped_storage().data_ptr())\n\n4565270528\n4565270528",
+    "text": "Arrays/tensors: storage vs access\nAlthough we interact with tensors as multi-dimensional arrays, for efficient computation, tensor values are actually stored in memory in linear, contiguous chunks (i.e. continuous sequence of memory locations). When working with tensors, we typically just change how we access or index the underlying chunk of memory rather than copying the stored values, saving memory. This idea is represented by a view, a ‘virtual’ tensor that accesses the same memory but with a different shape or indexing.\nSome operations, like slicing or permuting (swapping or rearranging) dimensions, change how we index (refer to) the stored data without rearranging it in memory (where it is actually stored). The order we read elements of the tensor in terms of indices, e.g. row by row for a matrix (2D tensor) in PyTorch, might then not correspond to consecutively stored elements in memory. This is a non-contiguous layout. For example, flattening a transposed matrix while preserving its row-by-row order can require a copy, so attempting this with the no-copy view method can give an error.\nThe contiguous() method returns a tensor whose elements are stored consecutively in indexing order. It makes a copy if needed; otherwise it returns the original tensor. The result looks the same to us: the tensor’s shape and the values at its indices do not change. What may change is how those values are arranged in memory.\nThe reshape operation creates a view if the requested shape can be represented as a view using the existing layout in memory; otherwise it makes a copy with a compatible memory layout. The view method never copies the data, and gives an error if the requested shape cannot be represented as a view.\nIt can be important to know whether a tensor operation copies the underlying data or just returns a new view of the same data; e.g. modifying values via a view modifies the results of all other views of the same data, while modifying a copy doesn’t. However, making a copy means twice the memory! In general, check the documentation of the given operation if you need to know what’s happening! You can manually check by using .untyped_storage().data_ptr() on two tensors to check if they point to the same memory or not.\n\n# same memory location (same pointer)!\nprint(cat_red.untyped_storage().data_ptr())\nprint(cat.untyped_storage().data_ptr())\n\n5239242752\n5239242752",
     "crumbs": [
       "Vectors, matrices, arrays, tensors"
     ]
@@ -997,6 +997,316 @@
     "text": "Example (minus details!) continued\n\n\n\n\n\n\n\n\n\nNotes:\n\nGCV selects a value of about \\(3\\times10^6\\) on this grid. The resulting fit sacrifices some agreement with the noisy observations and follows the underlying projectile trajectory more closely than the unpenalised spline.\n\nThe true trajectory is available here because we simulated the data. A larger penalty gives a closer fit to it in this example. GCV uses only the noisy observations to estimate prediction error, so it need not select the value that is best against the known trajectory.\n\nThe third-difference penalty agrees with the physics used to generate this example. When the physical model is approximate, stronger regularisation can worsen predictions, so the balance between data fit and model agreement needs to be checked.",
     "crumbs": [
       "Hybrid models"
+    ]
+  },
+  {
+    "objectID": "neural_models.html",
+    "href": "neural_models.html",
+    "title": "Neural networks",
+    "section": "",
+    "text": "Artificial intelligence and neural networks: brief history\nArtificial intelligence (AI), of which ‘machine learning’ is a subfield, has undergone numerous ‘booms’ and ‘busts’ since around 1950. The term AI winter has been used for several of the ‘bust’ cycles in AI, where funding and interest dropped after failures to live up to the hype. This includes ‘bust’ periods such as 1974-1980 and 1987-2000. The current ‘boom’ period (as of 2026) roughly started around 2012. (See e.g. the Wikipedia article AI Winter for further reading and references.)\nWithin AI, neural networks have undergone their own boom and bust periods. For example, after their initial hype (see NY Times article!), Minsky and Papert published a book Perceptrons in 1969 containing several criticisms of neural networks. Famously, they showed that single-layer neural nets are unable to compute the basic logical operation XOR (exclusive OR). It was known that multiple-layer networks (called multilayer networks or multilayer perceptrons) were not subject to this limitation, but feasible training methods for these were not known. In contrast, many AI researchers between the 1950s and 1980s focused on expert systems and symbolic AI, in which explicit rules are encoded rather than learned from data (note the similarity to encoding ‘engineering knowledge’!)",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#artificial-intelligence-and-neural-networks-brief-history",
+    "href": "neural_models.html#artificial-intelligence-and-neural-networks-brief-history",
+    "title": "Neural networks",
+    "section": "",
+    "text": "The book that (briefly) killed neural networks??",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#artificial-intelligence-and-neural-networks-brief-history-continued",
+    "href": "neural_models.html#artificial-intelligence-and-neural-networks-brief-history-continued",
+    "title": "Neural networks",
+    "section": "Artificial intelligence and neural networks: brief history continued",
+    "text": "Artificial intelligence and neural networks: brief history continued\nDevelopment of the backpropagation algorithm for training multilayer neural networks helped lead to renewed interest in neural networks in the 1980s. Backpropagation – essentially efficiently and automatically using the chain rule to compute gradients and hence carry out optimisation – was popularised in the 1980s, for example in the 1986 paper Learning representations by back-propagating errors by Rumelhart, Hinton, and Williams. However, it wasn’t until around 2012 that the availability of cheap and powerful computer hardware like GPUs, the availability of large datasets, and better architectures and training methods for older ideas such as convolutional neural networks (CNNs) and recurrent neural networks (RNNs), enabled the current explosion of interest (currently the ‘hot’ architecture is the transformer, the ‘T’ in ChatGPT!). These advances have led to a resurgence in machine learning and the use of neural networks with many- (many, many-) layers, often referred to as deep neural networks. Training such networks is known as deep learning.\nMachine learning is an opposing but complementary approach to rule-based AI – a yin and yang! The idea is to learn approximate, statistical, rules from the data, rather than impose them a priori. As we have seen, this has strengths and weaknesses in engineering applications! For now, engineers appear to need to continue to learn the ‘rules’ of Newton’s Laws of motion alongside machine learning and statistics. Perhaps, however, we will see the machine learning approach continue to supplant traditional approaches? Or perhaps various hybrid methods, such as those we looked at in the previous section, will come to dominate? Exciting times!\nSo far we have fitted models to time series, such as a pendulum’s angle over time, including hybrid models that build in physics. In this chapter we introduce neural networks through basic image classification: recognising handwritten digits. In the next chapter we return to time series prediction and hybrid modelling, with a neural network as the data model.",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#neural-networks-vs-linear-models",
+    "href": "neural_models.html#neural-networks-vs-linear-models",
+    "title": "Neural networks",
+    "section": "Neural networks vs linear models",
+    "text": "Neural networks vs linear models\nWhat is a neural network? First consider a simple linear model for observations \\((x_i,y_i)\\), \\(i=1,\\dots,m\\), \\[y_i \\approx b + x_i w \\]\nwhere \\(w\\) is a weight parameter and \\(b\\) is called a bias parameter (or intercept in linear regression). This can also be written as\n\\[y_i \\approx 1 b + x_i w = \\begin{bmatrix}1 & x_i\\end{bmatrix}\\begin{bmatrix}b\\\\ w\\end{bmatrix}\\] where we include the ‘constant feature’ 1. For \\(m\\) observations we get the vector equation\n\\[\ny = \\bar{X} \\bar{w}\n\\] where \\[\n\\bar{X} =\n\\begin{bmatrix}\n1 & x_1\\\\\n1 & x_2\\\\\n\\vdots & \\vdots\\\\\n1 & x_m\n\\end{bmatrix}\n\\] and \\[\\bar{w} = \\begin{bmatrix}b\\\\ w\\end{bmatrix}.\\] We’ve used a ‘bar’ over the \\(X\\) and \\(w\\) to indicate the constant/bias terms are included. For various reasons, neural network folk often keep the weights and bias terms separate, and instead write e.g.  \\[\ny = 1_mb + Xw\n\\] where here \\[\nX =\n\\begin{bmatrix}\nx_1\\\\\nx_2\\\\\n\\vdots\\\\\nx_m\n\\end{bmatrix}\n\\] and \\(1_m\\) is a ones vector of length \\(m\\).",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#neural-networks-vs-linear-models-1",
+    "href": "neural_models.html#neural-networks-vs-linear-models-1",
+    "title": "Neural networks",
+    "section": "Neural networks vs linear models",
+    "text": "Neural networks vs linear models\nSo far we have a standard linear model. This can obviously be extended to multiple input features, e.g. if we denote the \\(i\\)th measurement of the \\(j\\)th feature as \\(x_{ij}\\) we have a design/feature matrix of the form: \\[\nX = [x_{ij}]_{i=1:m,j=1:n}\n\\] and linear model \\[\ny \\approx b1_m +  Xw\n\\] for feature weights \\[\nw = \\begin{bmatrix}w_1\\\\w_2\\\\\\vdots\\\\w_n\\end{bmatrix}\n\\] The neural network folk like to represent this model with diagrams like the below: \nThe bias term is sometimes depicted explicitly but often left implicit. We almost have a simple neural network! We just need one more element that is normally implied by diagrams like the above\\(\\dots\\)",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#activation-functions",
+    "href": "neural_models.html#activation-functions",
+    "title": "Neural networks",
+    "section": "Activation functions",
+    "text": "Activation functions\nThe main element distinguishing a neural network from a standard linear model is a nonlinearity introduced by an activation function applied to the output of a linear component before the final output is produced. This means our model for a single output has the general form: \\[\ny \\approx f(Xw + 1_mb)\n\\] where \\(f\\) is a nonlinear function called an activation function that is (usually) applied elementwise, i.e. to each sample realisation, so that \\[\ny_i \\approx f(\\text{row}_i(X)w + b)\n\\] where \\(\\text{row}_i(X)\\) is the \\(i\\)th row of \\(X\\). Activation functions were originally inspired by the behaviour of biological neurons, which typically only ‘fire’ (send a signal) when a threshold signal is reached. Thus, typical activation functions generally have a threshold or switch-like shape, with varying degrees of smoothness and saturation properties, e.g.\n\n\n\nTypical activation functions, where \\(z\\) is the output of the linear component.\n\n\nAlthough originally inspired by biology, mathematically, the important thing is that introducing nonlinearities allows us to represent more complex classes of functions: so-called universal approximation theorems state, roughly, that sufficiently complex neural networks, with nonlinear activation functions, can approximate any continuous function on a bounded range of inputs as closely as we like, given enough neurons. These theorems say that suitable weights exist; they don’t say that training will find them, or how much data that takes.",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#multiple-neurons-and-multiple-layers",
+    "href": "neural_models.html#multiple-neurons-and-multiple-layers",
+    "title": "Neural networks",
+    "section": "Multiple neurons and multiple layers",
+    "text": "Multiple neurons and multiple layers\nSo far we have a single ‘regression’ style equation that represents a single output given multiple features, a weight for each feature, a single bias term, and a nonlinearity applied to the output of the linear component. This is called an artificial neuron, or just neuron for short. Similar models occur in statistics, for example this class of models essentially corresponds to so-called generalised linear models in statistics. What else distinguishes neural networks from standard statistical models?\nAnother key element in neural networks is that we typically consider multiple neurons, arranged in layers, as in the below diagram. There are three types of layers: input, output, and the intermediate hidden layers. Note, however, that we can have as many hidden layers as we want!\n\n\n\nNeural network with one hidden layer\n\n\nThus we have a collection of regression-like equations that in turn form the features for another collection of regression-like equations, and so on, until we reach the output. Note, though: without nonlinear activation functions this would still just be a big linear model!",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#architecture",
+    "href": "neural_models.html#architecture",
+    "title": "Neural networks",
+    "section": "Architecture",
+    "text": "Architecture\nThe term architecture refers to the structural design of the neural network: how many layers, how many neurons – also called nodes or units – in each layer, etc. The number of layers is referred to as the depth, while the number of neurons in a layer is referred to as the (layer) width.\nA feedforward neural network is the archetypal neural network where information moves in only one direction – from the input nodes, through the hidden layers, and finally to the output nodes (as in the diagram above). There are no loops or feedback connections between nodes in the network. Hence its general architecture consists of an input layer, one or more hidden layers, and an output layer:\n\n\n\n\n\nRecurrent neural networks include ‘recurrent connections’ or loops and are hence no longer feedforward neural networks. For simplicity we only focus on very simple feedforward neural networks here. It is relatively simple to experiment with different architectures in PyTorch on your own, however!",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#how-many-layers-deep-learning-and-feature-engineering",
+    "href": "neural_models.html#how-many-layers-deep-learning-and-feature-engineering",
+    "title": "Neural networks",
+    "section": "How many layers? Deep learning and feature engineering",
+    "text": "How many layers? Deep learning and feature engineering\nSince around 2012 there has been a large shift towards increasing deep architectures with many layers. Why? What’s the goal? The following image from ‘Deep Learning with PyTorch’ by Stevens, Antiga, and Viehmann (2020) illustrates the conceptual shift associated with deep learning vs. more ‘traditional’ machine learning/data science:\n\n\n\n\n\n\n\n\n\nFeature engineering\n\n\n\n\n\n\n\nDeep learning\n\n\n\n\n\nThat is, in theory, the goal of deep learning is to automatically learn as much of the data-to-outcome pipeline as possible, reducing the reliance on hand-crafted components. Note, however, that this diagram just illustrates the general conceptual orientation of different approaches, and is not a prescription of what to do. As engineers, we have professional and ethical obligations in terms of safety and reliability, as well as a pragmatic orientation on timely results. Current deep learning pipelines may not be the safest/most reliable/timely approach for many engineering applications!",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#building-neural-networks-in-pytorch",
+    "href": "neural_models.html#building-neural-networks-in-pytorch",
+    "title": "Neural networks",
+    "section": "Building neural networks in PyTorch",
+    "text": "Building neural networks in PyTorch\nSo far we’ve mainly just used the tensor data structures available in PyTorch, and a little of its autodiff capabilities. In theory, we could build neural networks from these components. However, the main torch module of PyTorch also contains a submodule torch.nn dedicated to helping us build neural networks more easily.\nThere are two main ways to build neural networks in PyTorch. The simplest is to use the further submodule of nn, torch.nn.Sequential, which allows us to simply specify a sequence of ‘layers’ to define a neural network model. While we can use this to do familiar things like predict the motion of a pendulum or projectile, we can also use this approach to make a simple neural network for image classification. For example, here is a simple neural network designed to classify \\(28 \\times 28\\) pixel grayscale images into one of five classes:\n\nimport torch\nimport torch.nn as nn\n\n# Define the model\nmodel = nn.Sequential(\n    nn.Flatten(),\n    nn.Linear(28 * 28, 128),\n    nn.ReLU(),\n    nn.Linear(128, 5),\n    nn.Softmax(dim=1)\n)\n\nThat’s it! Sort of\\(\\dots\\) we still need to obtain our training data and train our model. But first, let’s consider what’s happening in our model.",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#model-summary",
+    "href": "neural_models.html#model-summary",
+    "title": "Neural networks",
+    "section": "Model summary",
+    "text": "Model summary\nWe can use torchsummary (available in Colab) to summarise the model:\n\nfrom torchsummary import summary\nsummary(model, input_size=(1, 28, 28))\n\n----------------------------------------------------------------\n        Layer (type)               Output Shape         Param #\n================================================================\n           Flatten-1                  [-1, 784]               0\n            Linear-2                  [-1, 128]         100,480\n              ReLU-3                  [-1, 128]               0\n            Linear-4                    [-1, 5]             645\n           Softmax-5                    [-1, 5]               0\n================================================================\nTotal params: 101,125\nTrainable params: 101,125\nNon-trainable params: 0\n----------------------------------------------------------------\nInput size (MB): 0.00\nForward/backward pass size (MB): 0.01\nParams size (MB): 0.39\nEstimated Total Size (MB): 0.40\n----------------------------------------------------------------\n\n\nWe can also count the learnable parameters directly:\n\n# numel() is the number of entries in a tensor;\n# add them up over all parameters\nn_params = sum(p.numel() for p in model.parameters())\nprint(n_params)\n\n101125\n\n\nThe first nn.Linear layer accounts for 100,480 of these, as counted below; the output layer has the remaining \\(128 \\times 5 + 5 = 645\\).",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#terminology",
+    "href": "neural_models.html#terminology",
+    "title": "Neural networks",
+    "section": "Terminology",
+    "text": "Terminology\nNote on terminology: Flatten, ReLU and Softmax are considered ‘layers’ in the PyTorch model, but these are not parameterised. They instead represent data reshaping, data transformations, and activation functions. In standard, mathematical neural network terminology we usually only use the term ‘layer’ for what we would call parameterised layers in PyTorch (other than the input/data layer which is not parameterised).\nFurthermore, in a PyTorch ‘layer’ like nn.Linear(28 * 28, 128), its mathematical/diagrammatic counterpart is associated with the output nodes (128) of the PyTorch layer. So the width of the layer in the mathematical/diagrammatic sense is 128. Here we have five PyTorch ‘layers’ corresponding, in standard neural network terms, to one input layer and two (parameterised) layers. That is, we have one (non-parameterised) input layer, one (parameterised) hidden layer, and one (parameterised) output layer. There are also multiple output classes.\n\n\n\nNeural network predicting multiple class probabilities.",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#input-layer",
+    "href": "neural_models.html#input-layer",
+    "title": "Neural networks",
+    "section": "Input layer",
+    "text": "Input layer\nThe first ‘layer’ (in PyTorch terms) is nn.Flatten. This turns each image into a vector by ‘flattening’ the image row-wise into a long vector:\n\n\n\nTurning an image into a vector.\n\n\nNote that a common mathematical convention (and the Fortran convention) is to flatten column-wise, but NumPy and PyTorch, following C, flatten row-wise by default.\nThis step is needed because nn.Linear acts on the last dimension of its input. Flattening puts all \\(28 \\times 28 = 784\\) pixel values of each image in that dimension, so a minibatch becomes a tensor of shape [batch_size, 784], with one row per image and the pixel values as its ‘features’. Note though, that other, more advanced image-handling layers (such as convolutional layers) do not require images to be flattened, and can work directly with multi-dimensional tensors.\nThis is a non-parameterised layer and is essentially our input layer.",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#hidden-layers",
+    "href": "neural_models.html#hidden-layers",
+    "title": "Neural networks",
+    "section": "Hidden layers",
+    "text": "Hidden layers\nThe nn.Linear PyTorch layer is the first parameterised layer of the neural network and is a hidden layer because its output nodes are not directly observed outputs.\nThis layer has \\(28 \\times 28 = 784\\) input nodes and 128 output nodes. That is, we are representing 128 ‘regressions’, each taking 784 input variables with their own weights! Each regression also has a bias term, so we get \\(128 \\times 784 + 128 = 100480\\) learnable parameters. The width of this layer is 128, i.e. the number of output nodes in the layer.\nThe layer’s weights form a \\(784\\times128\\) matrix \\(W\\), with one row per input pixel and one column per neuron, and its biases a vector \\(b\\) of length 128. Each column of \\(W\\) holds one neuron’s 784 weights, like the weight vector \\(w\\) in the linear models chapter: placing the 128 regressions side by side gives \\(W\\). As in that chapter, observations go in rows, so for a minibatch \\(X\\) with one flattened image per row the layer computes \\(XW+b\\) (the convention of Goodfellow, Bengio and Courville’s Deep Learning):\n\n\n\nThe weights of nn.Linear(784, 128) for a minibatch \\(X\\) of \\(n\\) flattened images: entry \\((i,j)\\) of the output is image \\(i\\) times neuron \\(j\\)’s weights, plus entry \\(j\\) of \\(b\\).\n\n\nEach output row comes from one image, just as each row of \\(Xw\\) came from one observation in the linear models chapter. PyTorch stores the transpose: layer.weight is \\(W^T\\), with shape [128, 784], and the layer computes X @ layer.weight.T + layer.bias.\nMathematically, the subsequent nn.ReLU activation function is part of this layer. Separating the specification of the activation function from the linear component in code, however, gives greater flexibility.",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#output-layer",
+    "href": "neural_models.html#output-layer",
+    "title": "Neural networks",
+    "section": "Output layer",
+    "text": "Output layer\nThe nn.Linear(128, 5) layer is the output layer. It maps the 128 hidden neurons to five output classes. Mathematically, the nn.Softmax(dim=1) activation function is also part of this layer.\nWhat does nn.Softmax do? It normalises, in a particular way, an input vector \\(z\\) (represented as a tensor of course) into a discrete probability distribution vector \\(p\\) of the same dimension: \\[\n\\text{Softmax}: z \\mapsto p\n\\] where \\(z\\) and \\(p\\) are vectors of the same length, and \\(p\\) sums to one. Hence here we get a probability vector with five entries. Note that our \\(z\\) vector (tensor) here has a column for each output class, and hence we normalise over the column dimension, dim=1 (see e.g. torchsummary).\nInterestingly, in contrast to most activation functions, this function is not applied separately to each pre-activation neuron value. Instead, the softmax function depends on the values of all elements of the vector given, as its job is to ensure the values together sum to one. It is defined by: \\[\n\\text{Softmax}(z)_i = \\frac{\\exp(z_i)}{\\sum_j{\\exp(z_j)}}\n\\]\nSoftmax is usually only used for output layers, to provide a final probability distribution over a collection of discrete classes. It is rarely used ‘inside’ neural networks, i.e. in hidden layers, where elementwise activation functions are common.\nFinally, although Softmax is conceptually important, it turns out that, for multi-class classification, it is generally better practice to use the LogSoftmax function, nn.LogSoftmax(dim=1), instead of Softmax. And rather than a sum of squared errors, for multi-class classification this last output layer is usually used with a so-called negative log likelihood loss, nn.NLLLoss() that takes in log-probabilities. Equivalently, we can leave out the final activation and use nn.CrossEntropyLoss, which combines LogSoftmax and NLLLoss; most PyTorch examples do this.\nWhy this loss? The labels are categories, so a squared error on the label numbers doesn’t make sense: it would treat a 7 as closer to an 8 than to a 1. Instead we choose the weights that make the observed labels most probable. The likelihood is the probability the model gives the labels we observed. Treating the images as independent, it is the product \\(L=\\prod_i p_i\\), where \\(p_i\\) is the predicted probability of image \\(i\\)’s correct class; for example, probabilities 0.9, 0.6 and 0.2 for three images give \\(L=0.108\\). Choosing the weights to maximise \\(L\\) is maximum likelihood estimation. In practice we minimise the negative log-likelihood, \\(-\\log L=-\\sum_i\\log p_i\\) (natural log), averaged over the images:\n\nthe log turns the product into a sum, so the loss is an average over images, like the mean squared error, and a minibatch’s average estimates it;\na product of many probabilities underflows to zero in floating point (for example \\(0.9^{60\\,000}\\)), while the sum of their logs does not;\nthe log is increasing, so the same weights maximise \\(L\\) and minimise \\(-\\log L\\).\n\nEach image contributes \\(-\\log p_i\\), which is zero when \\(p_i=1\\) and grows without bound as \\(p_i\\to0\\), so giving the correct class a low probability costs the most. (Least squares is also maximum likelihood, for independent Gaussian errors with constant variance.)",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#loading-data-in-pytorch",
+    "href": "neural_models.html#loading-data-in-pytorch",
+    "title": "Neural networks",
+    "section": "Loading data in PyTorch",
+    "text": "Loading data in PyTorch\nLet’s look at an example. The machine learning and computer vision communities have collected many benchmark datasets over the years, and have run numerous competitions based on such datasets. (Interestingly, Donoho has argued that such practices have been central to the successes of data science and machine learning).\nA classic example dataset is the handwritten digit-recognition dataset called MNIST. This is a dataset of \\(28 \\times 28\\) images of handwritten digits with 60,000 training images and 10,000 testing images. LeCun et al. describe this as\n\na good database for people who want to try learning techniques and pattern recognition methods on real-world data while spending minimal efforts on preprocessing and formatting.\n\nThe PyTorch module torchvision contains useful datasets, models, and image transformations for computer vision (image/video machine learning) applications. There are ‘built-in’ datasets in the module torchvision.datasets, which also contains tools (functions, classes etc.) for working with custom datasets. We can load the MNIST dataset as follows:\n\nimport torch\nfrom torchvision import datasets, transforms\n# Define transformations to be applied to loaded images\n# Here just a conversion to tensor format.\ntransform = transforms.ToTensor()\n# Load training and test datasets\ntrain_dataset = datasets.MNIST(root='./data', train=True, \n                transform=transform, download=True)\ntest_dataset = datasets.MNIST(root='./data', train=False,\n                transform=transform, download=True)\n\nThe above looks for a local ‘data’ folder. If it doesn’t exist it creates this and downloads the dataset from public sources.",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#inspecting-the-data",
+    "href": "neural_models.html#inspecting-the-data",
+    "title": "Neural networks",
+    "section": "Inspecting the data",
+    "text": "Inspecting the data\nThe returned objects are MNIST dataset objects, a kind of torch.utils.data.Dataset.\n\nprint(train_dataset)\n\nDataset MNIST\n    Number of datapoints: 60000\n    Root location: ./data\n    Split: Train\n    StandardTransform\nTransform: ToTensor()\n\n\nWe can access (image, label) pairs of the dataset using standard indexing:\n\nimg, label = train_dataset[0]\nprint('image shape:')\nprint(img.shape)\nprint('\\n')\nprint('image label:')\nprint(label)\n\nimage shape:\ntorch.Size([1, 28, 28])\n\n\nimage label:\n5\n\n\nLet’s look at the image!",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#inspecting-the-data-1",
+    "href": "neural_models.html#inspecting-the-data-1",
+    "title": "Neural networks",
+    "section": "Inspecting the data",
+    "text": "Inspecting the data\n\nimport matplotlib.pyplot as plt\n# need to permute tensor to matplotlib layout\nplt.imshow(torch.permute(img,[1,2,0]),cmap='gray')\nplt.show()",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#what-totensor-does",
+    "href": "neural_models.html#what-totensor-does",
+    "title": "Neural networks",
+    "section": "What ToTensor does",
+    "text": "What ToTensor does\nDifferent libraries store images in different layouts (see the tensors chapter):\n\n\n\n\n\n\n\n\n\nDimensions\nValues\n\n\n\n\nImage files, NumPy, Matplotlib\n(height, width, channels)\nintegers 0 to 255 (uint8)\n\n\nPyTorch\n(channels, height, width)\nfloats, often in \\([0,1]\\) (float32)\n\n\nA PyTorch minibatch\n(images, channels, height, width)\n\n\n\n\nA grayscale image has one channel and a colour image three (red, green, blue). MNIST stores its training images as integers in train_dataset.data, with no channel dimension:\n\n# MNIST as stored\nprint(train_dataset.data.shape, train_dataset.data.dtype)\n\ntorch.Size([60000, 28, 28]) torch.uint8\n\n\nIn the tensors chapter we converted the cat image to a PyTorch tensor by hand, with torch.from_numpy, division by 255 and permute. The transform transforms.ToTensor(), which takes no arguments, does the same in one step:\n\nimport imageio.v3 as iio\nimg_arr = iio.imread('./data/cat3.png')  # height, width, channels\n# by hand: floats in [0, 1], then channels first\ncat = torch.from_numpy(img_arr).float() / 255\ncat = torch.permute(cat, (2, 0, 1))\nto_tensor = transforms.ToTensor()  # no arguments\nprint(img_arr.shape, to_tensor(img_arr).shape)\nprint(torch.equal(to_tensor(img_arr), cat))\n\n(256, 256, 3) torch.Size([3, 256, 256])\nTrue\n\n\nToTensor takes a NumPy array or a PIL image (the image format MNIST passes to it), of shape (height, width, channels) or just (height, width), and returns a float32 tensor of shape (channels, height, width), dividing uint8 values by 255. Each MNIST image therefore becomes a tensor of shape [1, 28, 28] with values between 0 and 1:\n\n# one image after ToTensor\nprint(img.shape, img.dtype, img.min().item(), img.max().item())\n\ntorch.Size([1, 28, 28]) torch.float32 0.0 1.0\n\n\nHere .item() turns a one-element tensor into a plain Python number. A Dataset like this can be indexed, train_dataset[i], and has a length, len(train_dataset). That is all a DataLoader needs to produce minibatches.",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#normalising-the-data",
+    "href": "neural_models.html#normalising-the-data",
+    "title": "Neural networks",
+    "section": "Normalising the data",
+    "text": "Normalising the data\nIt is common to normalise the inputs, for example to have zero mean and unit standard deviation. transforms.Normalize does this, but we supply the mean and standard deviation ourselves, computed beforehand from the training images only:\n\npixels = train_dataset.data.float() / 255  # scaled to [0, 1]\nprint(round(pixels.mean().item(), 4), round(pixels.std().item(), 4))\n\n0.1307 0.3081\n\n\ntransforms.Normalize(mean, std) subtracts mean and divides by std, with one value per channel. It goes in the transform argument of datasets.MNIST, combined with ToTensor by transforms.Compose:\n\n# first convert to a tensor, then compute (x - mean) / std\ntransform = transforms.Compose([\n    transforms.ToTensor(),\n    transforms.Normalize((0.1307,), (0.3081,))])\ntrain_normalised = datasets.MNIST(root='./data', train=True,\n                                  transform=transform)\n\nCompose applies the transforms in the order listed. Normalize works on tensors, so it must come after ToTensor. Across the training images, the normalised pixels then have mean 0 and standard deviation 1.\nUsing only the training images follows the same rule as data splitting for choosing \\(\\lambda\\) in the previous chapter: the validation and test data should not inform how we fit the model. In this chapter we skip normalisation for simplicity.",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#validation-splits-and-our-own-data",
+    "href": "neural_models.html#validation-splits-and-our-own-data",
+    "title": "Neural networks",
+    "section": "Validation splits and our own data",
+    "text": "Validation splits and our own data\nTo choose hyperparameters such as the learning rate or the number of epochs, we hold out part of the training data as a validation set, for example with torch.utils.data.random_split:\n\ntrain_part, val_part = torch.utils.data.random_split(\n    train_dataset, [50000, 10000])\nprint(len(train_part), len(val_part))\n\n50000 10000\n\n\nFor data we already have as tensors, such as inputs X and targets y from an experiment, torch.utils.data.TensorDataset(X, y) makes a dataset that a DataLoader can use in the same way.",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#mini-batching-the-data",
+    "href": "neural_models.html#mini-batching-the-data",
+    "title": "Neural networks",
+    "section": "Mini-batching the data",
+    "text": "Mini-batching the data\nFor various reasons, modern neural network models usually process data in small batches called minibatches rather than all at once. Each step then needs only part of the data in memory, and in practice minibatch training has often been found to generalise well; the randomness in each minibatch’s gradient is one suggested reason.\nTerminology can be inconsistent, but in general, we call the full dataset the batch, and subsets of the dataset minibatches. PyTorch, though, uses ‘batch’ for the minibatch being processed, as in the batch_size argument of DataLoader below. Given an original indexing \\(i\\) of data points, we shuffle them into a new order \\(i'\\) and cut this into a partition \\(\\mathcal{B}\\) of minibatches \\(B_1,\\dots,B_{mb}\\), where \\(mb\\) is the number of minibatches. For example:\n\n\n\n\n\nThe module torch.utils.data has a tool DataLoader that feeds a dataset to the training loop one minibatch at a time. A Dataset says how to get item \\(i\\); a DataLoader decides which items, in what order and how many at a time. It takes a dataset, a batch_size and a shuffle option.\n\ntrain_loader = torch.utils.data.DataLoader(train_dataset,\n                                batch_size=64,shuffle=True)\n\nThe returned object train_loader is a Python iterable – an object that can return its members (here, minibatches) one at a time, and hence be ‘iterated over’, e.g.:\n\nfor mb_imgs, mb_labels in train_loader:\n\nIf shuffle is true, the dataset is shuffled once at the beginning of each new iteration over the DataLoader. For large datasets, such as images read from disk, the num_workers option lets it prepare minibatches in parallel while the model trains.\nA small example shows what a DataLoader does. Each time round a for loop it takes the next few items and stacks them into tensors; the last minibatch holds what is left over:\n\nfrom torch.utils.data import DataLoader\ndata = torch.tensor([10, 11, 12, 13, 14, 15, 16])  # 7 data points\nloader = DataLoader(data, batch_size=3)\nfor minibatch in loader:\n    print(minibatch)\n\ntensor([10, 11, 12])\ntensor([13, 14, 15])\ntensor([16])\n\n\nFor MNIST each item is an (image, label) pair, so each minibatch is a pair too: a tensor of 64 images and a tensor of their 64 labels. Here we look at just the first minibatch:\n\nfor images, labels in train_loader:\n    print(images.shape, labels.shape, labels.dtype)\n    break  # just look at the first minibatch\n\ntorch.Size([64, 1, 28, 28]) torch.Size([64]) torch.int64\n\n\nThe labels are integer class indices, the form the classification loss below expects.",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#batch-minibatch-and-stochastic-gradient-descent",
+    "href": "neural_models.html#batch-minibatch-and-stochastic-gradient-descent",
+    "title": "Neural networks",
+    "section": "Batch, minibatch and stochastic gradient descent",
+    "text": "Batch, minibatch and stochastic gradient descent\nThe above leads to three variations of gradient descent:\n\nBatch (full-batch) gradient descent\n\nMinibatch gradient descent\n\nStochastic gradient descent\n\nThe first uses the full dataset at each iteration of gradient descent, the second uses a minibatch for each iteration of gradient descent, and the last uses a single data point. Note: PyTorch uses optim.SGD for all versions of gradient descent; the difference comes from what data you pass it at each iteration.\nThe basic training process is to randomly divide the training set into minibatches (possibly being the full batch or single data points). Then we fix the shuffled order and iterate through the batches until all data points have been seen. This is called an epoch. We then re-shuffle the data and divide into new minibatches and continue for some number of epochs. The full dataset will hence be ‘seen’ the same number of times as there are epochs. The total number of gradient descent steps will be the number of epochs times the number of minibatches the dataset is divided into at each epoch.\nFor example, MNIST has 60,000 training images. With batch_size=32 there are \\(60\\,000/32=1875\\) minibatches per epoch, so 10 epochs take \\(10\\times1875=18\\,750\\) steps. If the minibatch size does not divide the number of points, round up: with batch_size=64, \\(60\\,000/64=937.5\\), giving 938 minibatches per epoch (937 full and one of 32), which is len(train_loader).\nThis is illustrated below \\(\\dots\\)",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#batch-minibatch-and-stochastic-gradient-descent-1",
+    "href": "neural_models.html#batch-minibatch-and-stochastic-gradient-descent-1",
+    "title": "Neural networks",
+    "section": "Batch, minibatch and stochastic gradient descent",
+    "text": "Batch, minibatch and stochastic gradient descent\nHere is simple pseudocode (won’t run!) for the above:\n\ninitialise model parameters\ncreate train_loader with batch_size \n\nfor epoch in range(num_epochs):\n    epoch_loss = 0.0\n    for mb_inputs, mb_labels in train_loader:\n        # zero out gradients.\n        optimizer.zero_grad()\n        \n        # forward pass: compute predictions\n        mb_outputs = model(mb_inputs)\n        \n        # compute loss between predictions and true labels\n        mb_loss = loss_function(mb_outputs, mb_labels)\n        \n        # Accumulate epoch loss (use .item() to get scalar)\n        epoch_loss += mb_loss.item()\n\n        # backward pass: compute gradients\n        mb_loss.backward()\n        \n        # update model parameters\n        optimizer.step()\n\n# For\n# - Batch GD, batch_size = size of training dataset\n# - Minibatch GD, batch_size = 32, 64, etc.\n# - Stochastic GD, batch_size = 1",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#training-the-neural-network-in-pytorch",
+    "href": "neural_models.html#training-the-neural-network-in-pytorch",
+    "title": "Neural networks",
+    "section": "Training the neural network in PyTorch",
+    "text": "Training the neural network in PyTorch\nLet’s put it all together!\n\nimport torch\nimport torch.nn as nn\nimport torch.optim as optim\nfrom torchvision import datasets, transforms\nfrom torch.utils.data import DataLoader\n\n# Define the model with explicit LogSoftmax\nnum_classes = 10  # For MNIST dataset\nmodel = nn.Sequential(\n    nn.Flatten(),\n    nn.Linear(28 * 28, 128),\n    nn.ReLU(),\n    nn.Linear(128, num_classes),\n    nn.LogSoftmax(dim=1)\n)\n# Define transformations (simple conversion to tensor)\ntransform = transforms.ToTensor()\n\n# Load datasets\ntrain_dataset = datasets.MNIST(root='data', train=True,\n                        transform=transform, download=True)\ntest_dataset = datasets.MNIST(root='data', train=False,\n                        transform=transform)\n\n# Data loaders\nbatch_size = 32  # Adjust as needed\ntrain_loader = DataLoader(dataset=train_dataset, \n                            batch_size=batch_size, shuffle=True)\ntest_loader = DataLoader(dataset=test_dataset, \n                            batch_size=batch_size, shuffle=False)\n\n\n# Loss function and optimiser\ncriterion = nn.NLLLoss()\noptimizer = optim.SGD(model.parameters(), lr=0.01)\n# Training loop\nnum_epochs = 10  # Adjust as needed\nfor epoch in range(num_epochs):\n    epoch_loss = 0.0\n    for mb_data, mb_targets in train_loader:\n        # Zero the gradients\n        optimizer.zero_grad()\n        # Forward pass\n        outputs = model(mb_data)\n        # Compute minibatch loss\n        mb_loss = criterion(outputs, mb_targets)\n        # Accumulate epoch loss (use .item() to get scalar)\n        epoch_loss += mb_loss.item()\n        # Backward pass and optimization\n        mb_loss.backward()\n        optimizer.step()\n    # Compute average loss per minibatch\n    avg_epoch_loss = epoch_loss / len(train_loader)\n    # display\n    print(f'Epoch [{epoch+1}/{num_epochs}], '\n          f'Average (Per Minibatch) Loss: {avg_epoch_loss:.4f}')\n\nEpoch [1/10], Average (Per Minibatch) Loss: 0.8704\nEpoch [2/10], Average (Per Minibatch) Loss: 0.3758\nEpoch [3/10], Average (Per Minibatch) Loss: 0.3239\nEpoch [4/10], Average (Per Minibatch) Loss: 0.2948\nEpoch [5/10], Average (Per Minibatch) Loss: 0.2723\nEpoch [6/10], Average (Per Minibatch) Loss: 0.2530\nEpoch [7/10], Average (Per Minibatch) Loss: 0.2360\nEpoch [8/10], Average (Per Minibatch) Loss: 0.2209\nEpoch [9/10], Average (Per Minibatch) Loss: 0.2077\nEpoch [10/10], Average (Per Minibatch) Loss: 0.1957\n\n\n\n# Evaluation on test set\ncorrect = 0\ntotal = 0\n\nwith torch.no_grad():  # Disable gradient calculation\n    for data, targets in test_loader:\n        outputs = model(data)\n        _, predicted = torch.max(outputs.detach(), 1)\n        total += targets.size(0)\n        correct += (predicted == targets).sum().item()\n\naccuracy = 100 * correct / total\nprint(f'Accuracy on test set: {accuracy:.2f}%')\n\nAccuracy on test set: 94.51%",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#what-next",
+    "href": "neural_models.html#what-next",
+    "title": "Neural networks",
+    "section": "What next?",
+    "text": "What next?\nNote: there are many, many more difficulties and subtleties that we won’t go into here (see future courses??)\nIn general we need to preprocess the data (despite the ‘Deep Learning vs Feature Engineering’ picture!), define appropriate architectures, use the right training methods (including various ‘tricks of the trade’), handle training, testing and validation splits carefully, etc etc.\nFurthermore, more complex models are usually constructed by subclassing the nn.Module class rather than using nn.Sequential. We have only just scratched the surface of neural networks and PyTorch. However, hopefully now you can start exploring yourself!\nAnother useful way to explore is to download pre-trained models. For classic computer-vision models, torchvision.models provides both the architectures and their trained weights:\n\nfrom torchvision.models import resnet18\nmodel = resnet18(weights='DEFAULT')\n\nMany more pretrained models, including language models, are shared on the Hugging Face Hub and loaded with libraries such as transformers and timm.",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#example-architecture-improvements-convolutional-neural-networks",
+    "href": "neural_models.html#example-architecture-improvements-convolutional-neural-networks",
+    "title": "Neural networks",
+    "section": "Example architecture improvements: convolutional neural networks",
+    "text": "Example architecture improvements: convolutional neural networks\nWe have previously mentioned convolutional neural networks (CNNs) as a biology/physics-inspired neural network architecture. Briefly, a convolution kernel is a small ‘patch shaped’ tensor of weights that can be applied to local patches of an image (or video or time-series, for appropriate definitions of ‘patch’) by multiplying the weights of the kernel with the values of each patch, illustrated in the below figure:  This is a special type of linear operation, to be passed into subsequent nonlinear activation functions. For example, the below snippet manually applies an edge-detection kernel of dimensions 3 by 3, which responds to horizontal edges, to the patches of a cat image using torch.einsum (which can apply linear operations like convolution to tensors without flattening).",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#manual-convolution",
+    "href": "neural_models.html#manual-convolution",
+    "title": "Neural networks",
+    "section": "Manual convolution",
+    "text": "Manual convolution\n\n# kernel for vertical changes in brightness (horizontal edges)\nkernel = torch.tensor([[ -1,-2,  -1],\n                       [ 0,  0,   0],\n                       [ 1,  2,   1]],dtype=torch.float32)\n\npadded_cat = F.pad(cat, pad=(1, 1, 1, 1), \n                    mode='constant', value=0)\npatches = padded_cat.unfold(1, 3, 1).unfold(2, 3, 1)\n\nfiltered_cat = torch.abs(torch.einsum('cijkl,kl-&gt;cij', \n                                       patches, kernel))\n\n\n\n\n\n\n\n\n\n\nIn deep learning, the above result is called the convolution of the image and the kernel (strictly, it is a cross-correlation, since the kernel isn’t flipped; nn.Conv2d computes the same thing). PyTorch implements convolution directly, as we see next.",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#convolutional-layers-in-pytorch",
+    "href": "neural_models.html#convolutional-layers-in-pytorch",
+    "title": "Neural networks",
+    "section": "Convolutional layers in PyTorch",
+    "text": "Convolutional layers in PyTorch\nEach output pixel is the sum of the kernel weights multiplied by the \\(3\\times3\\) patch of the padded image around that pixel, exactly as our unfold and einsum code computed. Each output depends only on nearby pixels (locality), and the same kernel weights are used at every position (weight sharing), so a pattern is detected wherever it appears in the image. These are assumptions about images built into the architecture: an inductive bias, in the terms of the first chapter.\nnn.Conv2d, and its function form F.conv2d, compute this directly. F.conv2d expects a minibatch of images with shape (batch, channels, height, width) and kernels with shape (output channels, input channels, height, width). The cat has shape (3, height, width), so cat.unsqueeze(1) inserts a channel dimension of size 1, treating each colour channel as a separate grayscale image, and kernel.view(1, 1, 3, 3) gives the kernel one input and one output channel. squeeze(1) removes the extra dimension again, and torch.allclose checks that two tensors agree to within a small tolerance. The result matches the patch-based calculation above, up to rounding error:\n\nsame = F.conv2d(cat.unsqueeze(1), kernel.view(1, 1, 3, 3), padding=1)\nprint(torch.allclose(same.squeeze(1).abs(), filtered_cat, atol=1e-6))\n\nTrue\n\n\nIn a network the kernels are learned. A layer nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding) takes:\n\nin_channels: the number of channels in each input image, 1 for grayscale and 3 for colour;\nout_channels: the number of output channels (often called feature maps), each from its own learned kernel;\nkernel_size: the height and width of each kernel, e.g. 3 for \\(3\\times3\\);\nstride: the step between kernel positions (default 1);\npadding: the number of zero rows and columns added around the border (default 0).\n\nIt has one kernel for each pair of input and output channels, plus a bias for each output channel:\n\nconv = nn.Conv2d(1, 8, kernel_size=3, padding=1)\nprint(conv.weight.shape, sum(p.numel() for p in conv.parameters()))\nprint(conv(torch.rand(64, 1, 28, 28)).shape)\n\ntorch.Size([8, 1, 3, 3]) 80\ntorch.Size([64, 8, 28, 28])\n\n\nEight \\(3\\times3\\) kernels and their biases make 80 parameters, whereas an nn.Linear layer from the 784 pixels to 784 outputs has \\(784\\times784+784=615\\,440\\). For an input of height \\(H\\), a kernel of size \\(k\\), padding \\(p\\) and stride \\(s\\), the output height is \\(\\lfloor(H+2p-k)/s\\rfloor+1\\), and similarly for the width; here \\((28+2-3)/1+1=28\\).",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#pooling-and-a-small-cnn",
+    "href": "neural_models.html#pooling-and-a-small-cnn",
+    "title": "Neural networks",
+    "section": "Pooling and a small CNN",
+    "text": "Pooling and a small CNN\nA pooling layer summarises each small block of a feature map by a single number. Max pooling, nn.MaxPool2d(2), keeps the largest value in each \\(2\\times2\\) block, while average pooling, nn.AvgPool2d(2), keeps the mean. By default the blocks don’t overlap (the stride equals the block size), so the height and width halve:\n\n\n\nMax pooling with \\(2\\times2\\) blocks: each shaded block of the feature map is replaced by its largest value, shown in bold.\n\n\n\n# one image, one channel, 4 x 4\nx = torch.tensor([[[[1., 3., 2., 0.],\n                    [4., 2., 1., 1.],\n                    [0., 1., 5., 6.],\n                    [3., 2., 7., 8.]]]])\nprint(nn.MaxPool2d(2)(x))\n\ntensor([[[[4., 2.],\n          [3., 8.]]]])\n\n\nPooling has no parameters. It makes the feature maps smaller, so later layers need fewer weights, and it makes the output less sensitive to a feature moving by a pixel within its block.\nStacking convolution, activation and pooling, then flattening into a linear layer, gives a small convolutional neural network (CNN) for MNIST:\n\ncnn = nn.Sequential(\n    nn.Conv2d(1, 8, 3, padding=1), nn.ReLU(),\n    nn.MaxPool2d(2),                            # 8 x 14 x 14\n    nn.Conv2d(8, 16, 3, padding=1), nn.ReLU(),\n    nn.MaxPool2d(2),                            # 16 x 7 x 7\n    nn.Flatten(), nn.Linear(16 * 7 * 7, 10), nn.LogSoftmax(dim=1)\n)\nprint(sum(p.numel() for p in cnn.parameters()))\n\n9098\n\n\nBecause the convolutions share their weights, this network has 9,098 parameters, against 101,770 for the fully connected network we trained above. In Lab 5 we build and train LeNet-5, an early CNN for digit recognition, and compare it with the fully connected network.",
+    "crumbs": [
+      "Neural networks"
+    ]
+  },
+  {
+    "objectID": "neural_models.html#physics-informed-neural-networks-hybrid-neural-models",
+    "href": "neural_models.html#physics-informed-neural-networks-hybrid-neural-models",
+    "title": "Neural networks",
+    "section": "Physics-informed neural networks: hybrid neural models",
+    "text": "Physics-informed neural networks: hybrid neural models\nIn the next chapter, we combine a neural network with a physics-based loss term, giving a hybrid neural model, or physics-informed neural network.",
+    "crumbs": [
+      "Neural networks"
     ]
   }
 ]

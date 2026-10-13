@@ -59,6 +59,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <script src="site_libs/quarto-search/fuse.min.js"></script>
 <script src="site_libs/quarto-search/quarto-search.js"></script>
 <meta content="./" name="quarto:offset"/>
+<link href="./neural_models.html" rel="next"/>
 <link href="./linear_models.html" rel="prev"/>
 <script src="site_libs/quarto-html/quarto.js"></script>
 <script src="site_libs/quarto-html/popper.min.js"></script>
@@ -188,6 +189,12 @@ window.Quarto = {
 <span class="menu-text">Week 4: Hybrid linear models</span></a>
 </div>
 </li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./neural_models.html">
+<span class="menu-text">Week 5: Neural networks</span></a>
+</div>
+</li>
 </ul>
 </div>
 </nav>
@@ -255,7 +262,7 @@ y_{\text{obs}} = A_{\text{obs}}y
 </section>
 <section id="observation-matrix-example" class="level2">
 <h2 class="anchored" data-anchor-id="observation-matrix-example">Observation matrix example</h2>
-<div id="1fec7bd8" class="cell" data-execution_count="1">
+<div id="e3267bc5" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> torch.arange(<span class="dv">10</span>,<span class="dv">20</span>, dtype<span class="op">=</span>torch.float32)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>obs_indices <span class="op">=</span> [<span class="dv">0</span>,<span class="dv">4</span>,<span class="dv">9</span>]</span>
@@ -299,7 +306,7 @@ y_{\text{obs}} = A_{\text{obs}}y \approx A_{\text{obs}}Bw = B_{\text{obs}}w
 <section id="example" class="level2">
 <h2 class="anchored" data-anchor-id="example">Example</h2>
 <p>Suppose our <span class="math inline">\(B\)</span> matrix consists of two columns, <span class="math inline">\(\sin(t)\)</span> and <span class="math inline">\(\sin(2t)\)</span>, evaluated on a fine time grid <span class="math inline">\(t_i\)</span>, of points between <span class="math inline">\(t_1 = 0\)</span> and <span class="math inline">\(t_p=12\)</span>, for <span class="math inline">\(p=100\)</span>. This means <span class="math inline">\(B\)</span> has 100 rows and 2 columns. Then, suppose we take as observations every 10th point, starting from the first, giving 10 observation indices.</p>
-<div id="d6a7a887" class="cell" data-execution_count="2">
+<div id="e14d4d9a" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> torch.linspace(<span class="dv">0</span>,<span class="dv">12</span>,<span class="dv">100</span>, dtype<span class="op">=</span>torch.float32)</span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>B <span class="op">=</span> torch.stack([torch.sin(t),torch.sin(<span class="dv">2</span><span class="op">*</span>t)],dim<span class="op">=</span><span class="dv">1</span>)</span>
@@ -310,7 +317,7 @@ y_{\text{obs}} = A_{\text{obs}}y \approx A_{\text{obs}}Bw = B_{\text{obs}}w
 <span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>t_obs <span class="op">=</span> A_obs<span class="op">@</span>t</span>
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>y_obs <span class="op">=</span> A_obs<span class="op">@</span>y <span class="co"># = A_obs@B@w</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="f3a5236a" class="cell" data-execution_count="3">
+<div id="d78eb113" class="cell" data-execution_count="3">
 <div class="cell-output cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -339,7 +346,7 @@ y_{\text{obs}} = A_{\text{obs}}y \approx A_{\text{obs}}Bw = B_{\text{obs}}w
 <section id="b-spline-basis-functions-1" class="level2">
 <h2 class="anchored" data-anchor-id="b-spline-basis-functions-1">B-Spline basis functions</h2>
 <p>Many languages such as R, Python, MATLAB, Julia etc have B-Splines available. Below is an example of how to obtain B-Spline bases of different sizes, along with an intercept/constant term, using the <strong>Python library Patsy</strong>. This is installed in Google Colab by default.</p>
-<div id="97b0103e" class="cell" data-execution_count="4">
+<div id="5adc3c46" class="cell" data-execution_count="4">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Four cubic basis functions </span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># number of implied knots = 4-3 = 1, </span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># as well as one constant function. </span></span>
@@ -358,7 +365,7 @@ y_{\text{obs}} = A_{\text{obs}}y \approx A_{\text{obs}}Bw = B_{\text{obs}}w
 <span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>B2 <span class="op">=</span> torch.tensor(</span>
 <span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    dmatrix(<span class="st">"1+bs(t, df=6, degree=3)"</span>, {<span class="st">"t"</span>: t}))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="f00bf7ed" class="cell" data-execution_count="5">
+<div id="491f4c67" class="cell" data-execution_count="5">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -374,7 +381,7 @@ y_{\text{obs}} = A_{\text{obs}}y \approx A_{\text{obs}}Bw = B_{\text{obs}}w
 </div>
 </div>
 </div>
-<div id="1af5aa9e" class="cell" data-execution_count="6">
+<div id="a73bd7e0" class="cell" data-execution_count="6">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(B1.shape)</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(B2.shape)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
@@ -386,7 +393,7 @@ torch.Size([1000, 7])</code></pre>
 <section id="example-fit" class="level2">
 <h2 class="anchored" data-anchor-id="example-fit">Example fit</h2>
 <p>Suppose our true data is a coarse, and noisy version of our <code>sin</code> combination used above. Let’s fit a B-Spline basis to it with linear least squares. First generate data:</p>
-<div id="9e71a1ce" class="cell" data-execution_count="7">
+<div id="3538210f" class="cell" data-execution_count="7">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> torch.linspace(<span class="dv">0</span>,<span class="dv">12</span>,<span class="dv">100</span>, dtype<span class="op">=</span>torch.float32)</span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>B <span class="op">=</span> torch.stack([torch.sin(t),torch.sin(<span class="dv">2</span><span class="op">*</span>t)],dim<span class="op">=</span><span class="dv">1</span>)</span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>w <span class="op">=</span> torch.tensor([<span class="dv">2</span>,<span class="dv">3</span>],dtype<span class="op">=</span>torch.float32)</span>
@@ -401,7 +408,7 @@ torch.Size([1000, 7])</code></pre>
 <span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>y_obs <span class="op">=</span> A_obs<span class="op">@</span>y <span class="op">+</span> noise</span>
 <span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>t_obs <span class="op">=</span> A_obs<span class="op">@</span>t</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="30769cb1" class="cell" data-execution_count="8">
+<div id="cc9e1f96" class="cell" data-execution_count="8">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -414,7 +421,7 @@ torch.Size([1000, 7])</code></pre>
 <section id="example-fit-1" class="level2">
 <h2 class="anchored" data-anchor-id="example-fit-1">Example fit</h2>
 <p>Now, let’s fit a spline basis to the data.</p>
-<div id="5704721e" class="cell" data-execution_count="9">
+<div id="410d308f" class="cell" data-execution_count="9">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 15 cubic basis functions, </span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># number of implied knots = 15-3 = 12, </span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="co"># as well as one constant function. </span></span>
@@ -431,7 +438,7 @@ torch.Size([1000, 7])</code></pre>
 <span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a><span class="co"># We can then get the implied fit on the fine time grid </span></span>
 <span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>y_fitted <span class="op">=</span> B<span class="op">@</span>w_lstsq</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div id="7abe2830" class="cell" data-execution_count="10">
+<div id="9f691b33" class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>plt.plot(t_obs,y_obs,<span class="st">'ro'</span>,label<span class="op">=</span><span class="st">'obs'</span>)</span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>plt.plot(t,y,<span class="st">'b'</span>,label<span class="op">=</span><span class="st">'fine scale'</span>)</span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>plt.plot(t,y_fitted,<span class="st">'r'</span>,label<span class="op">=</span><span class="st">'fitted'</span>)</span>
@@ -463,7 +470,7 @@ torch.Size([1000, 7])</code></pre>
 </section>
 <section id="example-1" class="level2">
 <h2 class="anchored" data-anchor-id="example-1">Example</h2>
-<div id="5560d8d9" class="cell" data-execution_count="11">
+<div id="84e7fe6e" class="cell" data-execution_count="11">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> torch.linspace(<span class="dv">0</span>,<span class="dv">12</span>,<span class="dv">100</span>, dtype<span class="op">=</span>torch.float32)</span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>dt <span class="op">=</span> t[<span class="dv">1</span>]<span class="op">-</span>t[<span class="dv">0</span>]<span class="op">;</span> N <span class="op">=</span> <span class="bu">len</span>(t)</span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> torch.sin(t)</span>
@@ -482,7 +489,7 @@ torch.Size([1000, 7])</code></pre>
         [ 0.,  0.,  0.,  ...,  0., -1.,  1.]])</code></pre>
 </div>
 </div>
-<div id="bb8ef683" class="cell" data-execution_count="12">
+<div id="f426a713" class="cell" data-execution_count="12">
 <div class="cell-output cell-output-display">
 <div>
 <figure class="figure">
@@ -494,7 +501,7 @@ torch.Size([1000, 7])</code></pre>
 </section>
 <section id="higher-derivative-matrices-example" class="level2">
 <h2 class="anchored" data-anchor-id="higher-derivative-matrices-example">Higher derivative matrices: example</h2>
-<div id="4771434f" class="cell" data-execution_count="13">
+<div id="e26c921d" class="cell" data-execution_count="13">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># first derivative, backward diff</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(D<span class="op">*</span>dt)</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co"># second derivative, backward diff</span></span>
@@ -557,7 +564,7 @@ tensor([[-1.0000,  3.0000, -3.0000,  ...,  0.0000,  0.0000,  0.0000],
 <section id="example-2" class="level2">
 <h2 class="anchored" data-anchor-id="example-2">Example</h2>
 <p>Consider our projectile problem with observed data as shown:</p>
-<div id="919f64c0" class="cell" data-execution_count="14">
+<div id="e92010f0" class="cell" data-execution_count="14">
 <div class="cell-output cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -574,7 +581,7 @@ tensor([[-1.0000,  3.0000, -3.0000,  ...,  0.0000,  0.0000,  0.0000],
 </section>
 <section id="example-continued" class="level2">
 <h2 class="anchored" data-anchor-id="example-continued">Example continued</h2>
-<div id="7431bef1" class="cell" data-execution_count="15">
+<div id="6c0b40dc" class="cell" data-execution_count="15">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>t_grid <span class="op">=</span> torch.linspace(<span class="dv">0</span>,<span class="fl">2.5</span>,<span class="dv">100</span>)</span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>N <span class="op">=</span> <span class="bu">len</span>(t_grid)</span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="co"># spline basis. Can use lots when have diff. eqn!</span></span>
@@ -610,7 +617,7 @@ tensor([[-1.0000,  3.0000, -3.0000,  ...,  0.0000,  0.0000,  0.0000],
 </section>
 <section id="example-continued-1" class="level2">
 <h2 class="anchored" data-anchor-id="example-continued-1">Example continued</h2>
-<div id="fee813b0" class="cell" data-execution_count="16">
+<div id="e35a92b3" class="cell" data-execution_count="16">
 <div class="cell-output cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -620,7 +627,7 @@ tensor([[-1.0000,  3.0000, -3.0000,  ...,  0.0000,  0.0000,  0.0000],
 </div>
 </div>
 <p>Compare this to the pure spline fit with the same number of basis functions:</p>
-<div id="1d6bc9ef" class="cell" data-execution_count="17">
+<div id="a5773cc4" class="cell" data-execution_count="17">
 <div class="cell-output cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -657,7 +664,7 @@ tensor([[-1.0000,  3.0000, -3.0000,  ...,  0.0000,  0.0000,  0.0000],
 #fig-validation-splits img { width:80% !important; height:auto; }
 @media(max-width:600px) { #fig-validation-splits img { width:100% !important; } }
 </style>
-<div id="fig-validation-splits" class="compact-validation quarto-figure quarto-figure-center quarto-float anchored" data-fig-pos="H" data-fig-align="center" alt="A single training-validation split, and five-fold cross-validation using the same five groups in every row. Each group is used once for validation. For each candidate lambda, refit the weights in each fold and average the validation errors. For both approaches, keep the chosen lambda fixed and refit weights using all training and validation observations before evaluating on the test set. A separate test set stays outside all folds and is used for final evaluation only.">
+<div id="fig-validation-splits" class="compact-validation quarto-figure quarto-figure-center quarto-float anchored" alt="A single training-validation split, and five-fold cross-validation using the same five groups in every row. Each group is used once for validation. For each candidate lambda, refit the weights in each fold and average the validation errors. For both approaches, keep the chosen lambda fixed and refit weights using all training and validation observations before evaluating on the test set. A separate test set stays outside all folds and is used for final evaluation only." data-fig-align="center" data-fig-pos="H">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-validation-splits-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="figures/validation-splits.svg" class="compact-validation img-fluid quarto-figure quarto-figure-center figure-img" style="width:80.0%" data-fig-pos="H" alt="A single training-validation split, and five-fold cross-validation using the same five groups in every row. Each group is used once for validation. For each candidate lambda, refit the weights in each fold and average the validation errors. For both approaches, keep the chosen lambda fixed and refit weights using all training and validation observations before evaluating on the test set. A separate test set stays outside all folds and is used for final evaluation only.">
@@ -675,7 +682,7 @@ Figure&nbsp;1: As indicated in the figure, we use the training data to determine
 <section id="predicting-future-values" class="level4">
 <h4 class="anchored" data-anchor-id="predicting-future-values">Predicting future values</h4>
 <p>The figure below compares predicting new cases from the same population with predicting future values from earlier observations.</p>
-<div id="fig-prediction-task" class="quarto-figure quarto-figure-center quarto-float anchored" data-fig-pos="H" data-fig-align="center" alt="Two prediction tasks. New-case prediction holds out scattered cases with no time ordering. Future prediction fits only earlier observations and holds out later values beyond a cutoff. Blue blocks are used for fitting; orange blocks are used for validation when selecting lambda.">
+<div id="fig-prediction-task" class="quarto-figure quarto-figure-center quarto-float anchored" alt="Two prediction tasks. New-case prediction holds out scattered cases with no time ordering. Future prediction fits only earlier observations and holds out later values beyond a cutoff. Blue blocks are used for fitting; orange blocks are used for validation when selecting lambda." data-fig-align="center" data-fig-pos="H">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-prediction-task-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="figures/prediction-task-splits.svg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" data-fig-pos="H" alt="Two prediction tasks. New-case prediction holds out scattered cases with no time ordering. Future prediction fits only earlier observations and holds out later values beyond a cutoff. Blue blocks are used for fitting; orange blocks are used for validation when selecting lambda.">
@@ -687,7 +694,7 @@ Figure&nbsp;2: For new cases, we fit using the blue observations and evaluate pr
 </div>
 <p>While a random or stratified split can suit independent observations from the same population, for time-series prediction we often want to represent the ‘online’ nature of the task, where we only have access to past and present observations when predicting the future. We therefore fit using earlier observations and validate at later times. In Lab 4, we use the held-out later part of the reference trajectory to choose <span class="math inline">\(\lambda\)</span>. This explicitly checks our ability to predict beyond the fitting interval into the future, whereas withholding points within that interval can test interpolation or smoothing using observations on both sides.</p>
 <p>We can repeat the early/later split as new observations become available. In <strong>rolling-origin evaluation</strong>, we move the prediction cutoff forward, refit using the observations then available, and predict the next interval. The figure below shows an <strong>expanding training window</strong>, with the same prediction horizon at each step.</p>
-<div id="fig-rolling-origin" class="quarto-figure quarto-figure-center quarto-float anchored" data-fig-pos="H" data-fig-align="center" alt="Three fits with cutoffs advancing through time. Each fit uses all earlier observations and predicts the next two time blocks. The prediction horizons have the same length; the training sets grow. Earlier held-out outcomes are available before joining a later training set. This is a general extension of the single-cutoff idea. Lab 4 itself uses one cutoff and a later reference trajectory.">
+<div id="fig-rolling-origin" class="quarto-figure quarto-figure-center quarto-float anchored" alt="Three fits with cutoffs advancing through time. Each fit uses all earlier observations and predicts the next two time blocks. The prediction horizons have the same length; the training sets grow. Earlier held-out outcomes are available before joining a later training set. This is a general extension of the single-cutoff idea. Lab 4 itself uses one cutoff and a later reference trajectory." data-fig-align="center" data-fig-pos="H">
 <figure class="quarto-float quarto-float-fig figure">
 <div aria-describedby="fig-rolling-origin-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
 <img src="figures/rolling-origin.svg" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:100.0%" data-fig-pos="H" alt="Three fits with cutoffs advancing through time. Each fit uses all earlier observations and predicts the next two time blocks. The prediction horizons have the same length; the training sets grow. Earlier held-out outcomes are available before joining a later training set. This is a general extension of the single-cutoff idea. Lab 4 itself uses one cutoff and a later reference trajectory.">
@@ -718,7 +725,7 @@ H_{\lambda} = B_{\text{obs}} \left( B_{\text{obs}}^T B_{\text{obs}} + \lambda B^
 <section id="example-minus-details" class="level2">
 <h2 class="anchored" data-anchor-id="example-minus-details">Example (minus details!)</h2>
 <p>We use the same projectile example, with 30 cubic spline basis functions and one constant column. The third-difference penalty favours quadratic trajectories, while the spline basis allows departures from that shape. As in the preceding example, the time-step factors are absorbed into <span class="math inline">\(\lambda\)</span>.</p>
-<div id="86c008a5" class="cell" data-execution_count="18">
+<div id="8d457276" class="cell" data-execution_count="18">
 <div class="cell-output cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -733,7 +740,7 @@ H_{\lambda} = B_{\text{obs}} \left( B_{\text{obs}}^T B_{\text{obs}} + \lambda B^
 </section>
 <section id="example-minus-details-continued" class="level2">
 <h2 class="anchored" data-anchor-id="example-minus-details-continued">Example (minus details!) continued</h2>
-<div id="8f51950e" class="cell" data-execution_count="19">
+<div id="3e39a2b9" class="cell" data-execution_count="19">
 <div class="cell-output cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -1149,19 +1156,22 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 </a>
 </div>
 <div class="nav-page nav-page-next">
+<a aria-label="Week 5: Neural networks" class="pagination-link" href="./neural_models.html">
+<span class="nav-page-text">Week 5: Neural networks</span> <i class="bi bi-arrow-right-short"></i>
+</a>
 </div>
 </nav>
 </div> <!-- /content -->
 <footer class="footer">
 <div class="nav-footer">
 <div class="nav-footer-left">
-<p>ENGSCI 205 — Weeks 1–4 notes.</p>
+<p>ENGSCI 205 — Weeks 1–5 notes.</p>
 </div>
 <div class="nav-footer-center">
        
     </div>
 <div class="nav-footer-right">
-<p><a href="downloads/EML-Week-01.pdf">Week 1 PDF</a> · <a href="downloads/EML-Week-02.pdf">Week 2 PDF</a> · <a href="downloads/EML-Week-03.pdf">Week 3 PDF</a> · <a href="downloads/EML-Week-04.pdf">Week 4 PDF</a></p>
+<p><a href="downloads/EML-Week-01.pdf">Week 1 PDF</a> · <a href="downloads/EML-Week-02.pdf">Week 2 PDF</a> · <a href="downloads/EML-Week-03.pdf">Week 3 PDF</a> · <a href="downloads/EML-Week-04.pdf">Week 4 PDF</a> · <a href="downloads/EML-Week-05.pdf">Week 5 PDF</a></p>
 </div>
 </div>
 </footer>
