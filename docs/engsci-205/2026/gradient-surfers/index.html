@@ -1,0 +1,1238 @@
+<!doctype html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Gradient Surfers: a three-lane runner for revising ENGSCI 205 Weeks 1–5. Dodge bugs, answer questions at the gates and collect procedures' steps in order.">
+<style>
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; font-size: 14px; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+<title>Gradient Surfers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bungee&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: one full-screen canvas (a rail track at dusk under a loss-landscape skyline); a thin HUD on top,
+   a question banner under it with one answer per lane, and overlay cards for the menu, feedback and results.
+   The game commits to one dusk look, so it sets dark colours explicitly instead of following the viewer's theme. */
+:root {
+  --night: #131a30;
+  --dusk: #3a2b58;
+  --ember: #f0a35e;
+  --signal: #e2483d;
+  --token: #ffd166;
+  --good: #57d3a3;
+  --bad: #ff7a70;
+  --paper: #f3f0fb;
+  --muted: #b3b5d2;
+  --panel: rgba(17, 22, 42, 0.88);
+  --panel-solid: #161c33;
+  --line: rgba(243, 240, 251, 0.18);
+  --font-display: "Bungee", "Arial Black", Impact, sans-serif;
+  --font-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-code: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--night); color: var(--paper); font-family: var(--font-body); overflow: hidden; }
+#app { position: relative; height: 100%; overflow: hidden; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+#view { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--token); outline-offset: 2px; }
+
+/* HUD */
+.hud {
+  position: absolute; top: 0; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding-block: 10px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  pointer-events: none;
+}
+.hud-group { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.score-box { display: flex; flex-direction: column; line-height: 1.05; }
+.score { font-family: var(--font-display); font-size: clamp(20px, 3vw, 28px); color: var(--token); font-variant-numeric: tabular-nums; text-shadow: 0 2px 0 rgba(0,0,0,0.35); }
+.tally { font-size: 12px; color: var(--muted); letter-spacing: 0.04em; font-variant-numeric: tabular-nums; }
+.lives { display: flex; gap: 5px; }
+.pip { width: 12px; height: 12px; border-radius: 50%; background: var(--signal); box-shadow: 0 0 0 2px rgba(0,0,0,0.25); }
+.pip.lost { background: transparent; box-shadow: inset 0 0 0 2px rgba(243,240,251,0.35); }
+.pill-btn {
+  pointer-events: auto; border: 1px solid var(--line); background: var(--panel);
+  border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 700; letter-spacing: 0.02em;
+}
+
+/* Question and sequence banners */
+.banner {
+  position: absolute; left: 0; right: 0; top: 54px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  pointer-events: none;
+}
+.banner-box {
+  max-width: 760px; margin-inline: auto; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 14px; padding: 12px 14px 10px; display: flex; flex-direction: column; gap: 10px;
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.banner-box { background: rgba(17, 22, 42, 0.94); border-color: rgba(240,163,94,0.45); }
+.tag { font-family: var(--font-display); font-size: 12px; letter-spacing: 0.08em; color: var(--ember); }
+.prompt { font-size: clamp(19px, 1.2vw + 14px, 26px); font-weight: 700; line-height: 1.25; text-wrap: balance; min-width: 0; }
+.goal { font-size: 15px; color: #d9d6ee; }
+.goal b { color: var(--token); }
+.timer { height: 4px; border-radius: 2px; background: var(--ember); transform-origin: left center; }
+
+/* Answer cards, one per lane, above the track */
+.lanes {
+  position: absolute; left: 0; right: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  pointer-events: none;
+}
+.lanes-row { max-width: 820px; margin-inline: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.lane-chip {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  min-height: 64px; padding: 10px 8px; border-radius: 12px; text-align: center; min-width: 0;
+  background: rgba(17, 22, 42, 0.94); border: 2px solid rgba(243,240,251,0.28);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+}
+.lane-chip .lane-text { font-family: var(--font-code); font-weight: 700; font-size: clamp(15px, 0.9vw + 11px, 21px); line-height: 1.2; overflow-wrap: anywhere; }
+.lane-chip .lane-tag { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lane-chip.here { background: var(--token); border-color: #fff1c4; color: var(--night); }
+.lane-chip.here .lane-tag { color: #5b4310; }
+.seq-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip-step { font-family: var(--font-code); font-size: 13px; font-weight: 700; padding: 4px 8px; border-radius: 7px; background: rgba(87,211,163,0.16); color: #c9f5e3; }
+.chip-step.todo { background: transparent; box-shadow: inset 0 0 0 1.5px rgba(243,240,251,0.32); color: var(--paper); }
+.chips-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); align-self: center; }
+.q-steps .chip-step { font-size: 15px; padding: 6px 10px; }
+
+/* Label for the nearest bug in the player's lane (one at a time, so labels never overlap) */
+.bug-tag {
+  position: absolute; left: 0; top: 0; pointer-events: none; will-change: transform;
+  display: flex; align-items: baseline; gap: 6px; white-space: nowrap;
+  background: var(--signal); color: #fff; border-radius: 8px; padding: 5px 9px;
+  font-family: var(--font-code); font-weight: 700; font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+}
+.bug-tag::after {
+  content: ""; position: absolute; left: 50%; bottom: -6px; margin-left: -6px;
+  border: 6px solid transparent; border-bottom: 0; border-top-color: var(--signal);
+}
+.bug-tag .bug-k { font-family: var(--font-display); font-size: 10px; letter-spacing: 0.08em; color: #ffe1dc; }
+
+/* Toast */
+.toast {
+  position: absolute; left: 50%; top: 58px; transform: translate(-50%, -8px);
+  width: max-content; max-width: min(640px, calc(100% - 32px));
+  background: rgba(17, 22, 42, 0.94); border: 1px solid rgba(87,211,163,0.5); border-radius: 14px; padding: 12px 16px;
+  display: flex; flex-direction: column; gap: 4px; text-align: center;
+  opacity: 0; transition: opacity 160ms ease, transform 160ms ease; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast b { font-family: var(--font-display); font-weight: 400; font-size: 20px; letter-spacing: 0.03em; }
+.toast.good b { color: var(--good); }
+.toast span { font-size: 16px; line-height: 1.4; color: #e4e1f3; }
+
+/* Overlays */
+.overlay {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  padding-block: 20px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: rgba(9, 11, 24, 0.5); overflow-y: auto;
+}
+.card {
+  width: min(560px, 100%); max-height: 100%; overflow-y: auto;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 18px;
+  padding: 22px; display: flex; flex-direction: column; gap: 14px;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.eyebrow { font-family: var(--font-display); font-size: 12px; letter-spacing: 0.1em; color: var(--ember); margin: 0; }
+.title {
+  font-family: var(--font-display); font-weight: 400; margin: 0; line-height: 0.95;
+  font-size: clamp(34px, 8vw, 60px); color: var(--paper); text-wrap: balance;
+  text-shadow: 0 3px 0 var(--signal), 0 6px 18px rgba(0,0,0,0.4);
+}
+.lede { margin: 0; font-size: 16px; line-height: 1.5; color: #dcd9ee; max-width: 62ch; }
+fieldset { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+legend { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 0; margin-bottom: 8px; }
+.week-chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.week {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left;
+  border: 1.5px solid var(--line); background: rgba(243,240,251,0.04); border-radius: 11px; padding: 8px 10px;
+}
+.week b { font-size: 14px; }
+.week small { font-size: 12px; color: var(--muted); }
+.week[aria-pressed="true"] { border-color: var(--token); background: rgba(255,209,102,0.12); }
+.primary {
+  border: 0; border-radius: 12px; padding: 13px 18px; background: var(--token); color: var(--night);
+  font-family: var(--font-display); font-size: 17px; letter-spacing: 0.04em; box-shadow: 0 3px 0 #c7902f;
+}
+.primary:active { transform: translateY(2px); box-shadow: 0 1px 0 #c7902f; }
+.primary:disabled { opacity: 0.45; cursor: not-allowed; }
+.secondary { border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 16px; background: transparent; font-weight: 700; }
+.controls { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: #dcd9ee; }
+kbd {
+  font-family: var(--font-code); font-size: 12px; border: 1px solid var(--line); border-bottom-width: 2px;
+  border-radius: 5px; padding: 1px 6px; background: rgba(243,240,251,0.06); color: var(--paper);
+}
+.fine { margin: 0; font-size: 13px; color: var(--muted); }
+.row { display: flex; flex-wrap: wrap; gap: 10px; }
+.row > button { flex: 1 1 160px; }
+
+.kind { align-self: flex-start; margin: 0; font-family: var(--font-display); font-size: 12px; letter-spacing: 0.08em; padding: 4px 10px; border-radius: 999px; background: rgba(255,122,112,0.16); color: var(--bad); }
+.fb-title { margin: 0; font-size: 20px; line-height: 1.3; text-wrap: balance; }
+.answers { display: flex; flex-direction: column; gap: 8px; }
+.ans { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 10px; align-items: baseline; }
+.ans dt { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.ans dd { margin: 0; font-family: var(--font-code); font-weight: 700; font-size: 15px; overflow-wrap: anywhere; }
+.ans dd.wrong { color: var(--bad); text-decoration: line-through; text-decoration-thickness: 2px; }
+.ans dd.right { color: var(--good); }
+.why { margin: 0; font-size: 16px; line-height: 1.5; color: #e4e1f3; }
+.hint { margin: 0; font-size: 12px; color: var(--muted); text-align: center; }
+
+/* Question pop-up */
+#qOv { background: rgba(9, 11, 24, 0.62); }
+.q-card, .q-card:focus-visible { border-color: rgba(240,163,94,0.5); outline: none; }
+.q-prompt { margin: 0; font-size: clamp(21px, 1.4vw + 15px, 28px); line-height: 1.25; text-wrap: balance; }
+.q-opts { display: flex; flex-direction: column; gap: 10px; }
+.q-opt {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 14px; text-align: left;
+  padding: 14px 16px; border-radius: 12px; border: 2px solid rgba(243,240,251,0.25); background: rgba(243,240,251,0.06);
+  font-family: var(--font-code); font-weight: 700; font-size: clamp(17px, 0.6vw + 14px, 21px); line-height: 1.25;
+}
+.q-opt span { overflow-wrap: anywhere; }
+.q-opt:hover:not(:disabled) { border-color: var(--token); background: rgba(255,209,102,0.12); }
+.q-opt:disabled { cursor: default; opacity: 0.55; }
+.q-opt.right { border-color: var(--good); background: rgba(87,211,163,0.2); opacity: 1; }
+.q-opt.wrong { border-color: var(--bad); background: rgba(255,122,112,0.16); opacity: 1; }
+.q-opt.right span { color: #c9f5e3; }
+.q-opt.wrong span { color: #ffd0cb; text-decoration: line-through; }
+.verdict { margin: 0; font-family: var(--font-display); font-size: 20px; letter-spacing: 0.03em; }
+.verdict.good { color: var(--good); }
+.verdict.bad { color: var(--bad); }
+.q-result { display: flex; flex-direction: column; gap: 6px; }
+
+.final { display: flex; align-items: baseline; gap: 10px; }
+.big { font-family: var(--font-display); font-size: clamp(44px, 10vw, 68px); color: var(--token); line-height: 1; font-variant-numeric: tabular-nums; }
+.unit { font-size: 15px; color: var(--muted); }
+.stats { margin: 0; font-size: 15px; color: #dcd9ee; line-height: 1.5; }
+.review { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.review li { border-top: 1px solid var(--line); padding-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+.review .rk { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ember); }
+.review .rq { font-weight: 700; font-size: 15px; line-height: 1.35; }
+.review .ra { font-family: var(--font-code); font-weight: 700; font-size: 14px; color: var(--good); overflow-wrap: anywhere; }
+.review .rw { font-size: 14px; color: var(--muted); line-height: 1.45; }
+h3 { margin: 0; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+@media (max-width: 420px) {
+  .card { padding: 18px; gap: 12px; }
+  .banner { top: 50px; }
+  .ans { grid-template-columns: 1fr; gap: 2px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast { transition: none; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="view" aria-label="Gradient Surfers track"></canvas>
+
+  <header class="hud" id="hud" hidden>
+    <div class="hud-group">
+      <div class="score-box"><span class="score" id="score">0</span><span class="tally" id="tally">0 of 0 questions right</span></div>
+    </div>
+    <div class="hud-group">
+      <div class="lives" id="lives" aria-label="Lives"></div>
+      <button class="pill-btn" id="soundBtn" type="button" aria-pressed="false">Sound off</button>
+      <button class="pill-btn" id="pauseBtn" type="button">Pause</button>
+    </div>
+  </header>
+
+  <section class="banner" id="sBanner" hidden aria-live="polite">
+    <div class="banner-box">
+      <span class="tag" id="sTag">IN ORDER</span>
+      <span class="prompt" id="sTitle"></span>
+      <span class="goal" id="sGoal"></span>
+      <div class="seq-chips" id="sChips"></div>
+    </div>
+  </section>
+
+  <section class="lanes" id="laneChips" hidden aria-label="Answers by lane">
+    <div class="lanes-row">
+      <div class="lane-chip"><span class="lane-tag">Left</span><span class="lane-text"></span></div>
+      <div class="lane-chip"><span class="lane-tag">Middle</span><span class="lane-text"></span></div>
+      <div class="lane-chip"><span class="lane-tag">Right</span><span class="lane-text"></span></div>
+    </div>
+  </section>
+
+  <div class="bug-tag" id="bugTag" hidden><span class="bug-k">BUG</span><span id="bugName"></span></div>
+
+  <div class="toast" id="toast" role="status"><b id="toastHead"></b><span id="toastBody"></span></div>
+
+  <div class="overlay" id="menu">
+    <div class="card">
+      <p class="eyebrow">ENGSCI 205 · Revision run</p>
+      <h1 class="title">Gradient Surfers</h1>
+      <p class="lede">Ride the line and dodge the bugs. At each question gate the run pauses for a question: answer it to keep going. On some stretches you collect the steps of a procedure in order.</p>
+      <fieldset>
+        <legend>Weeks to revise</legend>
+        <div class="week-chips" id="weekChips"></div>
+      </fieldset>
+      <button class="primary" id="startBtn" type="button">Start run</button>
+      <ul class="controls">
+        <li><kbd>←</kbd> <kbd>→</kbd> or swipe sideways to change lane</li>
+        <li><kbd>↑</kbd> or <kbd>Space</kbd> or swipe up to jump the low barriers</li>
+        <li><kbd>P</kbd> to pause. On a phone you can also tap the left, middle or right of the track.</li>
+      </ul>
+      <p class="fine" id="bestLine" hidden></p>
+    </div>
+  </div>
+
+  <div class="overlay" id="qOv" hidden>
+    <div class="card q-card" id="qCard" role="dialog" aria-modal="true" aria-labelledby="qPrompt" tabindex="-1">
+      <p class="eyebrow" id="qTag">WEEK 1 · QUESTION</p>
+      <h2 class="q-prompt" id="qPrompt"></h2>
+      <div class="q-opts" id="qOpts">
+        <button class="q-opt" type="button" data-i="0"><kbd>1</kbd><span></span></button>
+        <button class="q-opt" type="button" data-i="1"><kbd>2</kbd><span></span></button>
+        <button class="q-opt" type="button" data-i="2"><kbd>3</kbd><span></span></button>
+      </div>
+      <div class="q-result" id="qResult" hidden><p class="verdict" id="qVerdict"></p><p class="why" id="qWhy"></p></div>
+      <div class="seq-chips q-steps" id="qSteps" hidden></div>
+      <button class="primary" id="qGo" type="button" hidden>Keep going</button>
+      <p class="hint" id="qHint">Tap an answer, or press 1, 2 or 3</p>
+    </div>
+  </div>
+
+  <div class="overlay" id="cardOv" hidden>
+    <div class="card" role="dialog" aria-modal="true" aria-labelledby="fbTitle">
+      <p class="kind" id="fbKind">Wrong answer</p>
+      <h2 class="fb-title" id="fbTitle"></h2>
+      <dl class="answers" id="fbAnswers"></dl>
+      <p class="why" id="fbWhy"></p>
+      <button class="primary" id="fbBtn" type="button">Keep going</button>
+      <p class="hint" id="fbHint">Space or Enter also continues</p>
+    </div>
+  </div>
+
+  <div class="overlay" id="pauseOv" hidden>
+    <div class="card">
+      <p class="eyebrow">Paused</p>
+      <div class="row">
+        <button class="primary" id="resumeBtn" type="button">Resume</button>
+        <button class="secondary" id="quitBtn" type="button">End run</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="overOv" hidden>
+    <div class="card">
+      <p class="eyebrow">Run over</p>
+      <div class="final"><span class="big" id="finalScore">0</span><span class="unit">points</span></div>
+      <p class="stats" id="finalStats"></p>
+      <section id="reviewSec" class="answers">
+        <h3>Worth another look</h3>
+        <ol class="review" id="reviewList"></ol>
+      </section>
+      <div class="row">
+        <button class="primary" id="againBtn" type="button">Run again</button>
+        <button class="secondary" id="menuBtn" type="button">Change weeks</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Question bank. Each gate has exactly three options and the index of the right one; "why" is shown after a wrong answer.
+     Sequences are collected in the order given. Bugs label the trains and barriers. Keep options to 18 characters or fewer. -->
+<script type="application/json" id="bank">
+{"gates":[{"week":1,"prompt":"Data end at t = 5.75 s. Predicting θ at t = 7 s is called…","options":["interpolation","extrapolation","regularisation"],"answer":1,"why":"t = 7 s lies outside the observed time range, so it is extrapolation; a time inside the range would be interpolation.","source":"intro.qmd § Predicting the pendulum"},{"week":1,"prompt":"K-nearest-neighbour prediction at a new time uses…","options":["the K-th point","degree-K poly fit","mean of K closest"],"answer":2,"why":"KNN averages the target values of the K observations whose times are closest to the new time.","source":"intro.qmd § Predicting the pendulum: empirical approach"},{"week":1,"prompt":"The linear pendulum uses the small-angle approximation sin θ ≈ …","options":["θ","θ²","cos θ"],"answer":0,"why":"For small angles sin θ ≈ θ, which turns the nonlinear pendulum ODE into a linear one.","source":"intro.qmd § The linear pendulum"},{"week":1,"prompt":"With estimated period T = 2.75 s, what is 7 mod T?","options":["4.25","1.5","2.5"],"answer":1,"why":"7 − 2 × 2.75 = 1.5, so t = 7 s is matched to data near t = 1.5 s in the cycle.","source":"intro.qmd § Extrapolation problem: simple period-based method"},{"week":1,"prompt":"24 observations, order k = 2 autoregression. Shape of X_lagged?","options":["(24, 2)","(2, 22)","(22, 2)"],"answer":2,"why":"Order k leaves m − k (past, present) pairs: 24 − 2 = 22 rows, with one column per lag.","source":"intro.qmd § Extrapolation problem: simple autoregressive model; Lab 1 (EML_Lab01_basic_concepts_worksheet.ipynb), lagged feature matrix task"},{"week":1,"prompt":"θ[t+1] ≈ a·θ[t] + b·θ[t−1]. Which is the state-update matrix A?","options":["[[a, b], [0, 1]]","[[1, 0], [a, b]]","[[a, b], [1, 0]]"],"answer":2,"why":"Row 1 predicts the next angle from a and b; row 2 copies the current angle into the second state slot.","source":"intro.qmd § Extrapolation problem: simple autoregressive model"},{"week":1,"prompt":"Linear AR state model: the n-step-ahead state is ? times the current state","options":["Aⁿ","nA","A"],"answer":0,"why":"Each step multiplies the state by A, so iterating the one-step model n times gives Aⁿ times the state.","source":"intro.qmd § Extrapolation problem: simple autoregressive model"},{"week":1,"prompt":"Bucket level predicts rain. Covering the bucket to stop rain mistakes it for…","options":["interpolation","intervention","regularisation"],"answer":1,"why":"Covering the bucket is an intervention: the pattern predicts rain passively, but rain fills the bucket, not the reverse.","source":"intro.qmd § Is data enough?"},{"week":1,"prompt":"Hume's problem of induction: predicting new data always needs…","options":["more data","assumptions","a bigger model"],"answer":1,"why":"Predicting beyond the observed data requires assumptions that go beyond the data, whatever the method.","source":"intro.qmd § Assumptions make data representative!"},{"week":1,"prompt":"In state-space form, Newton's second law becomes…","options":["two 1st-order ODEs","one 3rd-order ODE","an algebraic eqn"],"answer":0,"why":"A second-order ODE becomes a system of two first-order ODEs, e.g. for position and momentum.","source":"intro.qmd § State space models"},{"week":2,"prompt":"A (256, 256, 3) image after torch.permute(img, (2, 0, 1)) has shape…","options":["(256, 3, 256)","(256, 256, 3)","(3, 256, 256)"],"answer":2,"why":"permute puts old dimension 2 (channels) first, giving PyTorch's channels × height × width layout.","source":"vectors_matrices_tensors.qmd § Converting to a tensor"},{"week":2,"prompt":"cat has shape (3, 256, 256). Shape of cat[0, :, :]?","options":["(3, 256)","(256, 256)","(1, 256, 256)"],"answer":1,"why":"Indexing the channel dimension with an integer removes it, leaving the red channel's height × width.","source":"vectors_matrices_tensors.qmd § Converting to a tensor"},{"week":2,"prompt":"Which method never copies data and errors if a view isn't possible?","options":[".view()",".reshape()",".contiguous()"],"answer":0,"why":"view never copies; reshape copies when it must, and contiguous() copies if the layout isn't contiguous.","source":"vectors_matrices_tensors.qmd § Arrays/tensors: storage vs access"},{"week":2,"prompt":"x = torch.arange(1., 7). Shape of x.unfold(0, 2, 1)?","options":["(3, 2)","(6, 2)","(5, 2)"],"answer":2,"why":"floor((6 − 2)/1) + 1 = 5 windows, and the window of size 2 becomes a new last dimension.","source":"vectors_matrices_tensors.qmd § Using 'unfold' to generate 'sliding window views' along a dimension"},{"week":2,"prompt":"A has shape (4, 4). Shape of A.unfold(0, 2, 2).unfold(1, 2, 2)?","options":["(2, 2, 2, 2)","(4, 2, 2)","(2, 2, 4)"],"answer":0,"why":"Each unfold gives 2 windows along its dimension and adds a size-2 within-window index at the end.","source":"vectors_matrices_tensors.qmd § Using unfold to generate non-overlapping patches of an image"},{"week":2,"prompt":"Shape of F.pad(cat, pad=(25, 25, 25, 25)) for cat of shape (3, 256, 256)?","options":["(3, 281, 281)","(3, 356, 356)","(3, 306, 306)"],"answer":2,"why":"Height and width each gain 25 zeros on both sides: 256 + 2 × 25 = 306. The channels are untouched.","source":"vectors_matrices_tensors.qmd § Zero padding"},{"week":2,"prompt":"Usual time-series tensor layout? (B batch, T timesteps, F features)","options":["(B, T, F)","(T, F)","(F, T, B)"],"answer":0,"why":"Time-series data are usually stored as (Batch, Timesteps, Features), with the sample (batch) index first.","source":"vectors_matrices_tensors.qmd § Common shapes"},{"week":2,"prompt":"Minimise (x − 10)² with SGD, lr = 0.1, from x = 0. x after one step?","options":["−2.0","2.0","1.0"],"answer":1,"why":"The gradient 2(x − 10) is −20 at x = 0, so x ← 0 − 0.1 × (−20) = 2.0.","source":"vectors_matrices_tensors.qmd § Example"},{"week":2,"prompt":"Two loop iterations without optimizer.zero_grad(). x.grad then holds…","options":["sum of both grads","latest grad only","zero"],"answer":0,"why":"backward() adds to .grad, so gradients accumulate across iterations until zero_grad() clears them.","source":"vectors_matrices_tensors.qmd § Notes"},{"week":2,"prompt":"Besides GPU support, what key extra does PyTorch add over NumPy?","options":["data tables","auto derivatives","symbolic algebra"],"answer":1,"why":"PyTorch can automatically compute derivatives of composed tensor functions, which gradient-based fitting needs.","source":"vectors_matrices_tensors.qmd § Why? GPUs! Derivatives!"},{"week":2,"prompt":"Backpropagation applies the chain rule in which direction?","options":["parameters → loss","left to right","loss → parameters"],"answer":2,"why":"Values are computed forward; derivatives are multiplied backward, from the loss towards the parameters.","source":"vectors_matrices_tensors.qmd § Computation graphs"},{"week":3,"prompt":"In statistics and ML, a 'linear model' is linear in its…","options":["raw inputs","parameters","time t"],"answer":1,"why":"Linear means linear in the unknown weights; feature columns can be nonlinear functions such as t².","source":"linear_models.qmd § What is a linear model?"},{"week":3,"prompt":"Projectile y = h₀ + v₀t − ½gt². Which column of X multiplies g?","options":["t²","−½t²","t"],"answer":1,"why":"Writing y ≈ Xw with w = (h₀, v₀, g) gives the columns 1, t and −½t².","source":"linear_models.qmd § Example continued"},{"week":3,"prompt":"X has 6 rows (observations) and 3 columns (parameters). The system is…","options":["wide","tall","square"],"answer":1,"why":"More equations than unknowns gives a tall, over-determined system, solved approximately by least squares.","source":"linear_models.qmd § The shape of linear models: well-, over- and under-determined linear systems"},{"week":3,"prompt":"Wide X: among the exact solutions, lstsq and pinv return the one with…","options":["maximum norm","fewest nonzeros","minimum norm"],"answer":2,"why":"The pseudo-inverse picks the solution closest to zero in Euclidean (L2) norm.","source":"linear_models.qmd § Solving wide linear systems"},{"week":3,"prompt":"Pseudo-inverse X⁺ for a tall X with independent columns?","options":["Xᵀ(XXᵀ)⁻¹","X⁻¹","(XᵀX)⁻¹Xᵀ"],"answer":2,"why":"(XᵀX)⁻¹Xᵀ is the tall-case formula; Xᵀ(XXᵀ)⁻¹ is for wide X, and X⁻¹ needs a square matrix.","source":"linear_models.qmd § Solving tall linear systems"},{"week":3,"prompt":"Usually the most efficient, stable way to get least-squares weights?","options":["lstsq(X, y)","pinv(X) @ y","an SGD loop"],"answer":0,"why":"lstsq and pinv agree up to rounding, but lstsq is usually more efficient and stable; gradient descent is much slower.","source":"linear_models.qmd § Solving tall linear systems"},{"week":3,"prompt":"Least squares plus the penalty λ‖w‖² is called…","options":["autoregression","spline fitting","ridge regression"],"answer":2,"why":"Penalising the squared size of w is ridge regression, a type of Tikhonov regularisation.","source":"linear_models.qmd § Regularisation revisited"},{"week":3,"prompt":"In ridge regression, a very large λ pulls the weights w towards…","options":["zero","X⁺y","the true w"],"answer":0,"why":"For large λ the penalty λ‖w‖² dominates, so w shrinks towards 0 at the expense of fit to the data.","source":"linear_models.qmd § Regularisation revisited"},{"week":3,"prompt":"As λ → 0⁺, the ridge solution approaches…","options":["w = 0","X⁺y","the true w"],"answer":1,"why":"With a vanishing penalty, ridge tends to the minimum-norm least-squares solution w = X⁺y.","source":"linear_models.qmd § Solving linear systems in general"},{"week":3,"prompt":"To solve ridge regression with lstsq, stack X on top of…","options":["λ I","λ X","√λ I"],"answer":2,"why":"‖y − Xw‖² + λ‖w‖² is the squared norm of [y; 0] − [X; √λ I]w, since (√λ)² = λ.","source":"linear_models.qmd § Stacking"},{"week":3,"prompt":"Deep networks have many more weights than data. They resemble…","options":["wide systems","tall systems","square systems"],"answer":0,"why":"With far more parameters than observations, deep networks are analogous to wide, under-determined systems.","source":"linear_models.qmd § Issues"},{"week":4,"prompt":"Loss = data loss + λ × model loss. Larger λ makes the fit follow…","options":["the data","the ODE model","the test set"],"answer":1,"why":"λ sets the balance; a larger λ penalises departures from the theory-based model more strongly.","source":"hybrid_linear.qmd § Including derivatives in a linear model"},{"week":4,"prompt":"Fine grid of 100 points, every 10th observed. Shape of A_obs?","options":["(10, 100)","(100, 10)","(10, 10)"],"answer":0,"why":"A_obs has one row eⱼᵀ per observation and one column per fine-grid point.","source":"hybrid_linear.qmd § Observation matrix; § Example"},{"week":4,"prompt":"Columns of dmatrix('1 + bs(t, df=4, degree=3)', {'t': t})?","options":["5","4","7"],"answer":0,"why":"df = 4 gives four spline columns, plus one constant column from the '1 +' in the formula.","source":"hybrid_linear.qmd § B-Spline basis functions"},{"week":4,"prompt":"N = 100 grid points. Rows of D3 = D[2:, 2:] @ D[1:, 1:] @ D?","options":["99","97","100"],"answer":1,"why":"D has N − 1 rows, and each further application of the first difference loses one more: 100 − 3 = 97.","source":"hybrid_linear.qmd § Derivative matrices; § Higher derivative matrices: example"},{"week":4,"prompt":"To treat g as unknown, d²y/dt² = −g is enforced as…","options":["d²y/dt² = 0","dy/dt = −g","d³y/dt³ = 0"],"answer":2,"why":"Differentiating once more removes the unknown constant g, giving the penalty term ‖D3 B w‖².","source":"hybrid_linear.qmd § Example"},{"week":4,"prompt":"If the data model can fit the training data exactly, training error picks λ =","options":["0","∞","1"],"answer":0,"why":"With no penalty the model fits the training data best, so λ must be chosen on data it wasn't trained on.","source":"hybrid_linear.qmd § Choosing regularisation parameters"},{"week":4,"prompt":"After choosing λ on validation data, refit the weights on…","options":["train + validation","test data","validation only"],"answer":0,"why":"Keep the chosen λ fixed, refit using all training and validation data, then evaluate once on the test set.","source":"hybrid_linear.qmd § Data splitting for choosing λ"},{"week":4,"prompt":"80 houses, 20 apartments, stratified 5-fold split. Houses per fold?","options":["20","16","4"],"answer":1,"why":"Stratified folds keep the 80:20 mix, so each fold gets 80/5 = 16 houses and 4 apartments.","source":"hybrid_linear.qmd § Keeping subgroup proportions similar"},{"week":4,"prompt":"To choose λ for predicting future values, validate on…","options":["random points","earlier points","later observations"],"answer":2,"why":"Fit on earlier observations and validate at later times, mimicking prediction of the future from the past.","source":"hybrid_linear.qmd § Predicting future values"},{"week":4,"prompt":"Generalised cross-validation approximates which method for linear models?","options":["5-fold CV","test-set error","leave-one-out CV"],"answer":2,"why":"GCV is a cheap approximation to leave-one-out cross-validation, computed from the hat matrix for each λ.","source":"hybrid_linear.qmd § Generalised cross-validation for linear models"},{"week":4,"prompt":"Pure spline vs ODE-penalised fit: which fits the training data better?","options":["ODE-penalised","pure spline","they're equal"],"answer":1,"why":"The pure spline interpolates the training data, but the ODE-penalised fit generalises better to unseen data.","source":"hybrid_linear.qmd § Notes"},{"week":5,"prompt":"Total parameters: nn.Linear(784, 128) then nn.Linear(128, 10)?","options":["101,632","100,480","101,770"],"answer":2,"why":"784 × 128 + 128 = 100,480 and 128 × 10 + 10 = 1,290; the biases count as parameters too.","source":"neural_models.qmd § Hidden layers; § Pooling and a small CNN"},{"week":5,"prompt":"Shape of layer.weight for nn.Linear(784, 128)?","options":["[128, 784]","[784, 128]","[128]"],"answer":0,"why":"PyTorch stores the transpose, one row per output neuron; the layer computes X @ weight.T + bias.","source":"neural_models.qmd § Hidden layers"},{"week":5,"prompt":"Remove every activation function from a deep network. The result is…","options":["still linear","still nonlinear","a CNN"],"answer":0,"why":"Composing linear layers without nonlinear activations just gives one big linear model.","source":"neural_models.qmd § Multiple neurons and multiple layers"},{"week":5,"prompt":"nn.CrossEntropyLoss combines nn.LogSoftmax with…","options":["nn.Softmax","nn.MSELoss","nn.NLLLoss"],"answer":2,"why":"CrossEntropyLoss = LogSoftmax + NLLLoss, so a network trained with it ends without a final activation.","source":"neural_models.qmd § Output layer"},{"week":5,"prompt":"Loss −log p for an image whose true class gets probability 0.1?","options":["−2.30","0.10","2.30"],"answer":2,"why":"The negative log-likelihood for one image is −ln 0.1 ≈ 2.30, the typical loss of an untrained 10-class network.","source":"neural_models.qmd § Output layer; Lab 5 (EML_Lab05_neural_models_worksheet.ipynb) Question 4"},{"week":5,"prompt":"60,000 training images, batch_size=64. What is len(train_loader)?","options":["937","938","937.5"],"answer":1,"why":"60,000/64 = 937.5, so there are 937 full minibatches plus one of 32: 938 in total.","source":"neural_models.qmd § Batch, minibatch and stochastic gradient descent"},{"week":5,"prompt":"nn.Conv2d(6, 16, 5), no padding, stride 1, 14 × 14 input. Output height?","options":["10","14","9"],"answer":0,"why":"⌊(H + 2p − k)/s⌋ + 1 = (14 + 0 − 5)/1 + 1 = 10.","source":"neural_models.qmd § Convolutional layers in PyTorch"},{"week":5,"prompt":"Learnable parameters in nn.Conv2d(1, 8, kernel_size=3)?","options":["72","80","9"],"answer":1,"why":"Eight 3 × 3 kernels (72 weights, shared across all positions) plus one bias per output channel: 72 + 8 = 80.","source":"neural_models.qmd § Convolutional layers in PyTorch"},{"week":5,"prompt":"Shape after nn.MaxPool2d(2) on a (16, 10, 10) input?","options":["(8, 10, 10)","(16, 5, 5)","(16, 10, 5)"],"answer":1,"why":"2 × 2 max pooling with stride 2 halves height and width; the number of channels stays the same.","source":"neural_models.qmd § Pooling and a small CNN"},{"week":5,"prompt":"transforms.Normalize mean and std should be computed from…","options":["training images","test images","all 70,000 images"],"answer":0,"why":"Validation and test data must not inform fitting, so the statistics come from the training images only.","source":"neural_models.qmd § Normalising the data"},{"week":5,"prompt":"Gradient descent using a single data point per step is…","options":["minibatch GD","full-batch GD","stochastic GD"],"answer":2,"why":"Full-batch GD uses all the data, minibatch GD a subset, stochastic GD one point; PyTorch uses optim.SGD for all.","source":"neural_models.qmd § Batch, minibatch and stochastic gradient descent"}],"sequences":[{"week":1,"title":"Autoregressive forecast","steps":["Build lagged features","Fit linear regression","Form state matrix A","Multiply state by Aⁿ"],"why":"Build lagged inputs and targets, fit a and b, put them in A, then apply powers of A to roll the state forward.","source":"intro.qmd § Extrapolation problem: simple autoregressive model; Lab 1 (EML_Lab01_basic_concepts_worksheet.ipynb), autoregressive tasks"},{"week":1,"title":"Period-based prediction","steps":["Estimate period T","Compute t mod T","Find nearest times","Average their θ"],"why":"Estimate the period, map the target time into one cycle, then average the observations nearest that point.","source":"intro.qmd § Extrapolation problem: simple period-based method"},{"week":2,"title":"Getting a gradient","steps":["requires_grad=True","Compute the loss","loss.backward()","Read x.grad"],"why":"Mark the input for tracking, run the forward calculation, backpropagate from the loss, then read x.grad.","source":"vectors_matrices_tensors.qmd § Example; § Notes"},{"week":3,"title":"Estimate, then predict","steps":["Build design matrix X","Solve for ŵ (lstsq)","Predict y = xᵀŵ"],"why":"Build the design matrix, fit the weights by least squares, then predict new values with those fixed weights.","source":"linear_models.qmd § Estimation and prediction"},{"week":3,"title":"Ridge over a range of λ","steps":["Pick a range of λ","Stack [X; √λ I] per λ","Solve with lstsq","Compare val. errors","Choose the final λ"],"why":"For each λ, stack √λ·I under X and zeros under y and solve with lstsq; then keep the λ with the lowest validation error.","source":"linear_models.qmd § Stacking; § Choosing regularisation parameter"},{"week":4,"title":"Choosing λ by validation","steps":["Split train/validation","Fit w for each λ","Pick lowest val. error","Refit on train + val","Evaluate on test set"],"why":"Fit weights per λ on training data, choose λ on validation, refit on both, and use the test set once at the end.","source":"hybrid_linear.qmd § Data splitting for choosing λ"},{"week":4,"title":"Rolling-origin evaluation","steps":["Fit up to the cutoff","Predict next interval","Evaluate predictions","Advance the cutoff"],"why":"At each cutoff, fit on earlier data, predict the next interval, score it once observed, then move the cutoff on.","source":"hybrid_linear.qmd § Predicting future values"},{"week":5,"title":"One training step","steps":["model(mb_data)","criterion(...)","mb_loss.backward()","optimizer.step()"],"why":"Run the forward pass, compute the loss from the outputs, backpropagate it, then update the parameters with the gradients.","source":"neural_models.qmd § Training the neural network in PyTorch"},{"week":5,"title":"Simple MNIST network","steps":["nn.Flatten()","nn.Linear(784, 128)","nn.ReLU()","nn.Linear(128, 10)","nn.LogSoftmax(dim=1)"],"why":"Flatten each image to 784 values, apply the hidden layer and ReLU, then map to 10 classes as log-probabilities.","source":"neural_models.qmd § Training the neural network in PyTorch; Lab 5 (EML_Lab05_neural_models_worksheet.ipynb) Task 2.1"}],"bugs":[{"week":1,"name":"np.roll wraparound","tip":"np.roll wraps values round to the start; drop the first k rows so wrapped values never become lagged inputs.","source":"intro.qmd § Manual lagged features; Lab 1 (EML_Lab01_basic_concepts_worksheet.ipynb), lagged feature matrix task"},{"week":1,"name":"Variance as scale","tip":"np.random.normal's scale is a standard deviation: pass sigma, not sigma².","source":"Lab 1 (EML_Lab01_basic_concepts_worksheet.ipynb), noisy observations task"},{"week":1,"name":"Trusting the fit","tip":"A good fit over the observed times says little about extrapolation; check predictions beyond the data.","source":"intro.qmd § Predicting the pendulum: extrapolation problem; Lab 1 (EML_Lab01_basic_concepts_worksheet.ipynb), out-of-sample questions"},{"week":1,"name":"Wrong state order","tip":"The AR state holds the latest angle first: use np.flip(y_data[-2:]) to match the rows of A.","source":"Lab 1 (EML_Lab01_basic_concepts_worksheet.ipynb), state update task; intro.qmd § Extrapolation problem: simple autoregressive model"},{"week":1,"name":"1D sklearn input","tip":"scikit-learn expects a 2D feature array: use t_data.reshape(-1, 1) for a single feature.","source":"intro.qmd § Predicting the pendulum: interpolation problem; Lab 1 (EML_Lab01_basic_concepts_worksheet.ipynb), regressor task"},{"week":2,"name":"Channels last","tip":"PyTorch expects images as (C, H, W); permute NumPy/Matplotlib (H, W, C) arrays with (2, 0, 1).","source":"vectors_matrices_tensors.qmd § Converting to a tensor; § Common shapes"},{"week":2,"name":"Forgot zero_grad","tip":"backward() adds to .grad; call optimizer.zero_grad() every iteration or old gradients pile up.","source":"vectors_matrices_tensors.qmd § Notes"},{"week":2,"name":"view() on permuted","tip":"view() can fail on a permuted or transposed (non-contiguous) tensor; use reshape() or call contiguous() first.","source":"vectors_matrices_tensors.qmd § Arrays/tensors: storage vs access"},{"week":2,"name":"Edited a view","tip":"Views share storage: changing cat_red also changes cat. Make a copy if they must stay independent.","source":"vectors_matrices_tensors.qmd § Arrays/tensors: storage vs access"},{"week":2,"name":"No requires_grad","tip":"Set requires_grad=True on the tensor you optimise, or PyTorch won't track gradients for it.","source":"vectors_matrices_tensors.qmd § Example"},{"week":3,"name":"λ instead of √λ","tip":"Stack √λ·I under X, not λ·I: the squared norm turns √λ back into λ.","source":"linear_models.qmd § Stacking"},{"week":3,"name":"Wrong pinv formula","tip":"(XᵀX)⁻¹Xᵀ only holds for tall X with independent columns; for wide X use torch.linalg.pinv or lstsq.","source":"linear_models.qmd § Solving tall linear systems; § Solving wide linear systems"},{"week":3,"name":"Bad learning rate","tip":"Gradient descent depends strongly on the learning rate and number of iterations; check it has converged.","source":"linear_models.qmd § Solving tall linear systems: example"},{"week":3,"name":"Wrong feature row","tip":"Build prediction rows with the same recipe as X, e.g. (1, t, −½t²), not raw t alone.","source":"linear_models.qmd § Estimation and prediction"},{"week":3,"name":"No ones column","tip":"Include a column of ones in X, or the model has no intercept (h₀) term.","source":"linear_models.qmd § Example continued"},{"week":4,"name":"λ from train error","tip":"Training error alone favours λ = 0; choose λ by the error on held-out validation data.","source":"hybrid_linear.qmd § Choosing regularisation parameters"},{"week":4,"name":"Shuffled time data","tip":"For forecasting, validate on later times; randomly held-out points test interpolation, not the future.","source":"hybrid_linear.qmd § Predicting future values"},{"week":4,"name":"Wrong zeros length","tip":"The zeros stacked under y_obs need one entry per row of D (e.g. D3.shape[0]), not per observation.","source":"hybrid_linear.qmd § Stacking; § Example continued"},{"week":4,"name":"Missing A_obs","tip":"Fit with A_obs @ B, not B: the data exist only at the observation times.","source":"hybrid_linear.qmd § Example fit"},{"week":4,"name":"Test set in tuning","tip":"Keep the test set out of λ selection and CV folds; use it once, for the final evaluation.","source":"hybrid_linear.qmd § Choosing regularisation parameters; § Data splitting for choosing λ"},{"week":5,"name":"Shape mismatch","tip":"Check in_features of the first Linear layer matches the flattened size, e.g. 16 × 5 × 5 = 400 in LeNet-5.","source":"neural_models.qmd § Pooling and a small CNN; Lab 5 (EML_Lab05_neural_models_worksheet.ipynb) Task 4.1"},{"week":5,"name":"Double softmax","tip":"nn.CrossEntropyLoss already applies LogSoftmax; don't end the network with Softmax when using it.","source":"neural_models.qmd § Output layer"},{"week":5,"name":"NLLLoss on probs","tip":"nn.NLLLoss expects log-probabilities: end the network with LogSoftmax, not Softmax.","source":"neural_models.qmd § Output layer"},{"week":5,"name":"Stale optimiser","tip":"Make a new optimiser for the new model's parameters; the old one still updates the old model.","source":"Lab 5 (EML_Lab05_neural_models_worksheet.ipynb) Task 4.2"},{"week":5,"name":"Device mismatch","tip":"Move the model and every minibatch to the same device with .to(device).","source":"Lab 5 (EML_Lab05_neural_models_worksheet.ipynb), Note on GPUs; Task 2.3"}]}
+</script>
+
+<script>
+(() => {
+'use strict';
+const $ = (id) => document.getElementById(id);
+const BANK = JSON.parse($('bank').textContent);
+const WEEKS = [[1, 'Key ideas'], [2, 'Basic tools'], [3, 'Simple data models'], [4, 'Hybrid linear models'], [5, 'Neural models']];
+const SLOGANS = ['ZERO YOUR GRADIENTS', 'MIND THE SHAPES', 'TEST SET: LOOK ONCE', 'VALIDATE BEFORE YOU TEST', 'PLOT YOUR LOSS CURVES', 'model.eval() BEFORE TESTING', 'SHUFFLE THE TRAINING SET'];
+
+// ---------- small helpers ----------
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('gradient-surfers:' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('gradient-surfers:' + k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } },
+};
+const rand = (a, b) => a + Math.random() * (b - a);
+const randInt = (a, b) => Math.floor(rand(a, b + 1));
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function deck(items) { let pile = []; return { size: items.length, next() { if (!items.length) return null; if (!pile.length) pile = shuffle(items); return pile.pop(); } }; }
+const fmt = (n) => Math.round(n).toLocaleString('en-NZ');
+const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ---------- world constants ----------
+// A camera well behind the player with a narrow view keeps things ahead larger, so their labels stay readable.
+const LANE_W = 2.4, CAM_BACK = 8, NEAR = -CAM_BACK + 0.9, Z_VIS = 100, Z_FAR = 170;
+const JUMP_V = 9.4, GRAV = 28, MAX_SPEED = 26, SEQ_SPEED = 15;
+const MONO = '"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace';
+const DISPLAY = '"Bungee", Impact, "Arial Black", sans-serif';
+const laneX = (l) => (l - 1) * LANE_W;
+const COL = {
+  train: { front: '#e2483d', side: '#a8322b', top: '#f07a6c' },
+  post: { front: '#454a73', side: '#33375a', top: '#5a608c' },
+  barrier: { front: '#ffd166', side: '#c79b3f', top: '#ffe7a8' },
+  gatePost: { front: '#8b93b8', side: '#666d93', top: '#b4bbdb' },
+  beam: { front: '#c7cde6', side: '#9aa1c2', top: '#e3e7f6' },
+  panel: { front: '#131a30', side: '#0c1124', top: '#2a3150' },
+  plate: { front: '#f3f0fb', side: '#bdb7d6', top: '#ffffff' },
+  board: { front: '#2e2350', side: '#241b40', top: '#3d2f66' },
+};
+
+// ---------- canvas and projection ----------
+const cv = $('view');
+const ctx = cv.getContext('2d');
+let W = 0, H = 0, DPR = 1;
+const view = { s0: 50, F: 250, groundY: 0, camH: 4, horizon: 0 };
+const cam = { x: 0 };
+function resize() {
+  const dpr = DPR = Math.min(3, window.devicePixelRatio || 1);
+  const r = cv.getBoundingClientRect();
+  W = Math.max(1, r.width); H = Math.max(1, r.height);
+  cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const s0 = Math.min(0.94 * W / (3 * LANE_W + 0.8), 0.115 * H);
+  const groundY = H * 0.8;
+  const horizonTarget = H * (W < H ? 0.3 : 0.34);
+  const camH = clamp((groundY - horizonTarget) / s0, 2.6, 9);
+  Object.assign(view, { s0, F: s0 * CAM_BACK, groundY, camH, horizon: groundY - camH * s0 });
+  if (typeof placeLanes === 'function') placeLanes();
+}
+function P(x, y, z) {
+  const s = view.F / (z + CAM_BACK);
+  return [W / 2 + (x - cam.x) * s, view.horizon + (view.camH - y) * s, s];
+}
+function quad(a, b, c, d, fill) {
+  ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.lineTo(d[0], d[1]); ctx.closePath();
+  ctx.fillStyle = fill; ctx.fill();
+}
+// Axis-aligned box; returns the near face as a screen rectangle (null when the near face is behind the clip plane).
+function box(x0, x1, y0, y1, z0, z1, col) {
+  if (z1 <= NEAR) return null;
+  const zn = Math.max(z0, NEAR), zf = Math.max(z1, NEAR + 0.01);
+  const nbl = P(x0, y0, zn), nbr = P(x1, y0, zn), ntl = P(x0, y1, zn), ntr = P(x1, y1, zn);
+  const fbl = P(x0, y0, zf), fbr = P(x1, y0, zf), ftl = P(x0, y1, zf), ftr = P(x1, y1, zf);
+  if (x0 > cam.x) quad(nbl, ntl, ftl, fbl, col.side);
+  if (x1 < cam.x) quad(nbr, ntr, ftr, fbr, col.side);
+  if (y1 < view.camH) quad(ntl, ntr, ftr, ftl, col.top);
+  if (z0 < NEAR) return null;
+  quad(nbl, nbr, ntr, ntl, col.front);
+  return { x: nbl[0], y: ntl[1], w: nbr[0] - nbl[0], h: nbl[1] - ntl[1], s: nbl[2] };
+}
+// Centred text fitted into a w × h box. Long text with spaces goes onto two lines when that makes it bigger.
+// Sizes and positions snap to whole pixels so moving signs shimmer less; text too small to read is skipped.
+function textIn(text, cx, cy, w, h, family, weight, color, maxPx) {
+  ctx.font = `${weight} 100px ${family}`;
+  const cap = maxPx || 1e9;
+  let lines = [text], px = Math.min(h, (w / (ctx.measureText(text).width || 1)) * 100, cap);
+  if (text.includes(' ') && px < h * 0.62) {
+    const mid = text.length / 2;
+    let cut = -1;
+    for (let i = 0; i < text.length; i++) if (text[i] === ' ' && (cut < 0 || Math.abs(i - mid) < Math.abs(cut - mid))) cut = i;
+    const two = [text.slice(0, cut), text.slice(cut + 1)];
+    const px2 = Math.min(h / 2.25, (w / (Math.max(...two.map((t) => ctx.measureText(t).width)) || 1)) * 100, cap);
+    if (px2 > px * 1.15) { lines = two; px = px2; }
+  }
+  px = Math.floor(px);
+  if (px < 7) return;
+  ctx.font = `${weight} ${px}px ${family}`;
+  ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  const snap = (v) => Math.round(v * DPR) / DPR, lh = px * 1.12;
+  lines.forEach((t, i) => ctx.fillText(t, snap(cx), snap(cy + (i - (lines.length - 1) / 2) * lh)));
+}
+function rrect(x, y, w, h, r) {
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h);
+}
+
+// ---------- settings ----------
+let selectedWeeks = new Set(store.get('weeks', [1, 2, 3, 4, 5]));
+let soundOn = store.get('sound', false);
+let best = store.get('best', 0);
+
+// ---------- game state ----------
+const player = { lane: 1, x: 0, y: 0, vy: 0, lean: 0 };
+let G = makeWorld('menu');
+function makeWorld(state, prev) {
+  return {
+    state, t: 0, dist: prev ? prev.dist : 0, speed: 12, bonus: 0, coins: 0, lives: 3,
+    asked: 0, correct: 0, seqDone: 0,
+    objs: prev ? prev.objs.filter((o) => o.scenery) : [],
+    frontier: 34, sceneryFrontier: prev ? prev.sceneryFrontier : 0, lampN: prev ? prev.lampN : 0, sloganN: prev ? prev.sloganN : 0,
+    rowsUntil: 2, challengeN: 0, seq: null, invuln: 0, shake: 0, jumpBuf: 0, cardAt: 0,
+    missed: [], missedKeys: new Set(), decks: null,
+  };
+}
+function startRun() {
+  const weeks = selectedWeeks;
+  const gates = BANK.gates.filter((g) => weeks.has(g.week));
+  const seqs = BANK.sequences.filter((s) => weeks.has(s.week));
+  let bugs = BANK.bugs.filter((b) => weeks.has(b.week));
+  if (!bugs.length) bugs = BANK.bugs;
+  G = makeWorld('run', G);
+  G.decks = { gates: deck(gates), seqs: deck(seqs), bugs: deck(bugs) };
+  Object.assign(player, { lane: 1, x: 0, y: 0, vy: 0, lean: 0 });
+  hide('menu'); hide('overOv'); show('hud');
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  updateHud(true); last = performance.now();
+}
+const currentScore = () => Math.floor(G.dist / 2) + G.bonus;
+
+// ---------- spawning ----------
+function nextChallengeKind() {
+  const hasSeq = G.decks.seqs.size > 0, hasGate = G.decks.gates.size > 0;
+  if (hasSeq && !G.seq && (G.challengeN % 3 === 2 || !hasGate)) return 'seq';
+  return hasGate ? 'gate' : null;
+}
+function spawnAhead() {
+  const far = Math.max(150, G.speed * 8.5 + 40);
+  while (G.sceneryFrontier < far) {
+    const z = G.sceneryFrontier;
+    G.objs.push({ kind: 'lamp', side: -1, z, prevZ: z, scenery: true }, { kind: 'lamp', side: 1, z, prevZ: z, scenery: true });
+    if (G.lampN % 4 === 1) G.objs.push({ kind: 'board', side: G.lampN % 8 === 1 ? -1 : 1, z: z + 7, prevZ: z + 7, text: SLOGANS[G.sloganN++ % SLOGANS.length], scenery: true });
+    G.lampN++; G.sceneryFrontier += 14;
+  }
+  if (G.state !== 'run') return;
+  let guard = 0;
+  while (G.frontier < far && guard++ < 20) {
+    if (G.rowsUntil > 0) { G.rowsUntil--; spawnRow(G.rowsUntil < 2 && nextChallengeKind() === 'gate'); }
+    else { spawnChallenge(); G.rowsUntil = randInt(3, 4); }
+  }
+}
+function spawnRow(easy) {
+  const z = G.frontier, d = Math.min(1, G.t / 150), r = Math.random(), L = shuffle([0, 1, 2]);
+  const lanes = [null, null, null];
+  if (easy) lanes[L[0]] = Math.random() < 0.6 ? 'train' : 'barrier';
+  else if (r < 0.36 - 0.1 * d) lanes[L[0]] = 'train';
+  else if (r < 0.56 - 0.12 * d) lanes[L[0]] = 'barrier';
+  else if (r < 0.78) { lanes[L[0]] = 'train'; lanes[L[1]] = 'train'; }
+  else if (r < 0.91) { lanes[L[0]] = 'train'; lanes[L[1]] = 'barrier'; }
+  else { lanes[0] = lanes[1] = lanes[2] = 'barrier'; }
+  let maxLen = 0;
+  lanes.forEach((k, lane) => {
+    if (k === 'train') { const len = rand(7, 12.5); maxLen = Math.max(maxLen, len); G.objs.push({ kind: 'train', lane, z, prevZ: z, len, bug: G.decks.bugs.next() }); }
+    else if (k === 'barrier') G.objs.push({ kind: 'barrier', lane, z, prevZ: z, bug: G.decks.bugs.next() });
+  });
+  const free = [0, 1, 2].filter((l) => lanes[l] !== 'train');
+  if (free.length && Math.random() < 0.8) {
+    const cl = pick(free);
+    if (lanes[cl] === 'barrier') {
+      for (let i = -2; i <= 2; i++) G.objs.push({ kind: 'coin', lane: cl, z: z + i * 1.2, prevZ: z + i * 1.2, y: 0.6 + 1.05 * (1 - (i / 2.6) ** 2) });
+    } else {
+      for (let i = 0; i < 5; i++) G.objs.push({ kind: 'coin', lane: cl, z: z + 2 + i * 2.2, prevZ: z + 2 + i * 2.2, y: 0.6 });
+    }
+  }
+  G.frontier = z + maxLen + Math.max(14, G.speed * 0.95);
+}
+function spawnChallenge() {
+  const kind = nextChallengeKind();
+  G.challengeN++;
+  // A question gate pauses the run, so it only needs a short clear stretch either side.
+  if (kind === 'gate') {
+    const item = G.decks.gates.next(), z = G.frontier + 18;
+    G.objs.push({ kind: 'gate', z, prevZ: z, item, order: shuffle([0, 1, 2]) });
+    G.frontier = z + Math.max(22, G.speed * 1.8);
+  } else if (kind === 'seq') {
+    const item = G.decks.seqs.next(), spacing = SEQ_SPEED * 5;  // about 5 s between rows
+    let display = shuffle(item.steps);
+    for (let i = 0; i < 5 && display.join('|') === item.steps.join('|'); i++) display = shuffle(item.steps);
+    const s = { item, progress: 0, rows: [], spacing, display };
+    const z0 = G.frontier + G.speed * 4.5 + 6;
+    coinRuns(G.frontier + 8, z0 - 10);
+    item.steps.forEach((_, k) => {
+      const z = z0 + k * spacing;
+      const row = { kind: 'row', z, prevZ: z, correctLane: randInt(0, 2), tokens: [] };
+      s.rows.push(row); G.objs.push(row);
+    });
+    relabel(s);
+    G.seq = s;
+    G.frontier = s.rows[s.rows.length - 1].z + Math.max(22, G.speed * 1.8);
+  } else {
+    G.frontier += 10;
+  }
+}
+function coinRuns(zA, zB) {
+  for (let z = zA; z + 7 < zB; z += 16) {
+    const lane = randInt(0, 2);
+    for (let i = 0; i < 4; i++) G.objs.push({ kind: 'coin', lane, z: z + i * 2.2, prevZ: z + i * 2.2, y: 0.6 });
+  }
+}
+// Label the pending rows so the nearest asks for the next step, the one after for the step after, and so on.
+function relabel(s) {
+  const steps = s.item.steps;
+  const pending = s.rows.filter((r) => !r.done).sort((a, b) => a.z - b.z);
+  pending.forEach((r, i) => {
+    const k = s.progress + i;
+    if (k >= steps.length) { r.done = true; r.dead = true; return; }
+    const need = steps[k];
+    const later = steps.filter((t, j) => j > k && t !== need), earlier = steps.filter((t, j) => j < k && t !== need);
+    const decoys = shuffle(later).concat(shuffle(earlier)).slice(0, 2);
+    const others = [0, 1, 2].filter((l) => l !== r.correctLane);
+    r.tokens = [];
+    r.tokens[r.correctLane] = { text: need, correct: true };
+    others.forEach((l, j) => { r.tokens[l] = decoys[j] ? { text: decoys[j], correct: false } : null; });
+  });
+}
+function addRowAfterLast(s) {
+  const pending = s.rows.filter((r) => !r.done);
+  const base = pending.length ? Math.max(...pending.map((r) => r.z)) : 0;
+  const gap = pending.length ? s.spacing : Math.max(s.spacing, G.speed * 1.6);
+  for (const o of G.objs) if (!o.scenery && o.z > base) { o.z += gap; o.prevZ += gap; }
+  G.frontier += gap;
+  const row = { kind: 'row', z: base + gap, prevZ: base + gap, correctLane: randInt(0, 2), tokens: [] };
+  s.rows.push(row); G.objs.push(row);
+}
+
+// ---------- update ----------
+function nearestLane() { return clamp(Math.round(player.x / LANE_W) + 1, 0, 2); }
+function laneBlocked(lane) { return G.objs.some((o) => o.kind === 'train' && o.lane === lane && o.z < 1.0 && o.z + o.len > -0.8); }
+function move(dir) {
+  if (G.state !== 'run') return;
+  const target = clamp(player.lane + dir, 0, 2);
+  if (target === player.lane) return;
+  if (laneBlocked(target)) { G.shake = 0.35; sfx('bump'); return; }
+  player.lane = target; sfx('swish');
+}
+function jump() { if (G.state === 'run') G.jumpBuf = 0.16; }
+
+function update(dt) {
+  if (G.state === 'paused' || G.state === 'card' || G.state === 'question' || G.state === 'over') return;
+  const running = G.state === 'run';
+  if (running) {
+    G.t += dt;
+    // the pace builds slowly, and eases right down while collecting steps in order
+    let target = Math.min(MAX_SPEED, 13.5 + G.t * 0.06);
+    if (G.seq && G.seq.introduced) target = Math.min(target, SEQ_SPEED);
+    G.speed += (target - G.speed) * Math.min(1, dt * 1.5);
+  } else G.speed = 12;
+  const dz = G.speed * dt;
+  G.dist += dz;
+  for (const o of G.objs) { o.prevZ = o.z; o.z -= dz; }
+  G.frontier -= dz; G.sceneryFrontier -= dz;
+
+  const tx = laneX(player.lane);
+  player.x += (tx - player.x) * Math.min(1, dt * 16);
+  player.lean += ((tx - player.x) * 0.16 - player.lean) * Math.min(1, dt * 12);
+  if (G.jumpBuf > 0) {
+    G.jumpBuf -= dt;
+    if (player.y === 0 && player.vy === 0) { player.vy = JUMP_V; G.jumpBuf = 0; sfx('jump'); }
+  }
+  if (player.y > 0 || player.vy > 0) {
+    player.vy -= GRAV * dt; player.y += player.vy * dt;
+    if (player.y <= 0) { player.y = 0; player.vy = 0; }
+  }
+  cam.x += (player.x * 0.55 - cam.x) * Math.min(1, dt * 6);
+  G.shake = Math.max(0, G.shake - dt * 3);
+
+  if (running) { G.invuln = Math.max(0, G.invuln - dt); interact(); }
+  if (G.state === 'run' && G.seq && !G.seq.introduced) {
+    const first = Math.min(...G.seq.rows.filter((r) => !r.done).map((r) => r.z));
+    if (first < G.speed * 4.4) introSequence(G.seq);
+  }
+  G.objs = G.objs.filter((o) => !o.dead && o.z + (o.len || 0.6) > NEAR - 1);
+  spawnAhead();
+  if (G.state === 'run') { updateHud(); updateBanner(); }
+}
+function interact() {
+  const lane = nearestLane();
+  for (const o of G.objs) {
+    if (G.state !== 'run') return;
+    const crossed = o.prevZ > 0 && o.z <= 0;
+    const inLane = o.lane !== undefined && Math.abs(player.x - laneX(o.lane)) < 1.05;
+    switch (o.kind) {
+      case 'coin':
+        if (crossed && inLane && Math.abs(player.y + 0.6 - o.y) < 0.85) { o.dead = true; G.coins++; G.bonus += 10; sfx('coin'); }
+        break;
+      case 'train':
+        if (!G.invuln && inLane && o.z < 0.45 && o.z + o.len > -0.45) crash(o);
+        break;
+      case 'barrier':
+        if (!G.invuln && crossed && inLane && player.y < 0.9) crash(o);
+        break;
+      case 'gate':
+        if (o.prevZ > 2.5 && o.z <= 2.5 && !o.done) { o.done = true; askQuestion(o); }
+        break;
+      case 'row':
+        if (crossed && !o.done) { o.done = true; resolveRow(o, lane); }
+        break;
+    }
+  }
+}
+// ---------- question pop-up (the run waits while it is open) ----------
+const Q = { mode: null, gate: null, answered: false, at: 0 };
+const qOptEls = [...document.querySelectorAll('.q-opt')];
+function openQ() {
+  G.state = 'question'; Q.at = performance.now(); Q.answered = false;
+  hideChallenge(); show('qOv'); $('qCard').scrollTop = 0;
+  setTimeout(() => { if (G.state === 'question') $('qCard').focus({ preventScroll: true }); }, 30);
+}
+function askQuestion(gate) {
+  const item = gate.item;
+  Q.mode = 'ask'; Q.gate = gate;
+  $('qTag').textContent = `WEEK ${item.week} · QUESTION`;
+  $('qPrompt').textContent = item.prompt;
+  qOptEls.forEach((b, i) => { b.querySelector('span').textContent = item.options[gate.order[i]]; b.className = 'q-opt'; b.disabled = false; });
+  $('qOpts').hidden = false; $('qResult').hidden = true; $('qGo').hidden = true; $('qSteps').hidden = true;
+  $('qHint').textContent = 'Tap an answer, or press 1, 2 or 3';
+  openQ();
+}
+function introSequence(s) {
+  s.introduced = true;
+  Q.mode = 'intro'; Q.gate = null;
+  $('qTag').textContent = `WEEK ${s.item.week} · COLLECT IN ORDER`;
+  $('qPrompt').textContent = s.item.title;
+  $('qOpts').hidden = true;
+  $('qVerdict').textContent = `${s.item.steps.length} steps`; $('qVerdict').className = 'verdict';
+  $('qWhy').textContent = 'Here they are in random order. Each row on the track shows three of them, one per lane: steer into the one that comes next. A step out of order costs a life.';
+  $('qResult').hidden = false;
+  const qs = $('qSteps'); qs.replaceChildren();
+  s.display.forEach((t) => { const c = document.createElement('span'); c.className = 'chip-step todo'; c.textContent = t; qs.append(c); });
+  qs.hidden = false;
+  $('qGo').textContent = 'Go'; $('qGo').hidden = false;
+  $('qHint').textContent = 'Space or Enter also starts';
+  openQ();
+}
+function answerQ(i) {
+  if (Q.mode !== 'ask' || Q.answered || performance.now() - Q.at < 350) return;
+  Q.answered = true; Q.at = performance.now();
+  const item = Q.gate.item, chosen = Q.gate.order[i], right = Q.gate.order.indexOf(item.answer), ok = chosen === item.answer;
+  G.asked++;
+  qOptEls.forEach((b) => { b.disabled = true; });
+  qOptEls[right].classList.add('right');
+  if (ok) { G.correct++; G.bonus += 100; sfx('good'); }
+  else {
+    qOptEls[i].classList.add('wrong');
+    G.lives--; sfx('bad');
+    const rv = { key: 'g:' + item.prompt, kind: `Week ${item.week} · Question`, q: item.prompt, a: item.options[item.answer], why: item.why };
+    if (!G.missedKeys.has(rv.key)) { G.missedKeys.add(rv.key); G.missed.push(rv); }
+  }
+  $('qVerdict').textContent = ok ? 'Correct  +100' : 'Not quite';
+  $('qVerdict').className = 'verdict ' + (ok ? 'good' : 'bad');
+  $('qWhy').textContent = item.why;
+  $('qResult').hidden = false;
+  $('qGo').textContent = ok ? 'Keep going' : G.lives > 0 ? `Keep going (${G.lives} ${G.lives === 1 ? 'life' : 'lives'} left)` : 'See results';
+  $('qGo').hidden = false;
+  $('qHint').textContent = 'Space or Enter also continues';
+  updateHud(true);
+  $('qGo').focus({ preventScroll: true });
+}
+function continueQ() {
+  if (G.state !== 'question' || performance.now() - Q.at < 350 || (Q.mode === 'ask' && !Q.answered)) return;
+  hide('qOv');
+  if (G.lives <= 0) { gameOver(); return; }
+  G.state = 'run';
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  last = performance.now();
+}
+function resolveRow(row, lane) {
+  const s = G.seq;
+  if (!s || !s.rows.includes(row)) return;
+  const tok = row.tokens[lane];
+  row.picked = lane;
+  const steps = s.item.steps;
+  if (tok && tok.correct) {
+    s.progress++; G.bonus += 40; sfx('good');
+    if (s.progress >= steps.length) {
+      G.bonus += 200; G.seqDone++; G.seq = null;
+      toast('In order  +200', steps.join('  →  '), 'good', 4200);
+    }
+  } else {
+    const expected = steps[s.progress];
+    addRowAfterLast(s); relabel(s);
+    mistake({
+      kind: 'Out of order', title: s.item.title,
+      rows: [['You took', tok ? tok.text : '(nothing)', 'wrong'], ['Next was', expected, 'right'], ['Full order', steps.join(' → '), '']],
+      why: s.item.why,
+      review: { key: 's:' + s.item.title, kind: `Week ${s.item.week} · In order`, q: s.item.title, a: steps.join(' → '), why: s.item.why },
+    });
+  }
+}
+function crash(o) {
+  const b = o.bug || { name: 'Bug', tip: '', week: '' };
+  G.shake = 1;
+  mistake({
+    kind: 'Crashed into a bug', title: b.name, rows: [], why: b.tip,
+    review: { key: 'b:' + b.name, kind: `Week ${b.week} · Bug`, q: b.name, a: '', why: b.tip },
+  });
+}
+
+// ---------- feedback, pause, game over ----------
+function mistake(info) {
+  G.lives--; G.state = 'card'; G.cardAt = performance.now(); sfx('bad');
+  if (!G.missedKeys.has(info.review.key)) { G.missedKeys.add(info.review.key); G.missed.push(info.review); }
+  $('fbKind').textContent = info.kind;
+  $('fbTitle').textContent = info.title;
+  const dl = $('fbAnswers'); dl.replaceChildren();
+  for (const [label, value, cls] of info.rows) {
+    const wrap = document.createElement('div'); wrap.className = 'ans';
+    const dt = document.createElement('dt'); dt.textContent = label;
+    const dd = document.createElement('dd'); dd.textContent = value; if (cls) dd.className = cls;
+    wrap.append(dt, dd); dl.append(wrap);
+  }
+  dl.hidden = !info.rows.length;
+  $('fbWhy').textContent = info.why;
+  $('fbBtn').textContent = G.lives > 0 ? `Keep going (${G.lives} ${G.lives === 1 ? 'life' : 'lives'} left)` : 'See results';
+  updateHud(true);
+  hideChallenge();
+  show('cardOv');
+  setTimeout(() => { if (G.state === 'card') $('fbBtn').focus({ preventScroll: true }); }, 50);
+}
+function continueFromCard() {
+  if (G.state !== 'card' || performance.now() - G.cardAt < 450) return;
+  hide('cardOv');
+  if (G.lives <= 0) { gameOver(); return; }
+  G.state = 'run'; G.invuln = 1.5;
+  for (const o of G.objs) if ((o.kind === 'train' || o.kind === 'barrier') && o.z < 14 && o.z + (o.len || 0) > -2) o.dead = true;
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  last = performance.now();
+}
+function pause() {
+  if (G.state !== 'run') return;
+  G.state = 'paused'; show('pauseOv'); $('resumeBtn').focus({ preventScroll: true });
+}
+function resume() {
+  if (G.state !== 'paused') return;
+  hide('pauseOv'); G.state = 'run'; last = performance.now();
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+}
+function gameOver() {
+  G.state = 'over';
+  hide('hud'); hideChallenge();
+  const score = currentScore();
+  const isBest = score > best;
+  if (isBest) { best = score; store.set('best', best); }
+  $('finalScore').textContent = fmt(score);
+  const bits = [`${G.correct} of ${G.asked} questions right`];
+  if (G.seqDone) bits.push(`${G.seqDone} ${G.seqDone === 1 ? 'sequence' : 'sequences'} in order`);
+  bits.push(`${G.coins} ∇ coins`, `${fmt(G.dist)} m`);
+  $('finalStats').textContent = bits.join(' · ') + (isBest ? '. New best on this device.' : `. Best on this device: ${fmt(best)}.`);
+  const list = $('reviewList'); list.replaceChildren();
+  for (const m of G.missed) {
+    const li = document.createElement('li');
+    const k = document.createElement('span'); k.className = 'rk'; k.textContent = m.kind;
+    const q = document.createElement('span'); q.className = 'rq'; q.textContent = m.q;
+    li.append(k, q);
+    if (m.a) { const a = document.createElement('span'); a.className = 'ra'; a.textContent = m.a; li.append(a); }
+    if (m.why) { const w = document.createElement('span'); w.className = 'rw'; w.textContent = m.why; li.append(w); }
+    list.append(li);
+  }
+  $('reviewSec').hidden = !G.missed.length;
+  show('overOv'); $('againBtn').focus({ preventScroll: true });
+}
+function toMenu() {
+  G = makeWorld('menu', G);
+  Object.assign(player, { lane: 1, x: 0, y: 0, vy: 0, lean: 0 });
+  hide('overOv'); hide('pauseOv'); hide('cardOv'); hide('qOv'); hide('hud'); hideChallenge();
+  renderMenu(); show('menu');
+}
+
+// ---------- HUD, banners, toast ----------
+const sBanner = $('sBanner'), laneChips = $('laneChips');
+const laneEls = [...laneChips.querySelectorAll('.lane-chip')];
+let hudCache = '', seqKey = '', laneKey = '';
+function hideChallenge() {
+  sBanner.hidden = true; laneChips.hidden = true;
+  seqKey = ''; laneKey = '';
+}
+// Answer cards sit between the banner and the player, never under the banner.
+function placeLanes() {
+  const app = $('app').getBoundingClientRect();
+  let top = view.horizon + (view.groundY - view.horizon) * 0.2;
+  for (const b of [sBanner]) if (!b.hidden) top = Math.max(top, b.querySelector('.banner-box').getBoundingClientRect().bottom - app.top + 12);
+  laneChips.style.top = Math.round(top) + 'px';
+}
+function updateHud(force) {
+  const key = `${currentScore()}|${G.correct}|${G.asked}|${G.lives}`;
+  if (!force && key === hudCache) return;
+  hudCache = key;
+  $('score').textContent = fmt(currentScore());
+  $('tally').textContent = `${G.correct} of ${G.asked} questions right`;
+  const lv = $('lives');
+  if (lv.children.length !== 3) { lv.replaceChildren(); for (let i = 0; i < 3; i++) { const p = document.createElement('span'); p.className = 'pip'; lv.append(p); } }
+  [...lv.children].forEach((p, i) => p.classList.toggle('lost', i >= G.lives));
+  lv.setAttribute('aria-label', `${G.lives} lives left`);
+}
+function updateBanner() {
+  let laneTexts = null;
+  {
+    const s = G.seq;
+    const pend = s ? s.rows.filter((r) => !r.done).sort((a, b) => a.z - b.z) : [];
+    if (s && s.introduced && pend.length && pend[0].z < G.speed * 6) {
+      const key = s.item.title + '|' + s.progress;
+      if (key !== seqKey) {
+        seqKey = key;
+        const n = s.item.steps.length;
+        $('sTag').textContent = `WEEK ${s.item.week} · COLLECT IN ORDER`;
+        $('sTitle').textContent = s.item.title;
+        const g = $('sGoal'), bold = document.createElement('b');
+        g.replaceChildren();
+        bold.textContent = `Step ${s.progress + 1} of ${n}:`;
+        g.append(bold, ' steer into the step that comes next.');
+        // Steps collected so far, in order, then the steps still to place, in the shuffled order from the intro
+        const chips = $('sChips'); chips.replaceChildren();
+        const done = s.item.steps.slice(0, s.progress);
+        done.forEach((t, i) => { const c = document.createElement('span'); c.className = 'chip-step'; c.textContent = `${i + 1} ✓ ${t}`; chips.append(c); });
+        const left = s.display.filter((t) => !done.includes(t));
+        if (left.length) {
+          const lab = document.createElement('span'); lab.className = 'chips-label'; lab.textContent = done.length ? 'Still to place' : 'Steps to place'; chips.append(lab);
+          left.forEach((t) => { const c = document.createElement('span'); c.className = 'chip-step todo'; c.textContent = t; chips.append(c); });
+        }
+        chips.hidden = false;
+        sBanner.hidden = false; placeLanes();
+      }
+      if (pend[0].z < s.spacing + 5) laneTexts = pend[0].tokens.map((t) => (t ? t.text : '—'));
+    } else if (!sBanner.hidden) { sBanner.hidden = true; seqKey = ''; }
+  }
+  const key = laneTexts ? laneTexts.join('|') : '';
+  if (key !== laneKey) {
+    laneKey = key;
+    // let narrow cards wrap code after a dot or an opening bracket, not mid-name
+    if (laneTexts) laneEls.forEach((el, l) => { el.querySelector('.lane-text').textContent = laneTexts[l].replace(/([.(])/g, '$1​'); });
+    laneChips.hidden = !laneTexts;
+    if (laneTexts) placeLanes();
+  }
+  if (laneTexts) { const lane = nearestLane(); laneEls.forEach((el, l) => el.classList.toggle('here', l === lane)); }
+}
+let toastTimer = 0;
+function toast(head, body, cls, ms) {
+  const t = $('toast');
+  $('toastHead').textContent = head; $('toastBody').textContent = body || '';
+  t.className = 'toast show ' + (cls || '');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.className = 'toast'; }, ms || 2400);
+}
+function show(id) { $(id).hidden = false; }
+function hide(id) { $(id).hidden = true; }
+
+// ---------- sound (off by default; starts only after a click) ----------
+let actx = null;
+const TONES = { coin: [988, 0.07, 'square', 0.03], good: [660, 0.16, 'triangle', 0.08], bad: [140, 0.32, 'sawtooth', 0.06], jump: [440, 0.09, 'sine', 0.05], bump: [110, 0.1, 'square', 0.04], swish: [320, 0.05, 'sine', 0.02] };
+function sfx(name) {
+  if (!soundOn) return;
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+    const [f, d, type, vol] = TONES[name];
+    const o = actx.createOscillator(), g = actx.createGain(), t0 = actx.currentTime;
+    o.type = type; o.frequency.setValueAtTime(f, t0);
+    if (name === 'good') o.frequency.linearRampToValueAtTime(f * 1.5, t0 + d);
+    g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d);
+    o.connect(g); g.connect(actx.destination); o.start(t0); o.stop(t0 + d + 0.02);
+  } catch (e) { /* audio unavailable */ }
+}
+function renderSound() { const b = $('soundBtn'); b.textContent = soundOn ? 'Sound on' : 'Sound off'; b.setAttribute('aria-pressed', String(soundOn)); }
+
+// ---------- drawing ----------
+const STARS = Array.from({ length: 46 }, () => [Math.random(), Math.random() * 0.75, Math.random()]);
+function render(time) {
+  ctx.save();
+  if (G.shake > 0 && !reduceMotion) ctx.translate((Math.random() - 0.5) * G.shake * 10, (Math.random() - 0.5) * G.shake * 8);
+  drawSky(time); drawHills(); drawGround();
+  const list = G.objs.filter((o) => o.z < Z_VIS && o.z + (o.len || 0.6) > NEAR).sort((a, b) => b.z - a.z);
+  let drawn = false;
+  for (const o of list) {
+    if (!drawn && o.z < 0.2) { drawPlayer(time); drawn = true; }
+    ctx.globalAlpha = clamp((Z_VIS - o.z) / 28, 0, 1);
+    drawObj(o, time);
+    ctx.globalAlpha = 1;
+  }
+  if (!drawn) drawPlayer(time);
+  ctx.restore();
+}
+function drawSky(time) {
+  const hz = view.horizon;
+  const g = ctx.createLinearGradient(0, 0, 0, hz);
+  g.addColorStop(0, '#0f1529'); g.addColorStop(0.5, '#33275a'); g.addColorStop(0.82, '#9a5279'); g.addColorStop(1, '#f0a35e');
+  ctx.fillStyle = g; ctx.fillRect(-20, -20, W + 40, hz + 24);
+  for (const [u, v, a] of STARS) { ctx.globalAlpha = 0.25 + 0.4 * a; ctx.fillStyle = '#f3f0fb'; ctx.fillRect(u * W, v * hz * 0.7, 1.5, 1.5); }
+  // a training-loss curve drawn as a constellation
+  const x0 = W * 0.1 - cam.x * 3, x1 = W * 0.93 - cam.x * 3, y0 = Math.max(hz * 0.14, 64);
+  for (let i = 0; i <= 40; i++) {
+    const u = i / 40, x = x0 + u * (x1 - x0);
+    const y = y0 + (hz * 0.62 - y0) * (1 - Math.exp(-3.4 * u)) + hz * 0.02 * Math.sin(i * 2.3);
+    ctx.globalAlpha = reduceMotion ? 0.45 : 0.3 + 0.3 * Math.sin(time * 1.4 + i * 0.7) ** 2;
+    ctx.fillStyle = '#ffe2b3'; ctx.beginPath(); ctx.arc(x, y, 1.6, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  const sx = W * 0.5 - cam.x * 6, sy = hz - Math.min(W, H) * 0.015, r = Math.min(W, H) * 0.1;
+  const sg = ctx.createRadialGradient(sx, sy, r * 0.3, sx, sy, r * 2.4);
+  sg.addColorStop(0, 'rgba(255,214,150,0.9)'); sg.addColorStop(0.4, 'rgba(240,163,94,0.35)'); sg.addColorStop(1, 'rgba(240,163,94,0)');
+  ctx.fillStyle = sg; ctx.fillRect(sx - r * 2.4, sy - r * 2.4, r * 4.8, r * 4.8);
+  ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.fillStyle = '#ffd59a'; ctx.fill();
+}
+const HILLS = [
+  { amp: 0.15, f1: 0.0055, f2: 0.017, ph: 1.3, par: 2, col: '#6a4677' },
+  { amp: 0.1, f1: 0.0085, f2: 0.023, ph: 4.1, par: 4, col: '#4a3462' },
+  { amp: 0.065, f1: 0.012, f2: 0.031, ph: 2.2, par: 7, col: '#2c2443' },
+];
+function ridge(L, x, c) { const X = x + cam.x * L.par * 10; return view.horizon - H * L.amp * c * (0.55 + 0.3 * Math.sin(X * L.f1 + L.ph) + 0.15 * Math.sin(X * L.f2 + L.ph * 2)); }
+function drawHills() {
+  const hz = view.horizon;
+  HILLS.forEach((L, idx) => {
+    ctx.beginPath(); ctx.moveTo(-10, hz + 2);
+    for (let x = -10; x <= W + 10; x += 6) ctx.lineTo(x, ridge(L, x, 1));
+    ctx.lineTo(W + 10, hz + 2); ctx.closePath(); ctx.fillStyle = L.col; ctx.fill();
+    if (idx === 1) { // contour lines: the hills double as a loss landscape
+      ctx.strokeStyle = 'rgba(240,163,94,0.22)'; ctx.lineWidth = 1;
+      for (const c of [0.78, 0.56, 0.34]) { ctx.beginPath(); for (let x = -10; x <= W + 10; x += 8) { const y = ridge(L, x, c); if (x === -10) ctx.moveTo(x, y); else ctx.lineTo(x, y); } ctx.stroke(); }
+    }
+  });
+}
+function drawGround() {
+  const hz = view.horizon;
+  ctx.fillStyle = '#17142b'; ctx.fillRect(-20, hz, W + 40, H - hz + 20);
+  quad(P(-4.0, 0, NEAR), P(4.0, 0, NEAR), P(4.0, 0, Z_FAR), P(-4.0, 0, Z_FAR), '#221e3d');
+  quad(P(-4.7, 0, NEAR), P(-4.0, 0, NEAR), P(-4.0, 0, Z_FAR), P(-4.7, 0, Z_FAR), '#3b3360');
+  quad(P(4.0, 0, NEAR), P(4.7, 0, NEAR), P(4.7, 0, Z_FAR), P(4.0, 0, Z_FAR), '#3b3360');
+  const sp = 1.5;
+  for (let k = Math.ceil((NEAR + G.dist) / sp); ; k++) {
+    const z = k * sp - G.dist;
+    if (z > Z_VIS) break;
+    ctx.globalAlpha = clamp((Z_VIS - z) / 40, 0, 1);
+    for (let l = 0; l < 3; l++) { const x = laneX(l); quad(P(x - 0.95, 0, z), P(x + 0.95, 0, z), P(x + 0.95, 0, z + 0.32), P(x - 0.95, 0, z + 0.32), '#36315c'); }
+  }
+  ctx.globalAlpha = 1;
+  for (let l = 0; l < 3; l++) for (const off of [-0.62, 0.62]) {
+    const x = laneX(l) + off;
+    quad(P(x - 0.05, 0.02, NEAR), P(x + 0.05, 0.02, NEAR), P(x + 0.05, 0.02, Z_FAR), P(x - 0.05, 0.02, Z_FAR), '#97a3c8');
+  }
+  const fh = (view.groundY - hz) * 0.5;
+  const fg = ctx.createLinearGradient(0, hz, 0, hz + fh);
+  fg.addColorStop(0, 'rgba(240,163,94,0.5)'); fg.addColorStop(1, 'rgba(240,163,94,0)');
+  ctx.fillStyle = fg; ctx.fillRect(-20, hz, W + 40, fh);
+}
+function drawObj(o, time) {
+  switch (o.kind) {
+    case 'lamp': {
+      const x = o.side * 5.0;
+      box(x - 0.07, x + 0.07, 0, 4.2, o.z, o.z + 0.14, COL.post);
+      const [hx, hy, s] = P(x - o.side * 0.45, 4.12, o.z);
+      if (o.z > NEAR + 0.5) {
+        const glow = ctx.createRadialGradient(hx, hy, 0, hx, hy, 0.9 * s);
+        glow.addColorStop(0, 'rgba(255,213,154,0.45)'); glow.addColorStop(1, 'rgba(255,213,154,0)');
+        ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(hx, hy, 0.9 * s, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#fff1d6'; ctx.beginPath(); ctx.arc(hx, hy, Math.max(1, 0.13 * s), 0, Math.PI * 2); ctx.fill();
+      }
+      break;
+    }
+    case 'board': {
+      const x0 = o.side < 0 ? -9.8 : 5.9, x1 = x0 + 3.9;
+      box(x0 + 0.5, x0 + 0.65, 0, 2.0, o.z, o.z + 0.15, COL.post);
+      box(x1 - 0.65, x1 - 0.5, 0, 2.0, o.z, o.z + 0.15, COL.post);
+      const f = box(x0, x1, 2.0, 3.7, o.z, o.z + 0.2, COL.board);
+      if (f) {
+        ctx.strokeStyle = '#f0a35e'; ctx.lineWidth = Math.max(1, 0.06 * f.s); ctx.strokeRect(f.x + f.w * 0.04, f.y + f.h * 0.08, f.w * 0.92, f.h * 0.84);
+        textIn(o.text, f.x + f.w / 2, f.y + f.h / 2, f.w * 0.84, f.h * 0.42, o.text.includes('(') ? MONO : DISPLAY, o.text.includes('(') ? 700 : 400, '#f0a35e');
+      }
+      break;
+    }
+    case 'train': {
+      const x = laneX(o.lane);
+      const f = box(x - 1.0, x + 1.0, 0, 2.75, o.z, o.z + o.len, COL.train);
+      const sx = x - 1.0 > cam.x ? x - 1.0 : x + 1.0 < cam.x ? x + 1.0 : null;
+      if (sx !== null) {
+        const zn = Math.max(o.z, NEAR), zf = Math.max(o.z + o.len, NEAR + 0.01);
+        quad(P(sx, 1.55, zn), P(sx, 2.05, zn), P(sx, 2.05, zf), P(sx, 1.55, zf), '#1b2140');
+        quad(P(sx, 0.55, zn), P(sx, 0.7, zn), P(sx, 0.7, zf), P(sx, 0.55, zf), '#f07a6c');
+      }
+      if (f) {
+        ctx.fillStyle = '#1b2140'; rrect(f.x + f.w * 0.06, f.y + f.h * 0.1, f.w * 0.88, f.h * 0.44, f.w * 0.05); ctx.fill();
+        textIn(o.bug ? o.bug.name.toUpperCase() : 'BUG', f.x + f.w / 2, f.y + f.h * 0.32, f.w * 0.84, f.h * 0.38, MONO, 700, '#ffd166');
+        ctx.fillStyle = '#fff3d1';
+        for (const u of [0.2, 0.8]) { ctx.beginPath(); ctx.arc(f.x + f.w * u, f.y + f.h * 0.72, Math.max(1, f.w * 0.055), 0, Math.PI * 2); ctx.fill(); }
+        ctx.fillStyle = '#7d241f'; ctx.fillRect(f.x, f.y + f.h * 0.88, f.w, f.h * 0.12);
+      }
+      break;
+    }
+    case 'barrier': {
+      const x = laneX(o.lane);
+      box(x - 1.0, x - 0.85, 0, 0.4, o.z, o.z + 0.25, COL.post);
+      box(x + 0.85, x + 1.0, 0, 0.4, o.z, o.z + 0.25, COL.post);
+      const f = box(x - 1.08, x + 1.08, 0.38, 1.0, o.z, o.z + 0.25, COL.barrier);
+      if (f) {
+        ctx.fillStyle = '#131a30'; ctx.fillRect(f.x, f.y, f.w, f.h * 0.1); ctx.fillRect(f.x, f.y + f.h * 0.9, f.w, f.h * 0.1);
+        textIn(o.bug ? o.bug.name : 'bug', f.x + f.w / 2, f.y + f.h / 2, f.w * 0.88, f.h * 0.55, MONO, 700, '#131a30');
+      }
+      break;
+    }
+    case 'coin': {
+      const [cx, cy, s] = P(laneX(o.lane), o.y, o.z);
+      const r = 0.33 * s, spin = reduceMotion ? 1 : Math.abs(Math.cos(time * 5 + o.z * 0.3));
+      ctx.beginPath(); ctx.ellipse(cx, cy, Math.max(1, r * (0.25 + 0.75 * spin)), r, 0, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffd166'; ctx.fill(); ctx.lineWidth = Math.max(1, r * 0.14); ctx.strokeStyle = '#c7902f'; ctx.stroke();
+      if (r > 7 && spin > 0.55) textIn('∇', cx, cy + r * 0.04, r * 1.3 * spin, r * 1.2, MONO, 700, '#8a5a12');
+      break;
+    }
+    case 'gate': {
+      for (const px of [-3.7, 3.7]) box(px - 0.12, px + 0.12, 0, 3.6, o.z, o.z + 0.24, COL.gatePost);
+      box(-3.85, 3.85, 3.4, 3.7, o.z, o.z + 0.2, COL.beam);
+      const f = box(-1.3, 1.3, 2.0, 3.35, o.z + 0.02, o.z + 0.12, COL.panel);
+      if (f) {
+        ctx.strokeStyle = '#f0a35e'; ctx.lineWidth = Math.max(1, 0.06 * f.s); ctx.strokeRect(f.x, f.y, f.w, f.h);
+        textIn('?', f.x + f.w / 2, f.y + f.h * 0.54, f.w * 0.5, f.h * 0.78, DISPLAY, 400, '#ffd166');
+      }
+      break;
+    }
+    case 'row': {
+      for (let l = 0; l < 3; l++) {
+        const t = o.tokens[l];
+        if (!t || o.picked === l) continue;
+        const x = laneX(l);
+        box(x - 0.05, x + 0.05, 0, 0.8, o.z + 0.03, o.z + 0.11, COL.post);
+        const f = box(x - 1.02, x + 1.02, 0.8, 1.6, o.z, o.z + 0.08, COL.plate);
+        if (f) {
+          ctx.strokeStyle = '#ffd166'; ctx.lineWidth = Math.max(1, 0.06 * f.s); ctx.strokeRect(f.x, f.y, f.w, f.h);
+          textIn(t.text, f.x + f.w / 2, f.y + f.h / 2, f.w * 0.88, f.h * 0.5, MONO, 700, '#131a30');
+        }
+      }
+      break;
+    }
+  }
+}
+function drawPlayer(time) {
+  const [sx, sy, s] = P(player.x, player.y, 0);
+  const [gx, gy] = P(player.x, 0, 0);
+  ctx.save();
+  ctx.globalAlpha = 0.35 * (1 - Math.min(0.7, player.y / 2));
+  ctx.fillStyle = '#05060d'; ctx.beginPath(); ctx.ellipse(gx, gy, 0.75 * s, 0.2 * s, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+  ctx.save();
+  if (G.invuln > 0 && Math.floor(time * 12) % 2 === 0) ctx.globalAlpha = 0.45;
+  const moving = G.state === 'run' || G.state === 'menu';
+  const bob = player.y === 0 && moving && !reduceMotion ? Math.sin(time * 12) * 0.035 * s : 0;
+  ctx.translate(sx, sy - 0.12 * s + bob); ctx.rotate(player.lean);
+  const u = s;
+  ctx.fillStyle = 'rgba(87,211,163,0.32)'; ctx.beginPath(); ctx.ellipse(0, 0.06 * u, 0.82 * u, 0.15 * u, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#ffd166'; rrect(-0.7 * u, -0.17 * u, 1.4 * u, 0.17 * u, 0.085 * u); ctx.fill();
+  ctx.fillStyle = '#c7902f'; ctx.fillRect(-0.5 * u, -0.1 * u, 1.0 * u, 0.035 * u);
+  ctx.strokeStyle = '#2b3154'; ctx.lineWidth = 0.17 * u; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  for (const sg of [-1, 1]) { ctx.beginPath(); ctx.moveTo(sg * 0.22 * u, -0.2 * u); ctx.lineTo(sg * 0.3 * u, -0.56 * u); ctx.lineTo(sg * 0.14 * u, -0.95 * u); ctx.stroke(); }
+  const swing = moving && !reduceMotion ? Math.sin(time * 12) * 0.05 * u : 0;
+  ctx.strokeStyle = '#3fb48a'; ctx.lineWidth = 0.14 * u;
+  for (const sg of [-1, 1]) { ctx.beginPath(); ctx.moveTo(sg * 0.28 * u, -1.45 * u); ctx.lineTo(sg * 0.6 * u, -1.12 * u + sg * swing); ctx.stroke(); }
+  ctx.fillStyle = '#57d3a3'; rrect(-0.33 * u, -1.6 * u, 0.66 * u, 0.72 * u, 0.18 * u); ctx.fill();
+  ctx.fillStyle = '#e2483d'; rrect(-0.2 * u, -1.5 * u, 0.4 * u, 0.42 * u, 0.07 * u); ctx.fill();
+  if (u > 30) textIn('∇', 0, -1.29 * u, 0.3 * u, 0.3 * u, MONO, 700, '#ffd166');
+  ctx.fillStyle = '#3fb48a'; ctx.beginPath(); ctx.ellipse(0, -1.58 * u, 0.27 * u, 0.12 * u, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#2a1f33'; ctx.beginPath(); ctx.arc(0, -1.8 * u, 0.21 * u, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+}
+
+// ---------- input ----------
+addEventListener('keydown', (e) => {
+  const k = e.key;
+  if (G.state === 'question') {
+    if (Q.mode === 'ask' && !Q.answered) {
+      if (k === '1' || k === '2' || k === '3') { e.preventDefault(); answerQ(Number(k) - 1); }
+      else if (k === 'Enter' || k === ' ') { e.preventDefault(); const i = qOptEls.indexOf(document.activeElement); if (i >= 0) answerQ(i); }
+    } else if (k === 'Enter' || k === ' ') { e.preventDefault(); continueQ(); }
+    return;
+  }
+  if (G.state === 'card') { if (k === ' ' || k === 'Enter') { e.preventDefault(); continueFromCard(); } return; }
+  if (G.state === 'paused') { if (k === 'p' || k === 'P' || k === 'Escape') { e.preventDefault(); resume(); } return; }
+  if (G.state !== 'run') return;
+  if (k === 'ArrowLeft' || k === 'a' || k === 'A') { e.preventDefault(); move(-1); }
+  else if (k === 'ArrowRight' || k === 'd' || k === 'D') { e.preventDefault(); move(1); }
+  else if (k === 'ArrowUp' || k === 'w' || k === 'W' || k === ' ') { e.preventDefault(); jump(); }
+  else if (k === 'p' || k === 'P' || k === 'Escape') { e.preventDefault(); pause(); }
+});
+let ptr = null;
+cv.addEventListener('pointerdown', (e) => { ptr = { x: e.clientX, y: e.clientY, fired: false }; try { cv.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ } });
+cv.addEventListener('pointermove', (e) => {
+  if (!ptr || ptr.fired) return;
+  const dx = e.clientX - ptr.x, dy = e.clientY - ptr.y;
+  if (Math.hypot(dx, dy) < 26) return;
+  ptr.fired = true;
+  if (Math.abs(dx) > Math.abs(dy)) move(dx > 0 ? 1 : -1); else if (dy < 0) jump();
+});
+cv.addEventListener('pointerup', (e) => {
+  if (!ptr) return;
+  const fired = ptr.fired; ptr = null;
+  if (fired || G.state !== 'run') return;
+  const rx = (e.clientX - cv.getBoundingClientRect().left) / W;
+  if (rx < 0.33) move(-1); else if (rx > 0.67) move(1); else jump();
+});
+cv.addEventListener('pointercancel', () => { ptr = null; });
+qOptEls.forEach((b, i) => b.addEventListener('click', () => answerQ(i)));
+$('qGo').addEventListener('click', continueQ);
+$('fbBtn').addEventListener('click', continueFromCard);
+$('cardOv').addEventListener('click', (e) => { if (e.target === e.currentTarget) continueFromCard(); });
+$('pauseBtn').addEventListener('click', pause);
+$('resumeBtn').addEventListener('click', resume);
+$('quitBtn').addEventListener('click', () => { hide('pauseOv'); gameOver(); });
+$('againBtn').addEventListener('click', startRun);
+$('menuBtn').addEventListener('click', toMenu);
+$('startBtn').addEventListener('click', startRun);
+$('soundBtn').addEventListener('click', () => { soundOn = !soundOn; store.set('sound', soundOn); renderSound(); if (soundOn) sfx('good'); if (document.activeElement) document.activeElement.blur(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
+addEventListener('resize', resize);
+
+// ---------- menu ----------
+function renderMenu() {
+  const wrap = $('weekChips'); wrap.replaceChildren();
+  for (const [n, name] of WEEKS) {
+    const count = BANK.gates.filter((g) => g.week === n).length + BANK.sequences.filter((s) => s.week === n).length;
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'week'; b.id = 'week-' + n;
+    b.setAttribute('aria-pressed', String(selectedWeeks.has(n)));
+    const t = document.createElement('b'); t.textContent = `Week ${n}`;
+    const sm = document.createElement('small'); sm.textContent = `${name} · ${count} ${count === 1 ? 'item' : 'items'}`;
+    b.append(t, sm);
+    b.addEventListener('click', () => {
+      if (selectedWeeks.has(n)) selectedWeeks.delete(n); else selectedWeeks.add(n);
+      store.set('weeks', [...selectedWeeks]); renderMenu(); $('week-' + n).focus({ preventScroll: true });
+    });
+    wrap.append(b);
+  }
+  const ok = selectedWeeks.size > 0;
+  const sb = $('startBtn'); sb.disabled = !ok; sb.textContent = ok ? 'Start run' : 'Pick at least one week';
+  const bl = $('bestLine'); bl.hidden = !best; bl.textContent = best ? `Best on this device: ${fmt(best)} points` : '';
+}
+
+// ---------- bug label ----------
+const bugTag = $('bugTag');
+function updateBugTag() {
+  let best = null;
+  if (G.state === 'run') {
+    const lane = nearestLane();
+    for (const o of G.objs) if ((o.kind === 'train' || o.kind === 'barrier') && o.bug && o.lane === lane && o.z > 1.5 && o.z < 45 && (!best || o.z < best.z)) best = o;
+  }
+  if (!best) { if (!bugTag.hidden) bugTag.hidden = true; return; }
+  if (bugTag.dataset.name !== best.bug.name) { bugTag.dataset.name = best.bug.name; $('bugName').textContent = best.bug.name; }
+  const [x, y] = P(laneX(best.lane), best.kind === 'train' ? 2.75 : 1.0, best.z);
+  const half = bugTag.offsetWidth / 2 + 8;
+  const tx = Math.round(clamp(x, half, W - half)), ty = Math.round(Math.max(64, y - 10));
+  bugTag.style.transform = `translate(${tx}px, ${ty}px) translate(-50%, -100%)`;
+  bugTag.hidden = false;
+}
+
+// ---------- main loop ----------
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, Math.max(0, (now - last) / 1000)); last = now;
+  update(dt); render(now / 1000); updateBugTag();
+  requestAnimationFrame(frame);
+}
+function boot(data) {
+  if (data && Array.isArray(data.weeks)) selectedWeeks = new Set(data.weeks);
+  resize(); renderSound(); renderMenu();
+  if (document.fonts && document.fonts.load) { document.fonts.load(`700 16px ${MONO}`).catch(() => {}); document.fonts.load(`400 16px ${DISPLAY}`).catch(() => {}); }
+  requestAnimationFrame((t) => { last = t; frame(t); });
+}
+window.claude?.hot?.snapshot?.(() => ({ weeks: [...selectedWeeks] }));
+window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
+})();
+</script>
+</body>
+</html>
