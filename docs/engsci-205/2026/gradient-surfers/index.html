@@ -225,6 +225,18 @@ kbd {
 .review .rq { font-weight: 700; font-size: 15px; line-height: 1.35; }
 .review .ra { font-family: var(--font-code); font-weight: 700; font-size: 14px; color: var(--good); overflow-wrap: anywhere; }
 .review .rw { font-size: 14px; color: var(--muted); line-height: 1.45; }
+.share { display: flex; flex-direction: column; gap: 8px; }
+.share .row > button { flex: 0 1 auto; }
+.copy-text { width: 100%; font-family: var(--font-code); font-size: 14px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: rgba(243,240,251,0.06); color: var(--paper); }
+.bests { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; counter-reset: best; }
+.bests li {
+  counter-increment: best; display: grid; grid-template-columns: 2ch 7ch minmax(0, 1fr); gap: 10px; align-items: baseline;
+  font-size: 14px; color: #dcd9ee; font-variant-numeric: tabular-nums; padding: 3px 6px; border-radius: 6px;
+}
+.bests li::before { content: counter(best); color: var(--muted); text-align: right; }
+.bests li b { font-family: var(--font-code); color: var(--paper); text-align: right; }
+.bests li.now { background: rgba(255,209,102,0.14); }
+.bests li.now b { color: var(--token); }
 h3 { margin: 0; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
 
 @media (max-width: 420px) {
@@ -335,14 +347,23 @@ h3 { margin: 0; font-size: 13px; letter-spacing: 0.08em; text-transform: upperca
       <p class="eyebrow">Run over</p>
       <div class="final"><span class="big" id="finalScore">0</span><span class="unit">points</span></div>
       <p class="stats" id="finalStats"></p>
-      <section id="reviewSec" class="answers">
-        <h3>Worth another look</h3>
-        <ol class="review" id="reviewList"></ol>
-      </section>
       <div class="row">
         <button class="primary" id="againBtn" type="button">Run again</button>
         <button class="secondary" id="menuBtn" type="button">Change weeks</button>
       </div>
+      <div class="share">
+        <div class="row"><button class="secondary" id="copyBtn" type="button">Copy my result</button></div>
+        <input class="copy-text" id="copyText" type="text" readonly hidden aria-label="Your result">
+        <p class="fine" id="copyNote">Then paste it into the leaderboard thread on Canvas.</p>
+      </div>
+      <section id="reviewSec" class="answers">
+        <h3>Worth another look</h3>
+        <ol class="review" id="reviewList"></ol>
+      </section>
+      <section class="answers">
+        <h3>Your best runs on this device</h3>
+        <ol class="bests" id="bestsList"></ol>
+      </section>
     </div>
   </div>
 </div>
@@ -831,7 +852,47 @@ function gameOver() {
     list.append(li);
   }
   $('reviewSec').hidden = !G.missed.length;
+  // this device's top ten, and a one-line result to paste into the class thread
+  const run = { score, right: G.correct, asked: G.asked, seqs: G.seqDone, weeks: [...selectedWeeks].sort((a, b) => a - b), at: Date.now() };
+  let runs = store.get('runs', []);
+  if (!Array.isArray(runs)) runs = [];
+  runs = runs.concat([run]).sort((a, b) => b.score - a.score || a.at - b.at).slice(0, 10);
+  store.set('runs', runs);
+  const bl = $('bestsList'); bl.replaceChildren();
+  for (const r of runs) {
+    const li = document.createElement('li'); if (r.at === run.at) li.className = 'now';
+    const sc = document.createElement('b'); sc.textContent = fmt(r.score);
+    const d = document.createElement('span');
+    d.textContent = `${r.right}/${r.asked} right · ${weeksLabel(r.weeks || [])} · ${new Date(r.at).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short' })}${r.at === run.at ? ' · this run' : ''}`;
+    li.append(sc, d); bl.append(li);
+  }
+  lastResult = `Gradient Surfers: ${fmt(score)} points · ${G.correct}/${G.asked} questions right${G.seqDone ? ` · ${G.seqDone} in order` : ''} · ${weeksLabel(run.weeks)}`;
+  $('copyBtn').textContent = 'Copy my result'; $('copyText').hidden = true;
+  $('copyNote').textContent = 'Then paste it into the leaderboard thread on Canvas.';
   show('overOv'); $('againBtn').focus({ preventScroll: true });
+}
+let lastResult = '';
+function weeksLabel(ws) {
+  if (!ws.length) return '';
+  const parts = []; let a = ws[0], b = ws[0];
+  for (const w of ws.slice(1).concat([null])) {
+    if (w === b + 1) { b = w; continue; }
+    parts.push(a === b ? `${a}` : `${a}–${b}`); a = b = w;
+  }
+  return (ws.length === 1 ? 'Week ' : 'Weeks ') + parts.join(', ');
+}
+function copyResult() {
+  const inp = $('copyText');
+  const fallback = () => {
+    inp.value = lastResult; inp.hidden = false; inp.focus(); inp.select();
+    $('copyNote').textContent = 'Copy the text above, then paste it into the leaderboard thread on Canvas.';
+  };
+  try {
+    navigator.clipboard.writeText(lastResult).then(() => {
+      $('copyBtn').textContent = 'Copied';
+      $('copyNote').textContent = 'Now paste it into the leaderboard thread on Canvas.';
+    }, fallback);
+  } catch (e) { fallback(); }
 }
 function toMenu() {
   G = makeWorld('menu', G);
@@ -1335,6 +1396,7 @@ $('pauseBtn').addEventListener('click', pause);
 $('resumeBtn').addEventListener('click', resume);
 $('quitBtn').addEventListener('click', () => { hide('pauseOv'); gameOver(); });
 $('againBtn').addEventListener('click', startRun);
+$('copyBtn').addEventListener('click', copyResult);
 $('menuBtn').addEventListener('click', toMenu);
 $('startBtn').addEventListener('click', startRun);
 $('soundBtn').addEventListener('click', () => { toggleSound(); if (document.activeElement) document.activeElement.blur(); });
