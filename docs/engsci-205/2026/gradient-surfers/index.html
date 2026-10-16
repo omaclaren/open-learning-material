@@ -987,7 +987,7 @@ function makeNoise(ac) {
 }
 function ensureAudio() {
   if (!audioUnlocked) return false;
-  if (actx) { if (actx.state === 'suspended') actx.resume().catch(() => {}); return true; }
+  if (actx) { if (actx.state !== 'running' && actx.state !== 'closed') actx.resume().catch(() => {}); return true; }
   try {
     actx = new (window.AudioContext || window.webkitAudioContext)();
     const comp = actx.createDynamicsCompressor();
@@ -1144,12 +1144,24 @@ function syncMusic() {
     if (duck !== music.ducked) { music.ducked = duck; musicBus.gain.setTargetAtTime(duck ? 0.25 : 0.8, actx.currentTime, 0.12); }
   }
 }
-function unlockAudio() { audioUnlocked = true; if (soundOn) ensureAudio(); }
+let primed = false;
+function unlockAudio() {
+  audioUnlocked = true;
+  if (!soundOn) return;
+  // iPhones mute Web Audio when the ring/silent switch is on silent, unless the page asks to be treated as
+  // media playback (Safari 16.4 and later).
+  try { if (navigator.audioSession && navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback'; } catch (e) { /* not supported */ }
+  if (ensureAudio() && !primed) {
+    // older iOS only unlocks audio once a sound has started inside a tap, so start one silent sample
+    try { const s = actx.createBufferSource(); s.buffer = actx.createBuffer(1, 1, 22050); s.connect(actx.destination); s.start(0); primed = true; } catch (e) { /* ignore */ }
+  }
+}
 // Browsers allow audio only after the viewer touches the page, so the music starts on the first tap, click or key.
-for (const ev of ['pointerdown', 'touchend', 'click', 'keydown']) addEventListener(ev, unlockAudio, true);
+// Only events that count as a user activation on phones (not pointerdown) can unlock audio.
+for (const ev of ['touchend', 'pointerup', 'click', 'keydown']) addEventListener(ev, unlockAudio, true);
 function toggleSound() {
-  soundOn = !soundOn; store.set('sound', soundOn); audioUnlocked = true;
-  renderSound(); if (soundOn) { ensureAudio(); sfx('good'); }
+  soundOn = !soundOn; store.set('sound', soundOn);
+  unlockAudio(); renderSound(); if (soundOn) sfx('good');
   syncMusic();
 }
 function renderSound() {
