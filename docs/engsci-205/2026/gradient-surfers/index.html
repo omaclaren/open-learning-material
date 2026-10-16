@@ -247,7 +247,7 @@ h3 { margin: 0; font-size: 13px; letter-spacing: 0.08em; text-transform: upperca
     </div>
     <div class="hud-group">
       <div class="lives" id="lives" aria-label="Lives"></div>
-      <button class="pill-btn" id="soundBtn" type="button" aria-pressed="false">Sound off</button>
+      <button class="pill-btn" id="soundBtn" type="button" aria-pressed="true">Sound on</button>
       <button class="pill-btn" id="pauseBtn" type="button">Pause</button>
     </div>
   </header>
@@ -283,7 +283,7 @@ h3 { margin: 0; font-size: 13px; letter-spacing: 0.08em; text-transform: upperca
         <div class="week-chips" id="weekChips"></div>
       </fieldset>
       <button class="primary" id="startBtn" type="button">Start run</button>
-      <button class="secondary" id="menuSoundBtn" type="button" aria-pressed="false">Sound and music: off</button>
+      <button class="secondary" id="menuSoundBtn" type="button" aria-pressed="true">Sound and music: on</button>
       <ul class="controls">
         <li><kbd>←</kbd> <kbd>→</kbd> or swipe sideways to change lane</li>
         <li><kbd>↑</kbd> or <kbd>Space</kbd> or swipe up to jump the low barriers</li>
@@ -461,7 +461,7 @@ function rrect(x, y, w, h, r) {
 
 // ---------- settings ----------
 let selectedWeeks = new Set(store.get('weeks', [1, 2, 3, 4, 5]));
-let soundOn = store.get('sound', false);
+let soundOn = store.get('sound', true);
 let best = store.get('best', 0);
 
 // ---------- game state ----------
@@ -917,7 +917,7 @@ function toast(head, body, cls, ms) {
 function show(id) { $(id).hidden = false; }
 function hide(id) { $(id).hidden = true; }
 
-// ---------- sound and music (off by default; audio starts only after a click or key press) ----------
+// ---------- sound and music (on by default; audio starts at the first click, tap or key press) ----------
 let actx = null, sfxBus = null, musicBus = null, noiseBuf = null, audioUnlocked = false;
 function makeNoise(ac) {
   const b = ac.createBuffer(1, Math.floor(ac.sampleRate * 0.5), ac.sampleRate), d = b.getChannelData(0);
@@ -1084,8 +1084,8 @@ function syncMusic() {
   }
 }
 function unlockAudio() { audioUnlocked = true; if (soundOn) ensureAudio(); }
-addEventListener('pointerdown', unlockAudio, true);
-addEventListener('keydown', unlockAudio, true);
+// Browsers allow audio only after the viewer touches the page, so the music starts on the first tap, click or key.
+for (const ev of ['pointerdown', 'touchend', 'click', 'keydown']) addEventListener(ev, unlockAudio, true);
 function toggleSound() {
   soundOn = !soundOn; store.set('sound', soundOn); audioUnlocked = true;
   renderSound(); if (soundOn) { ensureAudio(); sfx('good'); }
