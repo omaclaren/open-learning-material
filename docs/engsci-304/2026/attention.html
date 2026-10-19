@@ -302,13 +302,36 @@ window.Quarto = {
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#sec-attention-lookup" id="toc-sec-attention-lookup" class="nav-link active" data-scroll-target="#sec-attention-lookup"><span class="header-section-number">15.1</span> Attention as similarity-based lookup</a>
+  <li><a href="#sec-attention-lookup" id="toc-sec-attention-lookup" class="nav-link active" data-scroll-target="#sec-attention-lookup"><span class="header-section-number">15.1</span> Attention as similarity-based soft lookup</a>
   <ul class="collapse">
   <li><a href="#sec-supplied-query" id="toc-sec-supplied-query" class="nav-link" data-scroll-target="#sec-supplied-query"><span class="header-section-number">15.1.1</span> One query and a supplied table</a></li>
   <li><a href="#sec-lookup-code" id="toc-sec-lookup-code" class="nav-link" data-scroll-target="#sec-lookup-code"><span class="header-section-number">15.1.2</span> The calculation in code</a></li>
   <li><a href="#sec-lookup-smoothing" id="toc-sec-lookup-smoothing" class="nav-link" data-scroll-target="#sec-lookup-smoothing"><span class="header-section-number">15.1.3</span> Connection to nearest neighbours and smoothing</a></li>
   </ul></li>
-  <li><a href="#sec-language-references" id="toc-sec-language-references" class="nav-link" data-scroll-target="#sec-language-references"><span class="header-section-number">15.2</span> References and further reading</a></li>
+  <li><a href="#sec-attention-prediction" id="toc-sec-attention-prediction" class="nav-link" data-scroll-target="#sec-attention-prediction"><span class="header-section-number">15.2</span> Building the table of keys and values from the text</a>
+  <ul class="collapse">
+  <li><a href="#sec-attention-parameters" id="toc-sec-attention-parameters" class="nav-link" data-scroll-target="#sec-attention-parameters"><span class="header-section-number">15.2.1</span> Computing queries, keys and values</a></li>
+  <li><a href="#sec-attention-learning-goal" id="toc-sec-attention-learning-goal" class="nav-link" data-scroll-target="#sec-attention-learning-goal"><span class="header-section-number">15.2.2</span> The training objective</a></li>
+  <li><a href="#sec-attention-training-loop" id="toc-sec-attention-training-loop" class="nav-link" data-scroll-target="#sec-attention-training-loop"><span class="header-section-number">15.2.3</span> Training the model</a></li>
+  </ul></li>
+  <li><a href="#sec-learned-weights" id="toc-sec-learned-weights" class="nav-link" data-scroll-target="#sec-learned-weights"><span class="header-section-number">15.3</span> What the learned weights do</a></li>
+  <li><a href="#sec-attention-sequence" id="toc-sec-attention-sequence" class="nav-link" data-scroll-target="#sec-attention-sequence"><span class="header-section-number">15.4</span> Attention at every position</a>
+  <ul class="collapse">
+  <li><a href="#sec-attention-matrix-scores" id="toc-sec-attention-matrix-scores" class="nav-link" data-scroll-target="#sec-attention-matrix-scores"><span class="header-section-number">15.4.1</span> All comparison scores and context rows</a></li>
+  </ul></li>
+  <li><a href="#sec-causal-attention" id="toc-sec-causal-attention" class="nav-link" data-scroll-target="#sec-causal-attention"><span class="header-section-number">15.5</span> Causality</a>
+  <ul class="collapse">
+  <li><a href="#sec-attention-future-leakage" id="toc-sec-attention-future-leakage" class="nav-link" data-scroll-target="#sec-attention-future-leakage"><span class="header-section-number">15.5.1</span> Leakage</a></li>
+  <li><a href="#sec-attention-causal-mask" id="toc-sec-attention-causal-mask" class="nav-link" data-scroll-target="#sec-attention-causal-mask"><span class="header-section-number">15.5.2</span> The causal mask</a></li>
+  <li><a href="#sec-attention-masked-code" id="toc-sec-attention-masked-code" class="nav-link" data-scroll-target="#sec-attention-masked-code"><span class="header-section-number">15.5.3</span> The calculation in PyTorch</a></li>
+  </ul></li>
+  <li><a href="#sec-attention-training" id="toc-sec-attention-training" class="nav-link" data-scroll-target="#sec-attention-training"><span class="header-section-number">15.6</span> The labs</a>
+  <ul class="collapse">
+  <li><a href="#sec-attention-practical-bridge" id="toc-sec-attention-practical-bridge" class="nav-link" data-scroll-target="#sec-attention-practical-bridge"><span class="header-section-number">15.6.1</span> From the training run to Lab 5</a></li>
+  <li><a href="#sec-attention-training-evaluation" id="toc-sec-attention-training-evaluation" class="nav-link" data-scroll-target="#sec-attention-training-evaluation"><span class="header-section-number">15.6.2</span> The Lab 5 experiment</a></li>
+  </ul></li>
+  <li><a href="#sec-attention-limits" id="toc-sec-attention-limits" class="nav-link" data-scroll-target="#sec-attention-limits"><span class="header-section-number">15.7</span> From one layer to many</a></li>
+  <li><a href="#sec-language-references" id="toc-sec-language-references" class="nav-link" data-scroll-target="#sec-language-references"><span class="header-section-number">15.8</span> References and further reading</a></li>
   </ul>
 </nav>
     </div>
@@ -336,18 +359,21 @@ window.Quarto = {
 
 <style>
 /* Keep long attention equations scrollable within the chapter on narrow screens. */
-#sec-attention-lookup mjx-container[display="true"] {
+#sec-attention-lookup mjx-container[display="true"],
+#sec-attention-prediction mjx-container[display="true"],
+#sec-learned-weights mjx-container[display="true"],
+#sec-attention-sequence mjx-container[display="true"],
+#sec-causal-attention mjx-container[display="true"],
+#sec-attention-training mjx-container[display="true"],
+#sec-attention-limits mjx-container[display="true"] {
   max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
 }
 </style>
 <section id="sec-attention-lookup" class="level2" data-number="15.1">
-<h2 data-number="15.1" class="anchored" data-anchor-id="sec-attention-lookup"><span class="header-section-number">15.1</span> Attention as similarity-based lookup</h2>
-<p>Returning to our colour example, we want to predict the token following <code>wear</code>. To form the search input for the similarity-based lookup, we construct a <strong>query vector</strong> from the embedding of <code>wear</code> using a learned transformation. We can think of the query as representing a question about what information would be useful for the current prediction.</p>
-<p>Each token in the available text also supplies a <strong>key</strong> and a <strong>value</strong>, constructed from its embedding using learned transformations. The key is used for comparison with the query in the similarity-based lookup. The associated value contains information from that token which we can use for the prediction. We compare the query with each key to determine how much weight to give the corresponding value, then form a weighted average of the values.</p>
-<p>We use vector dot products to calculate the query–key similarities. These comparisons provide scores, which we convert into weights summing to one. The available key–value entries include the current token, so we also compare the query from <code>wear</code> with its own key and include its value in the weighted average. This gives us a representation that draws on the history and can be used to predict the next token.</p>
-<p>This develops the weighted-average idea from our nearest-neighbour example. After working through the calculation, we will make the connection to kernel smoothing.</p>
+<h2 data-number="15.1" class="anchored" data-anchor-id="sec-attention-lookup"><span class="header-section-number">15.1</span> Attention as similarity-based soft lookup</h2>
+<p>In L7 we used a query to combine information from a supplied table of keys and values. Comparing the query with each key gives scores, which we convert into non-negative weights summing to one. We then take the weighted average of the associated values. This is a <em>soft</em> lookup: we combine entries using continuous weights rather than select a single entry.</p>
 <section id="sec-supplied-query" class="level3" data-number="15.1.1">
 <h3 data-number="15.1.1" class="anchored" data-anchor-id="sec-supplied-query"><span class="header-section-number">15.1.1</span> One query and a supplied table</h3>
 <p>To understand how this combination works, we first consider a single query and a supplied table of keys and values. Here the numbers are chosen for simplicity and convenience but are otherwise arbitrary.</p>
@@ -389,7 +415,7 @@ a_1=\frac{e^1}{e^1+e^{-1}}\approx0.881,
 \qquad
 a_2=\frac{e^{-1}}{e^1+e^{-1}}\approx0.119.
 \]</span></p>
-<p>Finally, we form the weighted average of the <strong>values</strong>, which we denote by <span class="math inline">\(z\)</span>:</p>
+<p>Finally, we form the weighted average of the <strong>values</strong>. This query-dependent combination is often called a <strong>context vector</strong>, which we denote by <span class="math inline">\(z\)</span>:</p>
 <p><span class="math display">\[
 z=a_1v_1+a_2v_2
 \approx0.881\begin{pmatrix}2\\0\end{pmatrix}
@@ -402,6 +428,7 @@ z=a_1v_1+a_2v_2
 <figcaption>The supplied-query calculation.</figcaption>
 </figure>
 </div>
+<p>In a language model, the query and the table of keys and values are built from the text.</p>
 </section>
 <section id="sec-lookup-code" class="level3" data-number="15.1.2">
 <h3 data-number="15.1.2" class="anchored" data-anchor-id="sec-lookup-code"><span class="header-section-number">15.1.2</span> The calculation in code</h3>
@@ -430,25 +457,410 @@ z=a_1v_1+a_2v_2
 tensor([0.8808, 0.1192])
 tensor([1.7616, 0.4768])</code></pre>
 <p>The matrix–vector product <code>keys @ query</code> calculates the dot product of each key row with the query. Once we have checked the individual contributions, we can also write the last calculation as <code>z = weights @ values</code>.</p>
-<p>If we change the query to <span class="math inline">\((0,0)^T\)</span>, both scores become zero. The weights are then <span class="math inline">\(1/2\)</span> and <span class="math inline">\(1/2\)</span>, giving the ordinary average <span class="math inline">\(z=(1,2)^T\)</span>. If we instead use <span class="math inline">\(q=(-1,0)^T\)</span>, the weights reverse, and the second value makes the larger contribution. The table has stayed fixed; the combination changes with the query.</p>
-<p>We can also change a value without changing its key. For example, replacing <span class="math inline">\(v_1\)</span> by <span class="math inline">\((3,2)^T\)</span> leaves the scores and weights unchanged for our original query, but changes the resulting <span class="math inline">\(z\)</span>. This separates the information used for the comparison from the information we combine.</p>
+<p>If we change the query to <span class="math inline">\((0,0)^T\)</span>, both scores become zero. The weights are then <span class="math inline">\(1/2\)</span> and <span class="math inline">\(1/2\)</span>, giving the ordinary average <span class="math inline">\(z=(1,2)^T\)</span>. If we instead use <span class="math inline">\(q=(-1,0)^T\)</span>, the weights reverse and the second value makes the larger contribution: we get a different context vector depending on the query, even for fixed keys and values.</p>
+<p>We can also change a value without changing its key. For example, replacing <span class="math inline">\(v_1\)</span> by <span class="math inline">\((3,2)^T\)</span> leaves the scores and weights unchanged for our original query, but changes the resulting <span class="math inline">\(z\)</span>. Changing a value changes what that entry contributes without changing how strongly it is selected.</p>
 </section>
 <section id="sec-lookup-smoothing" class="level3" data-number="15.1.3">
 <h3 data-number="15.1.3" class="anchored" data-anchor-id="sec-lookup-smoothing"><span class="header-section-number">15.1.3</span> Connection to nearest neighbours and smoothing</h3>
 <p>This has the same basic structure as our original nearest-neighbour example: compare a new input with the stored inputs, then combine the associated outputs. Rather than taking one or two nearest entries, we have given each entry a weight determined by its comparison with the query.</p>
 <p>In <strong>kernel smoothing</strong>, a non-negative function measures how strongly a stored input should contribute at a query location. We normalise these weights and combine the corresponding values. Our calculation has this form, using <span class="math inline">\(\exp(q^T k_j)\)</span> as the weighting function. The word <em>smoothing</em> describes the weighted-average calculation here; the entries need not be nearby times or neighbouring words.</p>
-<p>There is an important difference when we use this calculation within a language model. In nearest-neighbour regression, the values were observed outputs and their average was our prediction. In attention, the values carry information from the supplied text, and their average is a representation used for the prediction. We still need a further calculation to turn that representation into probabilities for the next token.</p>
+<p>The dot product is also what remains of a Gaussian kernel. A kernel smoother weights entry <span class="math inline">\(j\)</span> by <span class="math inline">\(\exp(-\tfrac12\|q-k_j\|^2)\)</span>, and expanding the square gives</p>
+<p><span class="math display">\[
+-\tfrac12\|q-k_j\|^2=q^Tk_j-\tfrac12\|k_j\|^2-\tfrac12\|q\|^2.
+\]</span></p>
+<p>The last term is the same for every entry, so it cancels when the weights are normalised, and if the keys all have about the same length the middle term is nearly constant too. What is left is the dot product (Zhang et al.&nbsp;2023, Section 11.3.1).</p>
+<p>In nearest-neighbour regression, the values were observed outputs and their weighted average was our prediction. Here, we multiply each input token’s embedding by a matrix, introduced in the next section, to form its value vector. We take a weighted average of these value vectors to form the context vector. A further calculation produces scores for possible next tokens, which softmax converts into probabilities.</p>
+<p>In early <a href="https://arxiv.org/abs/1409.0473">neural translation models</a>, recurrent networks summarised the input sentence in one vector, as we discussed earlier. Adding attention let the model keep a vector for each input word and form a different weighted average for each word of the translation.</p>
 </section>
 </section>
-<section id="sec-language-references" class="level2" data-number="15.2">
-<h2 data-number="15.2" class="anchored" data-anchor-id="sec-language-references"><span class="header-section-number">15.2</span> References and further reading</h2>
+<section id="sec-attention-prediction" class="level2" data-number="15.2">
+<h2 data-number="15.2" class="anchored" data-anchor-id="sec-attention-prediction"><span class="header-section-number">15.2</span> Building the table of keys and values from the text</h2>
+<p>The task throughout this chapter is colour recall on short texts written for the lab. Each states a team colour, <code>The team colour is C.</code> with <code>C</code> one of <code>red</code>, <code>blue</code> and <code>black</code>; may add <code>The game is starting.</code> or <code>The players are on court.</code> or both; and ends <code>So the players wear</code>. The next token, the target, is the stated colour. The tokens are the words and punctuation marks of these texts, seventeen in all, which keeps the model small enough to inspect, and the answer is always in the text, so one attention layer can do the task.</p>
+<p>We return to the colour-recall problem, with the prefix</p>
+<blockquote class="blockquote">
+<p>The team colour is red. So the players wear</p>
+</blockquote>
+<p>and the next-token target <code>red</code>. We describe a text, and the prefix in particular (the tokens before the prediction target), by <strong>positions</strong> in the sequence: a position is a numbered place holding one token, and the same token can occur at several positions. Positions are counted within the sequence at hand: position 10 means the tenth token of this prefix, and in a longer prefix <code>wear</code> sits at a later position. Each position comes with its token and, computed from the token’s embedding and from nothing else, a query, a key and a value; nothing in this model, so far, records where in the sequence a token is. Treating words and punctuation as tokens, the prefix has ten positions:</p>
+<pre class="text"><code>The | team | colour | is | red | . | So | the | players | wear</code></pre>
+<p>For the prediction at the last position of the prefix, position 10, which holds <code>wear</code>, we want to form a context vector using the positions available to it: itself and the earlier ones. Position 10 supplies the query, and each available position, including position 10, supplies a key for the comparison and a value to contribute to the prediction. Comparing the query with the keys determines the weights for combining the values. The lookup calculation is the same as before, but we now calculate its query and table from the text.</p>
+<section id="sec-attention-parameters" class="level3" data-number="15.2.1">
+<h3 data-number="15.2.1" class="anchored" data-anchor-id="sec-attention-parameters"><span class="header-section-number">15.2.1</span> Computing queries, keys and values</h3>
+<p>The key at a position is what the query is compared with, and the value is what that position contributes to the context vector, scaled by its attention weight, which is set by how similar its key is to the query. We calculate keys and values from the embedding rows using weight matrices <span class="math inline">\(W_K\)</span> and <span class="math inline">\(W_V\)</span>, and the query from the current position’s embedding using a third matrix, <span class="math inline">\(W_Q\)</span>. We use the same three matrices at every position, so the keys, values and queries are all produced by the same operations applied to the different token embeddings at each position. Their entries are model parameters: numbers adjusted during training. One set of <span class="math inline">\(W_Q\)</span>, <span class="math inline">\(W_K\)</span> and <span class="math inline">\(W_V\)</span> is called an <strong>attention head</strong>.</p>
+<p>Stack the embedding rows of one sequence, one per position, into a matrix <span class="math inline">\(X\)</span>: ten rows for the ten-token prefix. Each training prefix gives its own <span class="math inline">\(X\)</span>, and later in the chapter one recorded sentence gives one <span class="math inline">\(X\)</span> with a prediction at every position. Because the inputs are rows, we multiply by the weight matrices on the right:</p>
+<p><span class="math display">\[
+Q=XW_Q,\qquad K=XW_K,\qquad V=XW_V.
+\]</span></p>
+<p>The corresponding rows of <span class="math inline">\(Q\)</span>, <span class="math inline">\(K\)</span> and <span class="math inline">\(V\)</span> are that position’s query, key and value. If the embeddings have <span class="math inline">\(d\)</span> components, the queries and keys <span class="math inline">\(d_k\)</span> components and the values <span class="math inline">\(d_v\)</span>, then <span class="math inline">\(W_Q\)</span> and <span class="math inline">\(W_K\)</span> have shape <span class="math inline">\(d\times d_k\)</span> and <span class="math inline">\(W_V\)</span> has shape <span class="math inline">\(d\times d_v\)</span>.</p>
+<p>The model from Lab 4 starts with random numbers in the embedding table and the three matrices: eight-component embeddings, four-component queries and keys, and eight-component values. An output layer then maps the context vector to a score for each of the seventeen tokens in its vocabulary, and softmax turns the scores into probabilities; Lab 4 shows this layer in full. Its attention weights at position 10 are close to <span class="math inline">\(0.1\)</span> at every position, and the probability it gives <code>red</code> is about <span class="math inline">\(0.058\)</span>, close to <span class="math inline">\(1/17\)</span>. At this stage the output layer gets nothing useful from the context vector that would help predict <code>red</code> over the other tokens.</p>
+</section>
+<section id="sec-attention-learning-goal" class="level3" data-number="15.2.2">
+<h3 data-number="15.2.2" class="anchored" data-anchor-id="sec-attention-learning-goal"><span class="header-section-number">15.2.2</span> The training objective</h3>
+<p>For this task, a useful table has to do two things. The key at the position holding the stated colour should match the query from <code>wear</code>, whichever colour is stated, so that this position receives most of the weight. The value at that position should carry which colour was stated.</p>
+<p>Training is not given these two requirements. Each training example supplies a prefix and its next token, and the only measure of the model is the <a href="./training.html#training-loss">negative log-likelihood loss</a> from our digit classifier: the negative log of the probability the model gives to the target,</p>
+<p><span class="math display">\[
+L=-\log p_{\text{target}},
+\]</span></p>
+<p>averaged over the examples. No target attention pattern is supplied. The loss falls when the model gives the stated colour a higher probability, and the keys, values and attention weights change through updates that lower it.</p>
+</section>
+<section id="sec-attention-training-loop" class="level3" data-number="15.2.3">
+<h3 data-number="15.2.3" class="anchored" data-anchor-id="sec-attention-training-loop"><span class="header-section-number">15.2.3</span> Training the model</h3>
+<p>Suppose <code>model</code> is Lab 4’s PyTorch attention model and <code>training_examples</code> contains pairs of input-token ID tensors and one-element target ID tensors. The model returns an output-score vector and an attention-weight matrix. Here <code>F</code> denotes <code>torch.nn.functional</code>. The training loop is the one from our digit classifier in 205:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>optimiser <span class="op">=</span> torch.optim.Adam(model.parameters(), lr<span class="op">=</span><span class="fl">0.03</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> update <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">200</span>):</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    optimiser.zero_grad()</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    example_losses <span class="op">=</span> []</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> token_ids, target <span class="kw">in</span> training_examples:</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>        logits, weights <span class="op">=</span> model(token_ids)</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>        example_loss <span class="op">=</span> F.cross_entropy(logits[<span class="va">None</span>, :], target)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>        example_losses.append(example_loss)</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>    loss <span class="op">=</span> torch.stack(example_losses).mean()</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    loss.backward()</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    optimiser.step()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><code>logits[None, :]</code> supplies the batch dimension expected by the loss function: one example with seventeen output scores. <code>F.cross_entropy</code> calculates the log-softmax and selects the target’s negative log probability, which is the loss above. The loop averages the losses over the training examples before each update. <code>zero_grad()</code> clears previously accumulated gradients; <code>backward()</code> calculates the new gradients; and <code>step()</code> changes the model weights. Adam (adaptive moment estimation) is the method used here to turn gradients into updates. It is slightly more sophisticated than plain gradient descent: it sets a step size for each parameter from the gradients it has seen, and the learning rate <code>lr</code> sets the overall scale.</p>
+<p>The training examples are nine prefixes: each of the three colours, with no inserted sentence, with <code>The game is starting.</code> inserted, or with <code>The players are on court.</code> inserted before <code>So the players wear</code>. We keep aside three prefixes, with both sentences inserted, and their next tokens for validation; they are not used for the updates. In every prefix the colour is at position 5; <code>wear</code> is at position 10, 15 or 16 in the training prefixes and at 21 in the validation prefixes, so the validation prefixes test the learned rule at a length, and a distance from the colour, that training never contained. Running the loop for 200 updates from its random starting values gives the following, where the first two columns describe the attention row at position 10 for the first training prefix, <code>The team colour is red. So the players wear</code>:</p>
+<table class="table">
+<colgroup>
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 9%">
+<col style="width: 12%">
+<col style="width: 12%">
+<col style="width: 12%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: right;">Update</th>
+<th style="text-align: right;">Weight on position 5</th>
+<th style="text-align: right;">Largest other weight</th>
+<th style="text-align: right;"><span class="math inline">\(p_{\texttt{red}}\)</span></th>
+<th>Predicted token</th>
+<th style="text-align: right;">Training loss</th>
+<th style="text-align: right;">Validation loss</th>
+<th style="text-align: right;">Validation correct</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: right;">0</td>
+<td style="text-align: right;"><span class="math inline">\(0.099\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(0.103\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(0.058\)</span></td>
+<td><code>.</code></td>
+<td style="text-align: right;"><span class="math inline">\(2.837\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(2.836\)</span></td>
+<td style="text-align: right;">0 of 3</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">10</td>
+<td style="text-align: right;"><span class="math inline">\(0.079\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(0.160\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(0.279\)</span></td>
+<td><code>blue</code></td>
+<td style="text-align: right;"><span class="math inline">\(1.215\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(1.214\)</span></td>
+<td style="text-align: right;">1 of 3</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">30</td>
+<td style="text-align: right;"><span class="math inline">\(0.717\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(0.085\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(0.580\)</span></td>
+<td><code>red</code></td>
+<td style="text-align: right;"><span class="math inline">\(0.607\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(0.641\)</span></td>
+<td style="text-align: right;">3 of 3</td>
+</tr>
+<tr class="even">
+<td style="text-align: right;">50</td>
+<td style="text-align: right;"><span class="math inline">\(1.000\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(0.000\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(1.000\)</span></td>
+<td><code>red</code></td>
+<td style="text-align: right;"><span class="math inline">\(0.000\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(0.000\)</span></td>
+<td style="text-align: right;">3 of 3</td>
+</tr>
+<tr class="odd">
+<td style="text-align: right;">200</td>
+<td style="text-align: right;"><span class="math inline">\(1.000\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(0.000\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(1.000\)</span></td>
+<td><code>red</code></td>
+<td style="text-align: right;"><span class="math inline">\(0.000\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(0.000\)</span></td>
+<td style="text-align: right;">3 of 3</td>
+</tr>
+</tbody>
+</table>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="attachments/language/attention-training-run.png" class="img-fluid figure-img"></p>
+<figcaption>Training Lab 4’s model with the loop above: the loss on the training and validation prefixes, and the attention weights at position 10 before and after training.</figcaption>
+</figure>
+</div>
+<p>Before training, position 10 gives every position nearly the same weight and the three colours nearly the same probability. Around update 10 the weight moves onto other positions, and the model predicts <code>blue</code> for our prefix. By update 30 most of the weight is on position 5, and by update 50 all of it is, to three decimals. The trained model uses the colour position and nothing else: for the <code>black</code> prefix, the trained row also puts all of its weight on position 5 and gives <code>black</code> probability <span class="math inline">\(1.000\)</span>. On the three validation prefixes it predicted <code>the</code> before training and the correct colour after. The validation loss follows the training loss throughout, and the validation prefixes put the colour 16 positions before <code>wear</code>, a distance training never contained. The same key at the colour position matches the <code>wear</code> query at any distance, because keys and queries are computed from the token alone; that is why the rule carries over to the longer prefixes, and also why this model cannot use where a token is.</p>
+<p>Its matrices are not readable directly: <span class="math inline">\(W_K\)</span> is <span class="math inline">\(8\times4\)</span> with entries between about <span class="math inline">\(-1.5\)</span> and <span class="math inline">\(1.2\)</span>, and the others are similar. What they do at each position can still be read off, as the next section shows.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="attachments/language/attention-learned-matrices.png" class="img-fluid figure-img"></p>
+<figcaption>The trained model’s matrices after 200 updates, as heatmaps. They are not readable directly; what they do at each position is.</figcaption>
+</figure>
+</div>
+</section>
+</section>
+<section id="sec-learned-weights" class="level2" data-number="15.3">
+<h2 data-number="15.3" class="anchored" data-anchor-id="sec-learned-weights"><span class="header-section-number">15.3</span> What the learned weights do</h2>
+<p>The matrices are not readable entry by entry, but what they do at each position is. For the <code>red</code> prefix after 200 updates, the query at position 10 gives the colour position score <span class="math inline">\(39.9\)</span> and every other position a score near <span class="math inline">\(-12\)</span>, so the colour position’s weight is <span class="math inline">\(1.000\)</span> and every other weight is <span class="math inline">\(0.000\)</span>. The value at position 5, multiplied by its weight of <span class="math inline">\(1.000\)</span> and then by the output matrix, adds <span class="math inline">\(24.3\)</span> to the <code>red</code> score, <span class="math inline">\(7.7\)</span> to <code>black</code> and <span class="math inline">\(5.2\)</span> to <code>blue</code>. For the <code>black</code> prefix the same position scores <span class="math inline">\(45.5\)</span>, and its value adds <span class="math inline">\(11.9\)</span> to <code>black</code> while taking <span class="math inline">\(4.2\)</span> from <code>red</code> and <span class="math inline">\(3.1\)</span> from <code>blue</code>.</p>
+<p>For the two prefixes, the row at <code>wear</code> after 200 updates:</p>
+<table class="table">
+<colgroup>
+<col style="width: 17%">
+<col style="width: 17%">
+<col style="width: 23%">
+<col style="width: 23%">
+<col style="width: 17%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Prefix</th>
+<th>Position <span class="math inline">\(j\)</span></th>
+<th style="text-align: right;">Score of the <code>wear</code> query against the key at <span class="math inline">\(j\)</span> (<span class="math inline">\(q_{10}\cdot k_j/2\)</span>)</th>
+<th style="text-align: right;">Attention weight on <span class="math inline">\(j\)</span></th>
+<th>What the value at <span class="math inline">\(j\)</span> adds to the colour scores (weight <span class="math inline">\(\times\)</span> value <span class="math inline">\(\times W_{\text{out}}\)</span>)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>The team colour is red. So the players wear</code></td>
+<td>5, <code>red</code></td>
+<td style="text-align: right;"><span class="math inline">\(39.9\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(1.000\)</span></td>
+<td>red <span class="math inline">\(+24.3\)</span>, black <span class="math inline">\(+7.7\)</span>, blue <span class="math inline">\(+5.2\)</span></td>
+</tr>
+<tr class="even">
+<td><code>The team colour is black. So the players wear</code></td>
+<td>5, <code>black</code></td>
+<td style="text-align: right;"><span class="math inline">\(45.5\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(1.000\)</span></td>
+<td>black <span class="math inline">\(+11.9\)</span>, red <span class="math inline">\(-4.2\)</span>, blue <span class="math inline">\(-3.1\)</span></td>
+</tr>
+<tr class="odd">
+<td>either</td>
+<td>every other position</td>
+<td style="text-align: right;">about <span class="math inline">\(-12\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(0.000\)</span></td>
+<td>nothing</td>
+</tr>
+</tbody>
+</table>
+<p>Only the key at the stated colour matches the <code>wear</code> query, and that position’s value raises the stated colour’s score most.</p>
+</section>
+<section id="sec-attention-sequence" class="level2" data-number="15.4">
+<h2 data-number="15.4" class="anchored" data-anchor-id="sec-attention-sequence"><span class="header-section-number">15.4</span> Attention at every position</h2>
+<p>Training text supplies many next-token targets: after <code>The</code> comes <code>team</code>, after <code>The team</code> comes <code>colour</code>, and after the prefix ending in <code>wear</code> comes <code>red</code>. We therefore want a context vector at each position so that we can calculate these predictions in one go.</p>
+<p>Each position supplies its own query and receives its own weighted combination. When the queries, keys and values come from the same sequence, we call the operation <strong>self-attention</strong>. This is the general form of the operation: every position receives a context vector that combines information from the positions it can see, an updated representation of its token in its context. Predicting the next token from the last row is one use of it; the next chapter stacks layers so that later queries are computed from these updated rows. Lab 4 computes all ten rows and plots the weights before and after masking. We have already constructed the query, key and value rows; matrix multiplication lets us calculate their comparisons and combinations together.</p>
+<section id="sec-attention-matrix-scores" class="level3" data-number="15.4.1">
+<h3 data-number="15.4.1" class="anchored" data-anchor-id="sec-attention-matrix-scores"><span class="header-section-number">15.4.1</span> All comparison scores and context rows</h3>
+<p>Let <span class="math inline">\(T\)</span> be the number of input positions and <span class="math inline">\(d_k\)</span> the number of components in each query and key. The comparison-score matrix used in transformer attention is</p>
+<p><span class="math display">\[
+S=\frac{QK^T}{\sqrt{d_k}}.
+\]</span></p>
+<p>The entry <span class="math inline">\(S_{ij}\)</span> compares the query at position <span class="math inline">\(i\)</span> with the key at position <span class="math inline">\(j\)</span>: <strong>rows are queries and columns are keys</strong>. The scaling keeps the size of the scores from growing with the width: if the components of a query and a key are independent with zero mean and unit variance, their dot product has variance <span class="math inline">\(d_k\)</span>, and dividing by <span class="math inline">\(\sqrt{d_k}\)</span> brings it back to <span class="math inline">\(1\)</span> (Vaswani et al.&nbsp;2017; Zhang et al.&nbsp;2023, Section 11.3.1). In Lab 4’s model, with four-component queries and keys, the scores are divided by <span class="math inline">\(2\)</span>.</p>
+<p>Apply softmax separately to each row of <span class="math inline">\(S\)</span> to form the attention-weight matrix <span class="math inline">\(A\)</span>. Each row contains non-negative weights summing to one. Matrix multiplication then gives all the context vectors:</p>
+<p><span class="math display">\[
+Z=AV,\qquad z_i=\sum_{j=1}^{T}A_{ij}v_j.
+\]</span></p>
+<p>For the ten-token prefix, row 10 of <span class="math inline">\(Z\)</span> is the context vector at <code>wear</code> that the training run scored. As written, every row uses every column, which the next section restricts.</p>
+<p>The five shapes in Lab 4’s model, with <span class="math inline">\(T\)</span> input positions, are:</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Matrix</th>
+<th>Meaning</th>
+<th>Shape</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(X\)</span></td>
+<td>Embedding rows</td>
+<td><span class="math inline">\(T\times8\)</span></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(Q\)</span>, <span class="math inline">\(K\)</span></td>
+<td>Query and key rows</td>
+<td><span class="math inline">\(T\times4\)</span></td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(V\)</span></td>
+<td>Value rows</td>
+<td><span class="math inline">\(T\times8\)</span></td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(S\)</span>, <span class="math inline">\(A\)</span></td>
+<td>Scores and attention weights</td>
+<td><span class="math inline">\(T\times T\)</span></td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(Z\)</span></td>
+<td>Context rows</td>
+<td><span class="math inline">\(T\times8\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>A language model uses a full-vocabulary output head to turn each context row into probabilities for the following token; Lab 4’s head has seventeen columns, one per vocabulary token.</p>
+</section>
+</section>
+<section id="sec-causal-attention" class="level2" data-number="15.5">
+<h2 data-number="15.5" class="anchored" data-anchor-id="sec-causal-attention"><span class="header-section-number">15.5</span> Causality</h2>
+<p>When predicting the next token after position <span class="math inline">\(i\)</span>, the model can use tokens up to and including <span class="math inline">\(i\)</span>. We need to enforce this rule when supplying a complete recorded sequence to calculate predictions at several positions.</p>
+<p>Include the recorded next word:</p>
+<blockquote class="blockquote">
+<p>The team colour is red. So the players wear red</p>
+</blockquote>
+<p>This has eleven positions. The row at position 10, holding <code>wear</code>, has target <code>red</code> at position 11. Keys come from the token alone, so positions 5 and 11 both hold <code>red</code> and get the same key; position 5 is in the prefix, and position 11 is the word the row is meant to predict.</p>
+<section id="sec-attention-future-leakage" class="level3" data-number="15.5.1">
+<h3 data-number="15.5.1" class="anchored" data-anchor-id="sec-attention-future-leakage"><span class="header-section-number">15.5.1</span> Leakage</h3>
+<p>To follow the leak with numbers, take the last three positions, <code>players wear red</code>, and suppose the <code>wear</code> row’s scores against the three keys are <span class="math inline">\(0\)</span>, <span class="math inline">\(0\)</span> and <span class="math inline">\(2\)</span>. If the row can use all three, its weights are</p>
+<p><span class="math display">\[
+\frac{1}{2+e^2}\approx0.107\ \text{on } \texttt{players},\qquad 0.107\ \text{on } \texttt{wear},\qquad \frac{e^2}{2+e^2}\approx0.787\ \text{on } \texttt{red}.
+\]</span></p>
+<p>Most of the context vector is then the value at <code>red</code>, the token the row is meant to predict, so the prediction head can read the answer and the loss can fall without any change to the parameters. These scores are ones we supplied; they do not say what training would do. Training with future tokens available can reward using the target itself in the prediction, and at prediction time that future position is absent: when we use the model to predict what follows <code>wear</code>, only the prefix exists. In the full eleven-token row the weight could not go entirely to position 11, because positions 5 and 11 hold the same token, so they get the same key and the same weight, each at most one half; the trained model from the run above gives them <span class="math inline">\(0.5\)</span> and <span class="math inline">\(0.5\)</span>. They also carry the same value, so half of each is the same context vector as all of one: for the trained model, <span class="math inline">\(p_{\texttt{red}}=1.000\)</span> with the leak as without it. Two different things coincide here. An earlier token of the same type as the target is in the prefix, and using it is the recall the model is meant to learn; the target itself is also available, and using it is the leak. Because keys and values come from the token alone, the future <code>red</code> supplies exactly the key and value the earlier <code>red</code> already supplied, so on this data the leak adds nothing. It would add information for a row whose target token occurs nowhere earlier, which with the leak could use the target’s own value and at prediction time could not, and it would also once keys and values depend on position, which the next chapter introduces.</p>
+</section>
+<section id="sec-attention-causal-mask" class="level3" data-number="15.5.2">
+<h3 data-number="15.5.2" class="anchored" data-anchor-id="sec-attention-causal-mask"><span class="header-section-number">15.5.2</span> The causal mask</h3>
+<p>Number the positions from <span class="math inline">\(1\)</span> to <span class="math inline">\(T\)</span>. A <strong>causal mask</strong> <span class="math inline">\(M\)</span> has entry</p>
+<p><span class="math display">\[
+M_{ij}=\begin{cases}
+0,&amp;j\leq i,\\
+-\infty,&amp;j&gt;i.
+\end{cases}
+\]</span></p>
+<p>We add it to the comparison scores <strong>before</strong> applying softmax:</p>
+<p><span class="math display">\[
+A=\operatorname{softmax}_{\mathrm{rows}}(S+M).
+\]</span></p>
+<p>Here the subscript means that we apply softmax separately to each query row. A masked score contributes <span class="math inline">\(e^{-\infty}=0\)</span>, so its attention weight is zero. The remaining entries are normalised over the allowed positions. Giving a position a score of zero would instead contribute <span class="math inline">\(e^0=1\)</span> to the softmax sum and leave it available.</p>
+<p>For the last three positions of the recorded sentence, <code>players</code>, <code>wear</code> and the recorded <code>red</code>, the mask entries are:</p>
+<pre class="text"><code>…  players  wear  red</code></pre>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Query / key</th>
+<th style="text-align: right;"><code>players</code></th>
+<th style="text-align: right;"><code>wear</code></th>
+<th style="text-align: right;"><code>red</code></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>players</code></td>
+<td style="text-align: right;"><span class="math inline">\(0\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(-\infty\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(-\infty\)</span></td>
+</tr>
+<tr class="even">
+<td><code>wear</code></td>
+<td style="text-align: right;"><span class="math inline">\(0\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(0\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(-\infty\)</span></td>
+</tr>
+<tr class="odd">
+<td><code>red</code></td>
+<td style="text-align: right;"><span class="math inline">\(0\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(0\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(0\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>The earlier eight columns are allowed for all three query rows. The diagonal is allowed because the token at the current position is already known; its output predicts the following token. The mask says which positions may contribute; the scores decide how much each permitted position matters. Our nine training prefixes enforce the rule by construction, each stopping before its target; the mask does the same for every position of a recorded sentence in one calculation, so one sentence supplies a prefix and its target at every position.</p>
+<p>For the <code>wear</code> row, masking <code>red</code> removes its contribution: the scores <span class="math inline">\((0,0,2)\)</span> become <span class="math inline">\((0,0,-\infty)\)</span>, and the weights are</p>
+<table class="table">
+<thead>
+<tr class="header">
+<th>Mask</th>
+<th style="text-align: right;"><code>players</code></th>
+<th style="text-align: right;"><code>wear</code></th>
+<th style="text-align: right;"><code>red</code></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Without</td>
+<td style="text-align: right;"><span class="math inline">\(0.107\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(0.107\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(0.787\)</span></td>
+</tr>
+<tr class="even">
+<td>With</td>
+<td style="text-align: right;"><span class="math inline">\(0.5\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(0.5\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(0\)</span></td>
+</tr>
+</tbody>
+</table>
+<p>A full transformer also supplies position information, so that positions holding the same token can have different keys; we take this up in the next chapter.</p>
+</section>
+<section id="sec-attention-masked-code" class="level3" data-number="15.5.3">
+<h3 data-number="15.5.3" class="anchored" data-anchor-id="sec-attention-masked-code"><span class="header-section-number">15.5.3</span> The calculation in PyTorch</h3>
+<p>Suppose <span class="math inline">\(Q\)</span>, <span class="math inline">\(K\)</span> and <span class="math inline">\(V\)</span> have been calculated for the input sequence. We can construct the allowed positions and calculate the context rows as follows:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> math</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>T <span class="op">=</span> Q.shape[<span class="dv">0</span>]</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>d_k <span class="op">=</span> Q.shape[<span class="dv">1</span>]</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>scores <span class="op">=</span> Q <span class="op">@</span> K.T <span class="op">/</span> math.sqrt(d_k)</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a><span class="co"># True on and below the diagonal: key position &lt;= query position.</span></span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>allowed <span class="op">=</span> torch.ones(T, T, dtype<span class="op">=</span>torch.<span class="bu">bool</span>).tril()</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>scores <span class="op">=</span> scores.masked_fill(<span class="op">~</span>allowed, <span class="bu">float</span>(<span class="st">"-inf"</span>))</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>weights <span class="op">=</span> torch.softmax(scores, dim<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>contexts <span class="op">=</span> weights <span class="op">@</span> V</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p><code>~allowed</code> reverses the Boolean entries, selecting the forbidden positions for replacement. <code>dim=-1</code> applies softmax along the key columns within each query row. Each row has at least its own position available, so there is always an allowed entry to normalise. Implementations often use a very large negative number in place of <span class="math inline">\(-\infty\)</span>, which gives the same zero weight, and the same masking removes padding positions when sequences of different lengths are processed together (Zhang et al.&nbsp;2023, Section 11.3.2).</p>
+</section>
+</section>
+<section id="sec-attention-training" class="level2" data-number="15.6">
+<h2 data-number="15.6" class="anchored" data-anchor-id="sec-attention-training"><span class="header-section-number">15.6</span> The labs</h2>
+<section id="sec-attention-practical-bridge" class="level3" data-number="15.6.1">
+<h3 data-number="15.6.1" class="anchored" data-anchor-id="sec-attention-practical-bridge"><span class="header-section-number">15.6.1</span> From the training run to Lab 5</h3>
+<p>Lab 5 trains Lab 4’s model with the loop above. It performs the same attention operations with the sizes given earlier, and an output head with seventeen token columns, including the three colour targets <code>red</code>, <code>blue</code> and <code>black</code>. Its starting values are the ones used in the training run above: random embeddings and matrices, and an output bias of zero. The embedding table, query/key/value matrices, output matrix and output bias are all trainable parameters. PyTorch packages these together in the supplied model, whose <code>parameters()</code> method provides the weights to the optimiser.</p>
+</section>
+<section id="sec-attention-training-evaluation" class="level3" data-number="15.6.2">
+<h3 data-number="15.6.2" class="anchored" data-anchor-id="sec-attention-training-evaluation"><span class="header-section-number">15.6.2</span> The Lab 5 experiment</h3>
+<p>Lab 5 trains the model with learning rate 0.03 for 200 updates and draws the loss, the <code>wear</code> row and the colour probabilities across the updates. Its one change is a second run from the same starting parameters and data at one tenth of the learning rate, given 1000 updates so that it has time to finish.</p>
+<p>Lab 5’s one-layer colour-recall model scores only the final context row, whose prefix positions are all allowed, so the causal mask does not change that prediction. A full next-token language model scores predictions at each training position over the whole vocabulary.</p>
+</section>
+</section>
+<section id="sec-attention-limits" class="level2" data-number="15.7">
+<h2 data-number="15.7" class="anchored" data-anchor-id="sec-attention-limits"><span class="header-section-number">15.7</span> From one layer to many</h2>
+<p>In the trained model, the query computed from the token at the current position gives weight to the positions whose keys match it, and the values at those positions are carried into the prediction. After training, that was the colour’s position. That is what one attention layer does, and it is enough for recalling a stated colour.</p>
+<p>Two small changes to the task show what it cannot do on its own. First, state two colours and ask for the more recent one. In this model the key and value at a position depend only on the token there, so swapping the two colours’ positions leaves every score, weight and prediction unchanged; nothing in the calculation says which came later. Second, give the sentence two subjects:</p>
+<blockquote class="blockquote">
+<p>The teams wear blue. The referees wear red. So the players wear</p>
+</blockquote>
+<p>and compare it with the same sentence ending <code>So the officials wear</code>. The query comes from the embedding at <code>wear</code> and is identical in the two sentences, and so are the keys at <code>blue</code> and <code>red</code>, so this one layer gives the two colours the same relative weight in both cases. Preferring the team’s colour for the players needs a query that already knows what its subject is, which is information gathered at <code>wear</code> by an earlier layer.</p>
+<p>The next chapter adds position information, so that the same token at different positions can have different keys; stacks attention layers, so that later queries can use what earlier layers gathered; and runs several heads in parallel, each with its own weighting of the positions, so that a position receives several context vectors rather than one.</p>
+</section>
+<section id="sec-language-references" class="level2" data-number="15.8">
+<h2 data-number="15.8" class="anchored" data-anchor-id="sec-language-references"><span class="header-section-number">15.8</span> References and further reading</h2>
 <ul>
-<li>Mikolov, T., Chen, K., Corrado, G. and Dean, J. (2013). <a href="https://arxiv.org/abs/1301.3781"><em>Efficient Estimation of Word Representations in Vector Space</em></a>. Introduces the word2vec architectures discussed here.</li>
+<li>Mikolov, T., Chen, K., Corrado, G. and Dean, J. (2013). <a href="https://arxiv.org/abs/1301.3781"><em>Efficient Estimation of Word Representations in Vector Space</em></a>. Introduces the word2vec architectures discussed in the previous chapter.</li>
 <li>Sennrich, R., Haddow, B. and Birch, A. (2016). <a href="https://doi.org/10.18653/v1/P16-1162"><em>Neural Machine Translation of Rare Words with Subword Units</em></a>. Describes the adaptation of byte-pair encoding for subword segmentation.</li>
 <li>Schuster, M. and Nakajima, K. (2012). <a href="https://doi.org/10.1109/ICASSP.2012.6289079"><em>Japanese and Korean Voice Search</em></a>. Introduces WordPiece tokenisation.</li>
+<li>Bahdanau, D., Cho, K. and Bengio, Y. (2015). <a href="https://arxiv.org/abs/1409.0473"><em>Neural Machine Translation by Jointly Learning to Align and Translate</em></a>. The attention mechanism for translation discussed above.</li>
 <li>Vaswani, A. et al.&nbsp;(2017). <a href="https://arxiv.org/abs/1706.03762"><em>Attention Is All You Need</em></a>. Introduces the Transformer architecture and scaled dot-product attention.</li>
+<li>Zhang, A., Lipton, Z. C., Li, M. and Smola, A. J. (2023). <a href="https://d2l.ai/chapter_attention-mechanisms-and-transformers/index.html"><em>Dive into Deep Learning</em></a>, Cambridge University Press, Chapter 11. Section 11.3.1 derives dot-product attention from the Gaussian kernel and gives the variance argument for the <span class="math inline">\(1/\sqrt{d}\)</span> scaling; Section 11.3.2 covers the masked softmax; Section 11.6.3 the sinusoidal position encoding.</li>
 <li>Brown, T. B. et al.&nbsp;(2020). <a href="https://arxiv.org/abs/2005.14165"><em>Language Models are Few-Shot Learners</em></a>, Table 2.1. Gives the dimensions of the GPT-3 model variants.</li>
-<li>Huang, H., Stevens, E., Antiga, L. and Viehmann, T. (2026). <a href="https://www.manning.com/books/deep-learning-with-pytorch-second-edition"><em>Deep Learning with PyTorch</em>, second edition</a>, Chapter 4, section on text embeddings. Source of the apple/lemon illustration quoted above.</li>
+<li>Huang, H., Stevens, E., Antiga, L. and Viehmann, T. (2026). <a href="https://www.manning.com/books/deep-learning-with-pytorch-second-edition"><em>Deep Learning with PyTorch</em>, second edition</a>, Chapter 4, section on text embeddings. Source of the apple/lemon illustration quoted in the previous chapter.</li>
 <li>Raschka, S. <a href="https://www.manning.com/books/build-a-large-language-model-from-scratch"><em>Build a Large Language Model (From Scratch)</em></a>, Chapters 2–3. The token-lookup and one-query-at-a-time illustrations here draw on the teaching approach in these chapters.</li>
 </ul>
 
@@ -923,130 +1335,388 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
   <div class="nav-page nav-page-next">
   </div>
 </nav><div class="modal fade" id="quarto-embedded-source-code-modal" tabindex="-1" aria-labelledby="quarto-embedded-source-code-modal-label" aria-hidden="true"><div class="modal-dialog modal-dialog-scrollable"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="quarto-embedded-source-code-modal-label">Source Code</h5><button class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="">
-<div class="sourceCode" id="cb3" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Attention {#sec-attention}</span></span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>&lt;style&gt;</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">/* Keep long attention equations scrollable within the chapter on narrow screens. */</span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#sec-attention-lookup</span> mjx-container<span class="ex">[</span><span class="ss">display</span><span class="op">=</span><span class="st">"true"</span><span class="ex">]</span> {</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>  <span class="kw">max-width</span><span class="ch">:</span> <span class="dv">100</span><span class="dt">%</span><span class="op">;</span></span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>  <span class="kw">overflow-x</span><span class="ch">:</span> <span class="bu">auto</span><span class="op">;</span></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>  <span class="kw">overflow-y</span><span class="ch">:</span> <span class="dv">hidden</span><span class="op">;</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>&lt;/style&gt;</span>
-<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a><span class="fu">## Attention as similarity-based lookup {#sec-attention-lookup}</span></span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>Returning to our colour example, we want to predict the token following <span class="in">`wear`</span>. To form the search input for the similarity-based lookup, we construct a **query vector** from the embedding of <span class="in">`wear`</span> using a learned transformation. We can think of the query as representing a question about what information would be useful for the current prediction.</span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>Each token in the available text also supplies a **key** and a **value**, constructed from its embedding using learned transformations. The key is used for comparison with the query in the similarity-based lookup. The associated value contains information from that token which we can use for the prediction. We compare the query with each key to determine how much weight to give the corresponding value, then form a weighted average of the values.</span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>We use vector dot products to calculate the query–key similarities. These comparisons provide scores, which we convert into weights summing to one. The available key–value entries include the current token, so we also compare the query from <span class="in">`wear`</span> with its own key and include its value in the weighted average. This gives us a representation that draws on the history and can be used to predict the next token.</span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>This develops the weighted-average idea from our nearest-neighbour example. After working through the calculation, we will make the connection to kernel smoothing.</span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a><span class="fu">### One query and a supplied table {#sec-supplied-query}</span></span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>To understand how this combination works, we first consider a single query and a supplied table of keys and values. Here the numbers are chosen for simplicity and convenience but are otherwise arbitrary.</span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>Suppose our query is $q=(1,0)^T$, and our table contains two entries:</span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>| Entry | Key | Value |</span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>|---|---|---|</span>
-<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>| 1 | $k_1=(1,0)^T$ | $v_1=(2,0)^T$ |</span>
-<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>| 2 | $k_2=(-1,0)^T$ | $v_2=(0,4)^T$ |</span>
-<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>The keys and the query have the same number of components so that we can take their dot products.</span>
-<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>First, we calculate a **comparison score** for each key:</span>
-<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>s_j=q^T k_j.</span>
-<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>For these vectors, $s_1=1$ and $s_2=-1$. A dot product depends on both the lengths of the vectors and how they are aligned. Here the two keys have equal length, and the query points in the same direction as the first key and the opposite direction to the second.</span>
-<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>We want larger scores to give larger weights, with non-negative weights that sum to one. A standard way to do this is the **softmax** operation:</span>
-<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>a_j=\frac{\exp(s_j)}{\sum_\ell\exp(s_\ell)}.</span>
-<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>Exponentiating gives positive numbers, and dividing by their sum makes the weights sum to one. In this example,</span>
-<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>a_1=\frac{e^1}{e^1+e^{-1}}\approx0.881,</span>
-<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>\qquad</span>
-<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>a_2=\frac{e^{-1}}{e^1+e^{-1}}\approx0.119.</span>
-<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>Finally, we form the weighted average of the **values**, which we denote by $z$:</span>
-<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>z=a_1v_1+a_2v_2</span>
-<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>\approx0.881\begin{pmatrix}2<span class="sc">\\</span>0\end{pmatrix}</span>
-<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a>+0.119\begin{pmatrix}0<span class="sc">\\</span>4\end{pmatrix}</span>
-<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>\approx\begin{pmatrix}1.762<span class="sc">\\</span>0.477\end{pmatrix}.</span>
-<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a>$$</span>
-<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a><span class="al">![The supplied-query calculation.](attachments/language/one-query-lookup.png)</span></span>
-<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a><span class="fu">### The calculation in code {#sec-lookup-code}</span></span>
-<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>We can carry out the same calculation using PyTorch tensors. Each row of <span class="in">`keys`</span> is a key vector, and the matching row of <span class="in">`values`</span> contains its associated value:</span>
-<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
-<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
-<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a>query <span class="op">=</span> torch.tensor([<span class="fl">1.0</span>, <span class="fl">0.0</span>])</span>
-<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a>keys <span class="op">=</span> torch.tensor([[<span class="fl">1.0</span>, <span class="fl">0.0</span>], [<span class="op">-</span><span class="fl">1.0</span>, <span class="fl">0.0</span>]])</span>
-<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a>values <span class="op">=</span> torch.tensor([[<span class="fl">2.0</span>, <span class="fl">0.0</span>], [<span class="fl">0.0</span>, <span class="fl">4.0</span>]])</span>
-<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a><span class="co"># One dot product for each key.</span></span>
-<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a>scores <span class="op">=</span> keys <span class="op">@</span> query</span>
-<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a><span class="co"># Softmax: exponentiate, then divide by the sum.</span></span>
-<span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a>weights <span class="op">=</span> torch.exp(scores)</span>
-<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a>weights <span class="op">=</span> weights <span class="op">/</span> weights.<span class="bu">sum</span>()</span>
-<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a><span class="co"># Show the contribution from each value explicitly.</span></span>
-<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a>z <span class="op">=</span> weights[<span class="dv">0</span>] <span class="op">*</span> values[<span class="dv">0</span>] <span class="op">+</span> weights[<span class="dv">1</span>] <span class="op">*</span> values[<span class="dv">1</span>]</span>
-<span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(scores)</span>
-<span id="cb3-90"><a href="#cb3-90" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(weights)</span>
-<span id="cb3-91"><a href="#cb3-91" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(z)</span>
-<span id="cb3-92"><a href="#cb3-92" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb3-93"><a href="#cb3-93" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-94"><a href="#cb3-94" aria-hidden="true" tabindex="-1"></a>This gives</span>
-<span id="cb3-95"><a href="#cb3-95" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-96"><a href="#cb3-96" aria-hidden="true" tabindex="-1"></a><span class="in">```text</span></span>
-<span id="cb3-97"><a href="#cb3-97" aria-hidden="true" tabindex="-1"></a><span class="in">tensor([ 1., -1.])</span></span>
-<span id="cb3-98"><a href="#cb3-98" aria-hidden="true" tabindex="-1"></a><span class="in">tensor([0.8808, 0.1192])</span></span>
-<span id="cb3-99"><a href="#cb3-99" aria-hidden="true" tabindex="-1"></a><span class="in">tensor([1.7616, 0.4768])</span></span>
-<span id="cb3-100"><a href="#cb3-100" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
-<span id="cb3-101"><a href="#cb3-101" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-102"><a href="#cb3-102" aria-hidden="true" tabindex="-1"></a>The matrix–vector product <span class="in">`keys @ query`</span> calculates the dot product of each key row with the query. Once we have checked the individual contributions, we can also write the last calculation as <span class="in">`z = weights @ values`</span>.</span>
-<span id="cb3-103"><a href="#cb3-103" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-104"><a href="#cb3-104" aria-hidden="true" tabindex="-1"></a>If we change the query to $(0,0)^T$, both scores become zero. The weights are then $1/2$ and $1/2$, giving the ordinary average $z=(1,2)^T$. If we instead use $q=(-1,0)^T$, the weights reverse, and the second value makes the larger contribution. The table has stayed fixed; the combination changes with the query.</span>
-<span id="cb3-105"><a href="#cb3-105" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-106"><a href="#cb3-106" aria-hidden="true" tabindex="-1"></a>We can also change a value without changing its key. For example, replacing $v_1$ by $(3,2)^T$ leaves the scores and weights unchanged for our original query, but changes the resulting $z$. This separates the information used for the comparison from the information we combine.</span>
-<span id="cb3-107"><a href="#cb3-107" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-108"><a href="#cb3-108" aria-hidden="true" tabindex="-1"></a><span class="fu">### Connection to nearest neighbours and smoothing {#sec-lookup-smoothing}</span></span>
-<span id="cb3-109"><a href="#cb3-109" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-110"><a href="#cb3-110" aria-hidden="true" tabindex="-1"></a>This has the same basic structure as our original nearest-neighbour example: compare a new input with the stored inputs, then combine the associated outputs. Rather than taking one or two nearest entries, we have given each entry a weight determined by its comparison with the query.</span>
-<span id="cb3-111"><a href="#cb3-111" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-112"><a href="#cb3-112" aria-hidden="true" tabindex="-1"></a>In **kernel smoothing**, a non-negative function measures how strongly a stored input should contribute at a query location. We normalise these weights and combine the corresponding values. Our calculation has this form, using $\exp(q^T k_j)$ as the weighting function. The word *smoothing* describes the weighted-average calculation here; the entries need not be nearby times or neighbouring words.</span>
-<span id="cb3-113"><a href="#cb3-113" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-114"><a href="#cb3-114" aria-hidden="true" tabindex="-1"></a>There is an important difference when we use this calculation within a language model. In nearest-neighbour regression, the values were observed outputs and their average was our prediction. In attention, the values carry information from the supplied text, and their average is a representation used for the prediction. We still need a further calculation to turn that representation into probabilities for the next token.</span>
-<span id="cb3-115"><a href="#cb3-115" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-116"><a href="#cb3-116" aria-hidden="true" tabindex="-1"></a><span class="fu">## References and further reading {#sec-language-references}</span></span>
-<span id="cb3-117"><a href="#cb3-117" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-118"><a href="#cb3-118" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Mikolov, T., Chen, K., Corrado, G. and Dean, J. (2013). <span class="co">[</span><span class="ot">*Efficient Estimation of Word Representations in Vector Space*</span><span class="co">](https://arxiv.org/abs/1301.3781)</span>. Introduces the word2vec architectures discussed here.</span>
-<span id="cb3-119"><a href="#cb3-119" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Sennrich, R., Haddow, B. and Birch, A. (2016). <span class="co">[</span><span class="ot">*Neural Machine Translation of Rare Words with Subword Units*</span><span class="co">](https://doi.org/10.18653/v1/P16-1162)</span>. Describes the adaptation of byte-pair encoding for subword segmentation.</span>
-<span id="cb3-120"><a href="#cb3-120" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Schuster, M. and Nakajima, K. (2012). <span class="co">[</span><span class="ot">*Japanese and Korean Voice Search*</span><span class="co">](https://doi.org/10.1109/ICASSP.2012.6289079)</span>. Introduces WordPiece tokenisation.</span>
-<span id="cb3-121"><a href="#cb3-121" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Vaswani, A. et al. (2017). <span class="co">[</span><span class="ot">*Attention Is All You Need*</span><span class="co">](https://arxiv.org/abs/1706.03762)</span>. Introduces the Transformer architecture and scaled dot-product attention.</span>
-<span id="cb3-122"><a href="#cb3-122" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Brown, T. B. et al. (2020). <span class="co">[</span><span class="ot">*Language Models are Few-Shot Learners*</span><span class="co">](https://arxiv.org/abs/2005.14165)</span>, Table 2.1. Gives the dimensions of the GPT-3 model variants.</span>
-<span id="cb3-123"><a href="#cb3-123" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Huang, H., Stevens, E., Antiga, L. and Viehmann, T. (2026). <span class="co">[</span><span class="ot">*Deep Learning with PyTorch*, second edition</span><span class="co">](https://www.manning.com/books/deep-learning-with-pytorch-second-edition)</span>, Chapter 4, section on text embeddings. Source of the apple/lemon illustration quoted above.</span>
-<span id="cb3-124"><a href="#cb3-124" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Raschka, S. <span class="co">[</span><span class="ot">*Build a Large Language Model (From Scratch)*</span><span class="co">](https://www.manning.com/books/build-a-large-language-model-from-scratch)</span>, Chapters 2–3. The token-lookup and one-query-at-a-time illustrations here draw on the teaching approach in these chapters.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb7" data-shortcodes="false"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># Attention {#sec-attention}</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>&lt;style&gt;</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">/* Keep long attention equations scrollable within the chapter on narrow screens. */</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="pp">#sec-attention-lookup</span> mjx-container<span class="ex">[</span><span class="ss">display</span><span class="op">=</span><span class="st">"true"</span><span class="ex">]</span><span class="op">,</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="pp">#sec-attention-prediction</span> mjx-container<span class="ex">[</span><span class="ss">display</span><span class="op">=</span><span class="st">"true"</span><span class="ex">]</span><span class="op">,</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a><span class="pp">#sec-learned-weights</span> mjx-container<span class="ex">[</span><span class="ss">display</span><span class="op">=</span><span class="st">"true"</span><span class="ex">]</span><span class="op">,</span></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a><span class="pp">#sec-attention-sequence</span> mjx-container<span class="ex">[</span><span class="ss">display</span><span class="op">=</span><span class="st">"true"</span><span class="ex">]</span><span class="op">,</span></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a><span class="pp">#sec-causal-attention</span> mjx-container<span class="ex">[</span><span class="ss">display</span><span class="op">=</span><span class="st">"true"</span><span class="ex">]</span><span class="op">,</span></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="pp">#sec-attention-training</span> mjx-container<span class="ex">[</span><span class="ss">display</span><span class="op">=</span><span class="st">"true"</span><span class="ex">]</span><span class="op">,</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="pp">#sec-attention-limits</span> mjx-container<span class="ex">[</span><span class="ss">display</span><span class="op">=</span><span class="st">"true"</span><span class="ex">]</span> {</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>  <span class="kw">max-width</span><span class="ch">:</span> <span class="dv">100</span><span class="dt">%</span><span class="op">;</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>  <span class="kw">overflow-x</span><span class="ch">:</span> <span class="bu">auto</span><span class="op">;</span></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  <span class="kw">overflow-y</span><span class="ch">:</span> <span class="dv">hidden</span><span class="op">;</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>&lt;/style&gt;</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a><span class="fu">## Attention as similarity-based soft lookup {#sec-attention-lookup}</span></span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>In L7 we used a query to combine information from a supplied table of keys and values. Comparing the query with each key gives scores, which we convert into non-negative weights summing to one. We then take the weighted average of the associated values. This is a *soft* lookup: we combine entries using continuous weights rather than select a single entry.</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a><span class="fu">### One query and a supplied table {#sec-supplied-query}</span></span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a>To understand how this combination works, we first consider a single query and a supplied table of keys and values. Here the numbers are chosen for simplicity and convenience but are otherwise arbitrary.</span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>Suppose our query is $q=(1,0)^T$, and our table contains two entries:</span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a>| Entry | Key | Value |</span>
+<span id="cb7-29"><a href="#cb7-29" aria-hidden="true" tabindex="-1"></a>|---|---|---|</span>
+<span id="cb7-30"><a href="#cb7-30" aria-hidden="true" tabindex="-1"></a>| 1 | $k_1=(1,0)^T$ | $v_1=(2,0)^T$ |</span>
+<span id="cb7-31"><a href="#cb7-31" aria-hidden="true" tabindex="-1"></a>| 2 | $k_2=(-1,0)^T$ | $v_2=(0,4)^T$ |</span>
+<span id="cb7-32"><a href="#cb7-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-33"><a href="#cb7-33" aria-hidden="true" tabindex="-1"></a>The keys and the query have the same number of components so that we can take their dot products.</span>
+<span id="cb7-34"><a href="#cb7-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-35"><a href="#cb7-35" aria-hidden="true" tabindex="-1"></a>First, we calculate a **comparison score** for each key:</span>
+<span id="cb7-36"><a href="#cb7-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-37"><a href="#cb7-37" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-38"><a href="#cb7-38" aria-hidden="true" tabindex="-1"></a>s_j=q^T k_j.</span>
+<span id="cb7-39"><a href="#cb7-39" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-40"><a href="#cb7-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-41"><a href="#cb7-41" aria-hidden="true" tabindex="-1"></a>For these vectors, $s_1=1$ and $s_2=-1$. A dot product depends on both the lengths of the vectors and how they are aligned. Here the two keys have equal length, and the query points in the same direction as the first key and the opposite direction to the second.</span>
+<span id="cb7-42"><a href="#cb7-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-43"><a href="#cb7-43" aria-hidden="true" tabindex="-1"></a>We want larger scores to give larger weights, with non-negative weights that sum to one. A standard way to do this is the **softmax** operation:</span>
+<span id="cb7-44"><a href="#cb7-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-45"><a href="#cb7-45" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-46"><a href="#cb7-46" aria-hidden="true" tabindex="-1"></a>a_j=\frac{\exp(s_j)}{\sum_\ell\exp(s_\ell)}.</span>
+<span id="cb7-47"><a href="#cb7-47" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-48"><a href="#cb7-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-49"><a href="#cb7-49" aria-hidden="true" tabindex="-1"></a>Exponentiating gives positive numbers, and dividing by their sum makes the weights sum to one. In this example,</span>
+<span id="cb7-50"><a href="#cb7-50" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-51"><a href="#cb7-51" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-52"><a href="#cb7-52" aria-hidden="true" tabindex="-1"></a>a_1=\frac{e^1}{e^1+e^{-1}}\approx0.881,</span>
+<span id="cb7-53"><a href="#cb7-53" aria-hidden="true" tabindex="-1"></a>\qquad</span>
+<span id="cb7-54"><a href="#cb7-54" aria-hidden="true" tabindex="-1"></a>a_2=\frac{e^{-1}}{e^1+e^{-1}}\approx0.119.</span>
+<span id="cb7-55"><a href="#cb7-55" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-56"><a href="#cb7-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-57"><a href="#cb7-57" aria-hidden="true" tabindex="-1"></a>Finally, we form the weighted average of the **values**. This query-dependent combination is often called a **context vector**, which we denote by $z$:</span>
+<span id="cb7-58"><a href="#cb7-58" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-59"><a href="#cb7-59" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-60"><a href="#cb7-60" aria-hidden="true" tabindex="-1"></a>z=a_1v_1+a_2v_2</span>
+<span id="cb7-61"><a href="#cb7-61" aria-hidden="true" tabindex="-1"></a>\approx0.881\begin{pmatrix}2<span class="sc">\\</span>0\end{pmatrix}</span>
+<span id="cb7-62"><a href="#cb7-62" aria-hidden="true" tabindex="-1"></a>+0.119\begin{pmatrix}0<span class="sc">\\</span>4\end{pmatrix}</span>
+<span id="cb7-63"><a href="#cb7-63" aria-hidden="true" tabindex="-1"></a>\approx\begin{pmatrix}1.762<span class="sc">\\</span>0.477\end{pmatrix}.</span>
+<span id="cb7-64"><a href="#cb7-64" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-65"><a href="#cb7-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-66"><a href="#cb7-66" aria-hidden="true" tabindex="-1"></a><span class="al">![The supplied-query calculation.](attachments/language/one-query-lookup.png)</span></span>
+<span id="cb7-67"><a href="#cb7-67" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-68"><a href="#cb7-68" aria-hidden="true" tabindex="-1"></a>In a language model, the query and the table of keys and values are built from the text.</span>
+<span id="cb7-69"><a href="#cb7-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-70"><a href="#cb7-70" aria-hidden="true" tabindex="-1"></a><span class="fu">### The calculation in code {#sec-lookup-code}</span></span>
+<span id="cb7-71"><a href="#cb7-71" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-72"><a href="#cb7-72" aria-hidden="true" tabindex="-1"></a>We can carry out the same calculation using PyTorch tensors. Each row of <span class="in">`keys`</span> is a key vector, and the matching row of <span class="in">`values`</span> contains its associated value:</span>
+<span id="cb7-73"><a href="#cb7-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-74"><a href="#cb7-74" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb7-75"><a href="#cb7-75" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb7-76"><a href="#cb7-76" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-77"><a href="#cb7-77" aria-hidden="true" tabindex="-1"></a>query <span class="op">=</span> torch.tensor([<span class="fl">1.0</span>, <span class="fl">0.0</span>])</span>
+<span id="cb7-78"><a href="#cb7-78" aria-hidden="true" tabindex="-1"></a>keys <span class="op">=</span> torch.tensor([[<span class="fl">1.0</span>, <span class="fl">0.0</span>], [<span class="op">-</span><span class="fl">1.0</span>, <span class="fl">0.0</span>]])</span>
+<span id="cb7-79"><a href="#cb7-79" aria-hidden="true" tabindex="-1"></a>values <span class="op">=</span> torch.tensor([[<span class="fl">2.0</span>, <span class="fl">0.0</span>], [<span class="fl">0.0</span>, <span class="fl">4.0</span>]])</span>
+<span id="cb7-80"><a href="#cb7-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-81"><a href="#cb7-81" aria-hidden="true" tabindex="-1"></a><span class="co"># One dot product for each key.</span></span>
+<span id="cb7-82"><a href="#cb7-82" aria-hidden="true" tabindex="-1"></a>scores <span class="op">=</span> keys <span class="op">@</span> query</span>
+<span id="cb7-83"><a href="#cb7-83" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-84"><a href="#cb7-84" aria-hidden="true" tabindex="-1"></a><span class="co"># Softmax: exponentiate, then divide by the sum.</span></span>
+<span id="cb7-85"><a href="#cb7-85" aria-hidden="true" tabindex="-1"></a>weights <span class="op">=</span> torch.exp(scores)</span>
+<span id="cb7-86"><a href="#cb7-86" aria-hidden="true" tabindex="-1"></a>weights <span class="op">=</span> weights <span class="op">/</span> weights.<span class="bu">sum</span>()</span>
+<span id="cb7-87"><a href="#cb7-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-88"><a href="#cb7-88" aria-hidden="true" tabindex="-1"></a><span class="co"># Show the contribution from each value explicitly.</span></span>
+<span id="cb7-89"><a href="#cb7-89" aria-hidden="true" tabindex="-1"></a>z <span class="op">=</span> weights[<span class="dv">0</span>] <span class="op">*</span> values[<span class="dv">0</span>] <span class="op">+</span> weights[<span class="dv">1</span>] <span class="op">*</span> values[<span class="dv">1</span>]</span>
+<span id="cb7-90"><a href="#cb7-90" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-91"><a href="#cb7-91" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(scores)</span>
+<span id="cb7-92"><a href="#cb7-92" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(weights)</span>
+<span id="cb7-93"><a href="#cb7-93" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(z)</span>
+<span id="cb7-94"><a href="#cb7-94" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-95"><a href="#cb7-95" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-96"><a href="#cb7-96" aria-hidden="true" tabindex="-1"></a>This gives</span>
+<span id="cb7-97"><a href="#cb7-97" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-98"><a href="#cb7-98" aria-hidden="true" tabindex="-1"></a><span class="in">```text</span></span>
+<span id="cb7-99"><a href="#cb7-99" aria-hidden="true" tabindex="-1"></a><span class="in">tensor([ 1., -1.])</span></span>
+<span id="cb7-100"><a href="#cb7-100" aria-hidden="true" tabindex="-1"></a><span class="in">tensor([0.8808, 0.1192])</span></span>
+<span id="cb7-101"><a href="#cb7-101" aria-hidden="true" tabindex="-1"></a><span class="in">tensor([1.7616, 0.4768])</span></span>
+<span id="cb7-102"><a href="#cb7-102" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-103"><a href="#cb7-103" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-104"><a href="#cb7-104" aria-hidden="true" tabindex="-1"></a>The matrix–vector product <span class="in">`keys @ query`</span> calculates the dot product of each key row with the query. Once we have checked the individual contributions, we can also write the last calculation as <span class="in">`z = weights @ values`</span>.</span>
+<span id="cb7-105"><a href="#cb7-105" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-106"><a href="#cb7-106" aria-hidden="true" tabindex="-1"></a>If we change the query to $(0,0)^T$, both scores become zero. The weights are then $1/2$ and $1/2$, giving the ordinary average $z=(1,2)^T$. If we instead use $q=(-1,0)^T$, the weights reverse and the second value makes the larger contribution: we get a different context vector depending on the query, even for fixed keys and values.</span>
+<span id="cb7-107"><a href="#cb7-107" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-108"><a href="#cb7-108" aria-hidden="true" tabindex="-1"></a>We can also change a value without changing its key. For example, replacing $v_1$ by $(3,2)^T$ leaves the scores and weights unchanged for our original query, but changes the resulting $z$. Changing a value changes what that entry contributes without changing how strongly it is selected.</span>
+<span id="cb7-109"><a href="#cb7-109" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-110"><a href="#cb7-110" aria-hidden="true" tabindex="-1"></a><span class="fu">### Connection to nearest neighbours and smoothing {#sec-lookup-smoothing}</span></span>
+<span id="cb7-111"><a href="#cb7-111" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-112"><a href="#cb7-112" aria-hidden="true" tabindex="-1"></a>This has the same basic structure as our original nearest-neighbour example: compare a new input with the stored inputs, then combine the associated outputs. Rather than taking one or two nearest entries, we have given each entry a weight determined by its comparison with the query.</span>
+<span id="cb7-113"><a href="#cb7-113" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-114"><a href="#cb7-114" aria-hidden="true" tabindex="-1"></a>In **kernel smoothing**, a non-negative function measures how strongly a stored input should contribute at a query location. We normalise these weights and combine the corresponding values. Our calculation has this form, using $\exp(q^T k_j)$ as the weighting function. The word *smoothing* describes the weighted-average calculation here; the entries need not be nearby times or neighbouring words.</span>
+<span id="cb7-115"><a href="#cb7-115" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-116"><a href="#cb7-116" aria-hidden="true" tabindex="-1"></a>The dot product is also what remains of a Gaussian kernel. A kernel smoother weights entry $j$ by $\exp(-\tfrac12\|q-k_j\|^2)$, and expanding the square gives</span>
+<span id="cb7-117"><a href="#cb7-117" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-118"><a href="#cb7-118" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-119"><a href="#cb7-119" aria-hidden="true" tabindex="-1"></a>-\tfrac12\|q-k_j\|^2=q^Tk_j-\tfrac12\|k_j\|^2-\tfrac12\|q\|^2.</span>
+<span id="cb7-120"><a href="#cb7-120" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-121"><a href="#cb7-121" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-122"><a href="#cb7-122" aria-hidden="true" tabindex="-1"></a>The last term is the same for every entry, so it cancels when the weights are normalised, and if the keys all have about the same length the middle term is nearly constant too. What is left is the dot product (Zhang et al. 2023, Section 11.3.1).</span>
+<span id="cb7-123"><a href="#cb7-123" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-124"><a href="#cb7-124" aria-hidden="true" tabindex="-1"></a>In nearest-neighbour regression, the values were observed outputs and their weighted average was our prediction. Here, we multiply each input token's embedding by a matrix, introduced in the next section, to form its value vector. We take a weighted average of these value vectors to form the context vector. A further calculation produces scores for possible next tokens, which softmax converts into probabilities.</span>
+<span id="cb7-125"><a href="#cb7-125" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-126"><a href="#cb7-126" aria-hidden="true" tabindex="-1"></a>In early <span class="co">[</span><span class="ot">neural translation models</span><span class="co">](https://arxiv.org/abs/1409.0473)</span>, recurrent networks summarised the input sentence in one vector, as we discussed earlier. Adding attention let the model keep a vector for each input word and form a different weighted average for each word of the translation.</span>
+<span id="cb7-127"><a href="#cb7-127" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-128"><a href="#cb7-128" aria-hidden="true" tabindex="-1"></a><span class="fu">## Building the table of keys and values from the text {#sec-attention-prediction}</span></span>
+<span id="cb7-129"><a href="#cb7-129" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-130"><a href="#cb7-130" aria-hidden="true" tabindex="-1"></a>The task throughout this chapter is colour recall on short texts written for the lab. Each states a team colour, <span class="in">`The team colour is C.`</span> with <span class="in">`C`</span> one of <span class="in">`red`</span>, <span class="in">`blue`</span> and <span class="in">`black`</span>; may add <span class="in">`The game is starting.`</span> or <span class="in">`The players are on court.`</span> or both; and ends <span class="in">`So the players wear`</span>. The next token, the target, is the stated colour. The tokens are the words and punctuation marks of these texts, seventeen in all, which keeps the model small enough to inspect, and the answer is always in the text, so one attention layer can do the task.</span>
+<span id="cb7-131"><a href="#cb7-131" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-132"><a href="#cb7-132" aria-hidden="true" tabindex="-1"></a>We return to the colour-recall problem, with the prefix</span>
+<span id="cb7-133"><a href="#cb7-133" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-134"><a href="#cb7-134" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; The team colour is red. So the players wear</span></span>
+<span id="cb7-135"><a href="#cb7-135" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-136"><a href="#cb7-136" aria-hidden="true" tabindex="-1"></a>and the next-token target <span class="in">`red`</span>. We describe a text, and the prefix in particular (the tokens before the prediction target), by **positions** in the sequence: a position is a numbered place holding one token, and the same token can occur at several positions. Positions are counted within the sequence at hand: position 10 means the tenth token of this prefix, and in a longer prefix <span class="in">`wear`</span> sits at a later position. Each position comes with its token and, computed from the token's embedding and from nothing else, a query, a key and a value; nothing in this model, so far, records where in the sequence a token is. Treating words and punctuation as tokens, the prefix has ten positions:</span>
+<span id="cb7-137"><a href="#cb7-137" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-138"><a href="#cb7-138" aria-hidden="true" tabindex="-1"></a><span class="in">```text</span></span>
+<span id="cb7-139"><a href="#cb7-139" aria-hidden="true" tabindex="-1"></a><span class="in">The | team | colour | is | red | . | So | the | players | wear</span></span>
+<span id="cb7-140"><a href="#cb7-140" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-141"><a href="#cb7-141" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-142"><a href="#cb7-142" aria-hidden="true" tabindex="-1"></a>For the prediction at the last position of the prefix, position 10, which holds <span class="in">`wear`</span>, we want to form a context vector using the positions available to it: itself and the earlier ones. Position 10 supplies the query, and each available position, including position 10, supplies a key for the comparison and a value to contribute to the prediction. Comparing the query with the keys determines the weights for combining the values. The lookup calculation is the same as before, but we now calculate its query and table from the text.</span>
+<span id="cb7-143"><a href="#cb7-143" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-144"><a href="#cb7-144" aria-hidden="true" tabindex="-1"></a><span class="fu">### Computing queries, keys and values {#sec-attention-parameters}</span></span>
+<span id="cb7-145"><a href="#cb7-145" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-146"><a href="#cb7-146" aria-hidden="true" tabindex="-1"></a>The key at a position is what the query is compared with, and the value is what that position contributes to the context vector, scaled by its attention weight, which is set by how similar its key is to the query. We calculate keys and values from the embedding rows using weight matrices $W_K$ and $W_V$, and the query from the current position's embedding using a third matrix, $W_Q$. We use the same three matrices at every position, so the keys, values and queries are all produced by the same operations applied to the different token embeddings at each position. Their entries are model parameters: numbers adjusted during training. One set of $W_Q$, $W_K$ and $W_V$ is called an **attention head**.</span>
+<span id="cb7-147"><a href="#cb7-147" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-148"><a href="#cb7-148" aria-hidden="true" tabindex="-1"></a>Stack the embedding rows of one sequence, one per position, into a matrix $X$: ten rows for the ten-token prefix. Each training prefix gives its own $X$, and later in the chapter one recorded sentence gives one $X$ with a prediction at every position. Because the inputs are rows, we multiply by the weight matrices on the right:</span>
+<span id="cb7-149"><a href="#cb7-149" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-150"><a href="#cb7-150" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-151"><a href="#cb7-151" aria-hidden="true" tabindex="-1"></a>Q=XW_Q,\qquad K=XW_K,\qquad V=XW_V.</span>
+<span id="cb7-152"><a href="#cb7-152" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-153"><a href="#cb7-153" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-154"><a href="#cb7-154" aria-hidden="true" tabindex="-1"></a>The corresponding rows of $Q$, $K$ and $V$ are that position's query, key and value. If the embeddings have $d$ components, the queries and keys $d_k$ components and the values $d_v$, then $W_Q$ and $W_K$ have shape $d\times d_k$ and $W_V$ has shape $d\times d_v$.</span>
+<span id="cb7-155"><a href="#cb7-155" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-156"><a href="#cb7-156" aria-hidden="true" tabindex="-1"></a>The model from Lab 4 starts with random numbers in the embedding table and the three matrices: eight-component embeddings, four-component queries and keys, and eight-component values. An output layer then maps the context vector to a score for each of the seventeen tokens in its vocabulary, and softmax turns the scores into probabilities; Lab 4 shows this layer in full. Its attention weights at position 10 are close to $0.1$ at every position, and the probability it gives <span class="in">`red`</span> is about $0.058$, close to $1/17$. At this stage the output layer gets nothing useful from the context vector that would help predict <span class="in">`red`</span> over the other tokens.</span>
+<span id="cb7-157"><a href="#cb7-157" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-158"><a href="#cb7-158" aria-hidden="true" tabindex="-1"></a><span class="fu">### The training objective {#sec-attention-learning-goal}</span></span>
+<span id="cb7-159"><a href="#cb7-159" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-160"><a href="#cb7-160" aria-hidden="true" tabindex="-1"></a>For this task, a useful table has to do two things. The key at the position holding the stated colour should match the query from <span class="in">`wear`</span>, whichever colour is stated, so that this position receives most of the weight. The value at that position should carry which colour was stated.</span>
+<span id="cb7-161"><a href="#cb7-161" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-162"><a href="#cb7-162" aria-hidden="true" tabindex="-1"></a>Training is not given these two requirements. Each training example supplies a prefix and its next token, and the only measure of the model is the <span class="co">[</span><span class="ot">negative log-likelihood loss</span><span class="co">](training.qmd#training-loss)</span> from our digit classifier: the negative log of the probability the model gives to the target,</span>
+<span id="cb7-163"><a href="#cb7-163" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-164"><a href="#cb7-164" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-165"><a href="#cb7-165" aria-hidden="true" tabindex="-1"></a>L=-\log p_{\text{target}},</span>
+<span id="cb7-166"><a href="#cb7-166" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-167"><a href="#cb7-167" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-168"><a href="#cb7-168" aria-hidden="true" tabindex="-1"></a>averaged over the examples. No target attention pattern is supplied. The loss falls when the model gives the stated colour a higher probability, and the keys, values and attention weights change through updates that lower it.</span>
+<span id="cb7-169"><a href="#cb7-169" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-170"><a href="#cb7-170" aria-hidden="true" tabindex="-1"></a><span class="fu">### Training the model {#sec-attention-training-loop}</span></span>
+<span id="cb7-171"><a href="#cb7-171" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-172"><a href="#cb7-172" aria-hidden="true" tabindex="-1"></a>Suppose <span class="in">`model`</span> is Lab 4's PyTorch attention model and <span class="in">`training_examples`</span> contains pairs of input-token ID tensors and one-element target ID tensors. The model returns an output-score vector and an attention-weight matrix. Here <span class="in">`F`</span> denotes <span class="in">`torch.nn.functional`</span>. The training loop is the one from our digit classifier in 205:</span>
+<span id="cb7-173"><a href="#cb7-173" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-174"><a href="#cb7-174" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb7-175"><a href="#cb7-175" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb7-176"><a href="#cb7-176" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch.nn.functional <span class="im">as</span> F</span>
+<span id="cb7-177"><a href="#cb7-177" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-178"><a href="#cb7-178" aria-hidden="true" tabindex="-1"></a>optimiser <span class="op">=</span> torch.optim.Adam(model.parameters(), lr<span class="op">=</span><span class="fl">0.03</span>)</span>
+<span id="cb7-179"><a href="#cb7-179" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-180"><a href="#cb7-180" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> update <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">200</span>):</span>
+<span id="cb7-181"><a href="#cb7-181" aria-hidden="true" tabindex="-1"></a>    optimiser.zero_grad()</span>
+<span id="cb7-182"><a href="#cb7-182" aria-hidden="true" tabindex="-1"></a>    example_losses <span class="op">=</span> []</span>
+<span id="cb7-183"><a href="#cb7-183" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-184"><a href="#cb7-184" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> token_ids, target <span class="kw">in</span> training_examples:</span>
+<span id="cb7-185"><a href="#cb7-185" aria-hidden="true" tabindex="-1"></a>        logits, weights <span class="op">=</span> model(token_ids)</span>
+<span id="cb7-186"><a href="#cb7-186" aria-hidden="true" tabindex="-1"></a>        example_loss <span class="op">=</span> F.cross_entropy(logits[<span class="va">None</span>, :], target)</span>
+<span id="cb7-187"><a href="#cb7-187" aria-hidden="true" tabindex="-1"></a>        example_losses.append(example_loss)</span>
+<span id="cb7-188"><a href="#cb7-188" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-189"><a href="#cb7-189" aria-hidden="true" tabindex="-1"></a>    loss <span class="op">=</span> torch.stack(example_losses).mean()</span>
+<span id="cb7-190"><a href="#cb7-190" aria-hidden="true" tabindex="-1"></a>    loss.backward()</span>
+<span id="cb7-191"><a href="#cb7-191" aria-hidden="true" tabindex="-1"></a>    optimiser.step()</span>
+<span id="cb7-192"><a href="#cb7-192" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-193"><a href="#cb7-193" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-194"><a href="#cb7-194" aria-hidden="true" tabindex="-1"></a><span class="in">`logits[None, :]`</span> supplies the batch dimension expected by the loss function: one example with seventeen output scores. <span class="in">`F.cross_entropy`</span> calculates the log-softmax and selects the target's negative log probability, which is the loss above. The loop averages the losses over the training examples before each update. <span class="in">`zero_grad()`</span> clears previously accumulated gradients; <span class="in">`backward()`</span> calculates the new gradients; and <span class="in">`step()`</span> changes the model weights. Adam (adaptive moment estimation) is the method used here to turn gradients into updates. It is slightly more sophisticated than plain gradient descent: it sets a step size for each parameter from the gradients it has seen, and the learning rate <span class="in">`lr`</span> sets the overall scale.</span>
+<span id="cb7-195"><a href="#cb7-195" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-196"><a href="#cb7-196" aria-hidden="true" tabindex="-1"></a>The training examples are nine prefixes: each of the three colours, with no inserted sentence, with <span class="in">`The game is starting.`</span> inserted, or with <span class="in">`The players are on court.`</span> inserted before <span class="in">`So the players wear`</span>. We keep aside three prefixes, with both sentences inserted, and their next tokens for validation; they are not used for the updates. In every prefix the colour is at position 5; <span class="in">`wear`</span> is at position 10, 15 or 16 in the training prefixes and at 21 in the validation prefixes, so the validation prefixes test the learned rule at a length, and a distance from the colour, that training never contained. Running the loop for 200 updates from its random starting values gives the following, where the first two columns describe the attention row at position 10 for the first training prefix, <span class="in">`The team colour is red. So the players wear`</span>:</span>
+<span id="cb7-197"><a href="#cb7-197" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-198"><a href="#cb7-198" aria-hidden="true" tabindex="-1"></a>| Update | Weight on position 5 | Largest other weight | $p_{\texttt{red}}$ | Predicted token | Training loss | Validation loss | Validation correct |</span>
+<span id="cb7-199"><a href="#cb7-199" aria-hidden="true" tabindex="-1"></a>|---:|---:|---:|---:|---|---:|---:|---:|</span>
+<span id="cb7-200"><a href="#cb7-200" aria-hidden="true" tabindex="-1"></a>| 0 | $0.099$ | $0.103$ | $0.058$ | <span class="in">`.`</span> | $2.837$ | $2.836$ | 0 of 3 |</span>
+<span id="cb7-201"><a href="#cb7-201" aria-hidden="true" tabindex="-1"></a>| 10 | $0.079$ | $0.160$ | $0.279$ | <span class="in">`blue`</span> | $1.215$ | $1.214$ | 1 of 3 |</span>
+<span id="cb7-202"><a href="#cb7-202" aria-hidden="true" tabindex="-1"></a>| 30 | $0.717$ | $0.085$ | $0.580$ | <span class="in">`red`</span> | $0.607$ | $0.641$ | 3 of 3 |</span>
+<span id="cb7-203"><a href="#cb7-203" aria-hidden="true" tabindex="-1"></a>| 50 | $1.000$ | $0.000$ | $1.000$ | <span class="in">`red`</span> | $0.000$ | $0.000$ | 3 of 3 |</span>
+<span id="cb7-204"><a href="#cb7-204" aria-hidden="true" tabindex="-1"></a>| 200 | $1.000$ | $0.000$ | $1.000$ | <span class="in">`red`</span> | $0.000$ | $0.000$ | 3 of 3 |</span>
+<span id="cb7-205"><a href="#cb7-205" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-206"><a href="#cb7-206" aria-hidden="true" tabindex="-1"></a><span class="al">![Training Lab 4's model with the loop above: the loss on the training and validation prefixes, and the attention weights at position 10 before and after training.](attachments/language/attention-training-run.png)</span></span>
+<span id="cb7-207"><a href="#cb7-207" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-208"><a href="#cb7-208" aria-hidden="true" tabindex="-1"></a>Before training, position 10 gives every position nearly the same weight and the three colours nearly the same probability. Around update 10 the weight moves onto other positions, and the model predicts <span class="in">`blue`</span> for our prefix. By update 30 most of the weight is on position 5, and by update 50 all of it is, to three decimals. The trained model uses the colour position and nothing else: for the <span class="in">`black`</span> prefix, the trained row also puts all of its weight on position 5 and gives <span class="in">`black`</span> probability $1.000$. On the three validation prefixes it predicted <span class="in">`the`</span> before training and the correct colour after. The validation loss follows the training loss throughout, and the validation prefixes put the colour 16 positions before <span class="in">`wear`</span>, a distance training never contained. The same key at the colour position matches the <span class="in">`wear`</span> query at any distance, because keys and queries are computed from the token alone; that is why the rule carries over to the longer prefixes, and also why this model cannot use where a token is.</span>
+<span id="cb7-209"><a href="#cb7-209" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-210"><a href="#cb7-210" aria-hidden="true" tabindex="-1"></a>Its matrices are not readable directly: $W_K$ is $8\times4$ with entries between about $-1.5$ and $1.2$, and the others are similar. What they do at each position can still be read off, as the next section shows.</span>
+<span id="cb7-211"><a href="#cb7-211" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-212"><a href="#cb7-212" aria-hidden="true" tabindex="-1"></a><span class="al">![The trained model's matrices after 200 updates, as heatmaps. They are not readable directly; what they do at each position is.](attachments/language/attention-learned-matrices.png)</span></span>
+<span id="cb7-213"><a href="#cb7-213" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-214"><a href="#cb7-214" aria-hidden="true" tabindex="-1"></a><span class="fu">## What the learned weights do {#sec-learned-weights}</span></span>
+<span id="cb7-215"><a href="#cb7-215" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-216"><a href="#cb7-216" aria-hidden="true" tabindex="-1"></a>The matrices are not readable entry by entry, but what they do at each position is. For the <span class="in">`red`</span> prefix after 200 updates, the query at position 10 gives the colour position score $39.9$ and every other position a score near $-12$, so the colour position's weight is $1.000$ and every other weight is $0.000$. The value at position 5, multiplied by its weight of $1.000$ and then by the output matrix, adds $24.3$ to the <span class="in">`red`</span> score, $7.7$ to <span class="in">`black`</span> and $5.2$ to <span class="in">`blue`</span>. For the <span class="in">`black`</span> prefix the same position scores $45.5$, and its value adds $11.9$ to <span class="in">`black`</span> while taking $4.2$ from <span class="in">`red`</span> and $3.1$ from <span class="in">`blue`</span>.</span>
+<span id="cb7-217"><a href="#cb7-217" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-218"><a href="#cb7-218" aria-hidden="true" tabindex="-1"></a>For the two prefixes, the row at <span class="in">`wear`</span> after 200 updates:</span>
+<span id="cb7-219"><a href="#cb7-219" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-220"><a href="#cb7-220" aria-hidden="true" tabindex="-1"></a>| Prefix | Position $j$ | Score of the <span class="in">`wear`</span> query against the key at $j$ ($q_{10}\cdot k_j/2$) | Attention weight on $j$ | What the value at $j$ adds to the colour scores (weight $\times$ value $\times W_{\text{out}}$) |</span>
+<span id="cb7-221"><a href="#cb7-221" aria-hidden="true" tabindex="-1"></a>|---|---|---:|---:|---|</span>
+<span id="cb7-222"><a href="#cb7-222" aria-hidden="true" tabindex="-1"></a>| <span class="in">`The team colour is red. So the players wear`</span> | 5, <span class="in">`red`</span> | $39.9$ | $1.000$ | red $+24.3$, black $+7.7$, blue $+5.2$ |</span>
+<span id="cb7-223"><a href="#cb7-223" aria-hidden="true" tabindex="-1"></a>| <span class="in">`The team colour is black. So the players wear`</span> | 5, <span class="in">`black`</span> | $45.5$ | $1.000$ | black $+11.9$, red $-4.2$, blue $-3.1$ |</span>
+<span id="cb7-224"><a href="#cb7-224" aria-hidden="true" tabindex="-1"></a>| either | every other position | about $-12$ | $0.000$ | nothing |</span>
+<span id="cb7-225"><a href="#cb7-225" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-226"><a href="#cb7-226" aria-hidden="true" tabindex="-1"></a>Only the key at the stated colour matches the <span class="in">`wear`</span> query, and that position's value raises the stated colour's score most.</span>
+<span id="cb7-227"><a href="#cb7-227" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-228"><a href="#cb7-228" aria-hidden="true" tabindex="-1"></a><span class="fu">## Attention at every position {#sec-attention-sequence}</span></span>
+<span id="cb7-229"><a href="#cb7-229" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-230"><a href="#cb7-230" aria-hidden="true" tabindex="-1"></a>Training text supplies many next-token targets: after <span class="in">`The`</span> comes <span class="in">`team`</span>, after <span class="in">`The team`</span> comes <span class="in">`colour`</span>, and after the prefix ending in <span class="in">`wear`</span> comes <span class="in">`red`</span>. We therefore want a context vector at each position so that we can calculate these predictions in one go.</span>
+<span id="cb7-231"><a href="#cb7-231" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-232"><a href="#cb7-232" aria-hidden="true" tabindex="-1"></a>Each position supplies its own query and receives its own weighted combination. When the queries, keys and values come from the same sequence, we call the operation **self-attention**. This is the general form of the operation: every position receives a context vector that combines information from the positions it can see, an updated representation of its token in its context. Predicting the next token from the last row is one use of it; the next chapter stacks layers so that later queries are computed from these updated rows. Lab 4 computes all ten rows and plots the weights before and after masking. We have already constructed the query, key and value rows; matrix multiplication lets us calculate their comparisons and combinations together.</span>
+<span id="cb7-233"><a href="#cb7-233" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-234"><a href="#cb7-234" aria-hidden="true" tabindex="-1"></a><span class="fu">### All comparison scores and context rows {#sec-attention-matrix-scores}</span></span>
+<span id="cb7-235"><a href="#cb7-235" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-236"><a href="#cb7-236" aria-hidden="true" tabindex="-1"></a>Let $T$ be the number of input positions and $d_k$ the number of components in each query and key. The comparison-score matrix used in transformer attention is</span>
+<span id="cb7-237"><a href="#cb7-237" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-238"><a href="#cb7-238" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-239"><a href="#cb7-239" aria-hidden="true" tabindex="-1"></a>S=\frac{QK^T}{\sqrt{d_k}}.</span>
+<span id="cb7-240"><a href="#cb7-240" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-241"><a href="#cb7-241" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-242"><a href="#cb7-242" aria-hidden="true" tabindex="-1"></a>The entry $S_{ij}$ compares the query at position $i$ with the key at position $j$: **rows are queries and columns are keys**. The scaling keeps the size of the scores from growing with the width: if the components of a query and a key are independent with zero mean and unit variance, their dot product has variance $d_k$, and dividing by $\sqrt{d_k}$ brings it back to $1$ (Vaswani et al. 2017; Zhang et al. 2023, Section 11.3.1). In Lab 4's model, with four-component queries and keys, the scores are divided by $2$.</span>
+<span id="cb7-243"><a href="#cb7-243" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-244"><a href="#cb7-244" aria-hidden="true" tabindex="-1"></a>Apply softmax separately to each row of $S$ to form the attention-weight matrix $A$. Each row contains non-negative weights summing to one. Matrix multiplication then gives all the context vectors:</span>
+<span id="cb7-245"><a href="#cb7-245" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-246"><a href="#cb7-246" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-247"><a href="#cb7-247" aria-hidden="true" tabindex="-1"></a>Z=AV,\qquad z_i=\sum_{j=1}^{T}A_{ij}v_j.</span>
+<span id="cb7-248"><a href="#cb7-248" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-249"><a href="#cb7-249" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-250"><a href="#cb7-250" aria-hidden="true" tabindex="-1"></a>For the ten-token prefix, row 10 of $Z$ is the context vector at <span class="in">`wear`</span> that the training run scored. As written, every row uses every column, which the next section restricts.</span>
+<span id="cb7-251"><a href="#cb7-251" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-252"><a href="#cb7-252" aria-hidden="true" tabindex="-1"></a>The five shapes in Lab 4's model, with $T$ input positions, are:</span>
+<span id="cb7-253"><a href="#cb7-253" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-254"><a href="#cb7-254" aria-hidden="true" tabindex="-1"></a>| Matrix | Meaning | Shape |</span>
+<span id="cb7-255"><a href="#cb7-255" aria-hidden="true" tabindex="-1"></a>|---|---|---|</span>
+<span id="cb7-256"><a href="#cb7-256" aria-hidden="true" tabindex="-1"></a>| $X$ | Embedding rows | $T\times8$ |</span>
+<span id="cb7-257"><a href="#cb7-257" aria-hidden="true" tabindex="-1"></a>| $Q$, $K$ | Query and key rows | $T\times4$ |</span>
+<span id="cb7-258"><a href="#cb7-258" aria-hidden="true" tabindex="-1"></a>| $V$ | Value rows | $T\times8$ |</span>
+<span id="cb7-259"><a href="#cb7-259" aria-hidden="true" tabindex="-1"></a>| $S$, $A$ | Scores and attention weights | $T\times T$ |</span>
+<span id="cb7-260"><a href="#cb7-260" aria-hidden="true" tabindex="-1"></a>| $Z$ | Context rows | $T\times8$ |</span>
+<span id="cb7-261"><a href="#cb7-261" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-262"><a href="#cb7-262" aria-hidden="true" tabindex="-1"></a>A language model uses a full-vocabulary output head to turn each context row into probabilities for the following token; Lab 4's head has seventeen columns, one per vocabulary token.</span>
+<span id="cb7-263"><a href="#cb7-263" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-264"><a href="#cb7-264" aria-hidden="true" tabindex="-1"></a><span class="fu">## Causality {#sec-causal-attention}</span></span>
+<span id="cb7-265"><a href="#cb7-265" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-266"><a href="#cb7-266" aria-hidden="true" tabindex="-1"></a>When predicting the next token after position $i$, the model can use tokens up to and including $i$. We need to enforce this rule when supplying a complete recorded sequence to calculate predictions at several positions.</span>
+<span id="cb7-267"><a href="#cb7-267" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-268"><a href="#cb7-268" aria-hidden="true" tabindex="-1"></a>Include the recorded next word:</span>
+<span id="cb7-269"><a href="#cb7-269" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-270"><a href="#cb7-270" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; The team colour is red. So the players wear red</span></span>
+<span id="cb7-271"><a href="#cb7-271" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-272"><a href="#cb7-272" aria-hidden="true" tabindex="-1"></a>This has eleven positions. The row at position 10, holding <span class="in">`wear`</span>, has target <span class="in">`red`</span> at position 11. Keys come from the token alone, so positions 5 and 11 both hold <span class="in">`red`</span> and get the same key; position 5 is in the prefix, and position 11 is the word the row is meant to predict.</span>
+<span id="cb7-273"><a href="#cb7-273" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-274"><a href="#cb7-274" aria-hidden="true" tabindex="-1"></a><span class="fu">### Leakage {#sec-attention-future-leakage}</span></span>
+<span id="cb7-275"><a href="#cb7-275" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-276"><a href="#cb7-276" aria-hidden="true" tabindex="-1"></a>To follow the leak with numbers, take the last three positions, <span class="in">`players wear red`</span>, and suppose the <span class="in">`wear`</span> row's scores against the three keys are $0$, $0$ and $2$. If the row can use all three, its weights are</span>
+<span id="cb7-277"><a href="#cb7-277" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-278"><a href="#cb7-278" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-279"><a href="#cb7-279" aria-hidden="true" tabindex="-1"></a>\frac{1}{2+e^2}\approx0.107\ \text{on } \texttt{players},\qquad 0.107\ \text{on } \texttt{wear},\qquad \frac{e^2}{2+e^2}\approx0.787\ \text{on } \texttt{red}.</span>
+<span id="cb7-280"><a href="#cb7-280" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-281"><a href="#cb7-281" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-282"><a href="#cb7-282" aria-hidden="true" tabindex="-1"></a>Most of the context vector is then the value at <span class="in">`red`</span>, the token the row is meant to predict, so the prediction head can read the answer and the loss can fall without any change to the parameters. These scores are ones we supplied; they do not say what training would do. Training with future tokens available can reward using the target itself in the prediction, and at prediction time that future position is absent: when we use the model to predict what follows <span class="in">`wear`</span>, only the prefix exists. In the full eleven-token row the weight could not go entirely to position 11, because positions 5 and 11 hold the same token, so they get the same key and the same weight, each at most one half; the trained model from the run above gives them $0.5$ and $0.5$. They also carry the same value, so half of each is the same context vector as all of one: for the trained model, $p_{\texttt{red}}=1.000$ with the leak as without it. Two different things coincide here. An earlier token of the same type as the target is in the prefix, and using it is the recall the model is meant to learn; the target itself is also available, and using it is the leak. Because keys and values come from the token alone, the future <span class="in">`red`</span> supplies exactly the key and value the earlier <span class="in">`red`</span> already supplied, so on this data the leak adds nothing. It would add information for a row whose target token occurs nowhere earlier, which with the leak could use the target's own value and at prediction time could not, and it would also once keys and values depend on position, which the next chapter introduces.</span>
+<span id="cb7-283"><a href="#cb7-283" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-284"><a href="#cb7-284" aria-hidden="true" tabindex="-1"></a><span class="fu">### The causal mask {#sec-attention-causal-mask}</span></span>
+<span id="cb7-285"><a href="#cb7-285" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-286"><a href="#cb7-286" aria-hidden="true" tabindex="-1"></a>Number the positions from $1$ to $T$. A **causal mask** $M$ has entry</span>
+<span id="cb7-287"><a href="#cb7-287" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-288"><a href="#cb7-288" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-289"><a href="#cb7-289" aria-hidden="true" tabindex="-1"></a>M_{ij}=\begin{cases}</span>
+<span id="cb7-290"><a href="#cb7-290" aria-hidden="true" tabindex="-1"></a>0,&amp;j\leq i,<span class="sc">\\</span></span>
+<span id="cb7-291"><a href="#cb7-291" aria-hidden="true" tabindex="-1"></a>-\infty,&amp;j&gt;i.</span>
+<span id="cb7-292"><a href="#cb7-292" aria-hidden="true" tabindex="-1"></a>\end{cases}</span>
+<span id="cb7-293"><a href="#cb7-293" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-294"><a href="#cb7-294" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-295"><a href="#cb7-295" aria-hidden="true" tabindex="-1"></a>We add it to the comparison scores **before** applying softmax:</span>
+<span id="cb7-296"><a href="#cb7-296" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-297"><a href="#cb7-297" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-298"><a href="#cb7-298" aria-hidden="true" tabindex="-1"></a>A=\operatorname{softmax}_{\mathrm{rows}}(S+M).</span>
+<span id="cb7-299"><a href="#cb7-299" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb7-300"><a href="#cb7-300" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-301"><a href="#cb7-301" aria-hidden="true" tabindex="-1"></a>Here the subscript means that we apply softmax separately to each query row. A masked score contributes $e^{-\infty}=0$, so its attention weight is zero. The remaining entries are normalised over the allowed positions. Giving a position a score of zero would instead contribute $e^0=1$ to the softmax sum and leave it available.</span>
+<span id="cb7-302"><a href="#cb7-302" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-303"><a href="#cb7-303" aria-hidden="true" tabindex="-1"></a>For the last three positions of the recorded sentence, <span class="in">`players`</span>, <span class="in">`wear`</span> and the recorded <span class="in">`red`</span>, the mask entries are:</span>
+<span id="cb7-304"><a href="#cb7-304" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-305"><a href="#cb7-305" aria-hidden="true" tabindex="-1"></a><span class="in">```text</span></span>
+<span id="cb7-306"><a href="#cb7-306" aria-hidden="true" tabindex="-1"></a><span class="in">…  players  wear  red</span></span>
+<span id="cb7-307"><a href="#cb7-307" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-308"><a href="#cb7-308" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-309"><a href="#cb7-309" aria-hidden="true" tabindex="-1"></a>| Query / key | <span class="in">`players`</span> | <span class="in">`wear`</span> | <span class="in">`red`</span> |</span>
+<span id="cb7-310"><a href="#cb7-310" aria-hidden="true" tabindex="-1"></a>|---|---:|---:|---:|</span>
+<span id="cb7-311"><a href="#cb7-311" aria-hidden="true" tabindex="-1"></a>| <span class="in">`players`</span> | $0$ | $-\infty$ | $-\infty$ |</span>
+<span id="cb7-312"><a href="#cb7-312" aria-hidden="true" tabindex="-1"></a>| <span class="in">`wear`</span> | $0$ | $0$ | $-\infty$ |</span>
+<span id="cb7-313"><a href="#cb7-313" aria-hidden="true" tabindex="-1"></a>| <span class="in">`red`</span> | $0$ | $0$ | $0$ |</span>
+<span id="cb7-314"><a href="#cb7-314" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-315"><a href="#cb7-315" aria-hidden="true" tabindex="-1"></a>The earlier eight columns are allowed for all three query rows. The diagonal is allowed because the token at the current position is already known; its output predicts the following token. The mask says which positions may contribute; the scores decide how much each permitted position matters. Our nine training prefixes enforce the rule by construction, each stopping before its target; the mask does the same for every position of a recorded sentence in one calculation, so one sentence supplies a prefix and its target at every position.</span>
+<span id="cb7-316"><a href="#cb7-316" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-317"><a href="#cb7-317" aria-hidden="true" tabindex="-1"></a>For the <span class="in">`wear`</span> row, masking <span class="in">`red`</span> removes its contribution: the scores $(0,0,2)$ become $(0,0,-\infty)$, and the weights are</span>
+<span id="cb7-318"><a href="#cb7-318" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-319"><a href="#cb7-319" aria-hidden="true" tabindex="-1"></a>| Mask | <span class="in">`players`</span> | <span class="in">`wear`</span> | <span class="in">`red`</span> |</span>
+<span id="cb7-320"><a href="#cb7-320" aria-hidden="true" tabindex="-1"></a>|---|---:|---:|---:|</span>
+<span id="cb7-321"><a href="#cb7-321" aria-hidden="true" tabindex="-1"></a>| Without | $0.107$ | $0.107$ | $0.787$ |</span>
+<span id="cb7-322"><a href="#cb7-322" aria-hidden="true" tabindex="-1"></a>| With | $0.5$ | $0.5$ | $0$ |</span>
+<span id="cb7-323"><a href="#cb7-323" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-324"><a href="#cb7-324" aria-hidden="true" tabindex="-1"></a>A full transformer also supplies position information, so that positions holding the same token can have different keys; we take this up in the next chapter.</span>
+<span id="cb7-325"><a href="#cb7-325" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-326"><a href="#cb7-326" aria-hidden="true" tabindex="-1"></a><span class="fu">### The calculation in PyTorch {#sec-attention-masked-code}</span></span>
+<span id="cb7-327"><a href="#cb7-327" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-328"><a href="#cb7-328" aria-hidden="true" tabindex="-1"></a>Suppose $Q$, $K$ and $V$ have been calculated for the input sequence. We can construct the allowed positions and calculate the context rows as follows:</span>
+<span id="cb7-329"><a href="#cb7-329" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-330"><a href="#cb7-330" aria-hidden="true" tabindex="-1"></a><span class="in">```python</span></span>
+<span id="cb7-331"><a href="#cb7-331" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> math</span>
+<span id="cb7-332"><a href="#cb7-332" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb7-333"><a href="#cb7-333" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-334"><a href="#cb7-334" aria-hidden="true" tabindex="-1"></a>T <span class="op">=</span> Q.shape[<span class="dv">0</span>]</span>
+<span id="cb7-335"><a href="#cb7-335" aria-hidden="true" tabindex="-1"></a>d_k <span class="op">=</span> Q.shape[<span class="dv">1</span>]</span>
+<span id="cb7-336"><a href="#cb7-336" aria-hidden="true" tabindex="-1"></a>scores <span class="op">=</span> Q <span class="op">@</span> K.T <span class="op">/</span> math.sqrt(d_k)</span>
+<span id="cb7-337"><a href="#cb7-337" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-338"><a href="#cb7-338" aria-hidden="true" tabindex="-1"></a><span class="co"># True on and below the diagonal: key position &lt;= query position.</span></span>
+<span id="cb7-339"><a href="#cb7-339" aria-hidden="true" tabindex="-1"></a>allowed <span class="op">=</span> torch.ones(T, T, dtype<span class="op">=</span>torch.<span class="bu">bool</span>).tril()</span>
+<span id="cb7-340"><a href="#cb7-340" aria-hidden="true" tabindex="-1"></a>scores <span class="op">=</span> scores.masked_fill(<span class="op">~</span>allowed, <span class="bu">float</span>(<span class="st">"-inf"</span>))</span>
+<span id="cb7-341"><a href="#cb7-341" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-342"><a href="#cb7-342" aria-hidden="true" tabindex="-1"></a>weights <span class="op">=</span> torch.softmax(scores, dim<span class="op">=-</span><span class="dv">1</span>)</span>
+<span id="cb7-343"><a href="#cb7-343" aria-hidden="true" tabindex="-1"></a>contexts <span class="op">=</span> weights <span class="op">@</span> V</span>
+<span id="cb7-344"><a href="#cb7-344" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-345"><a href="#cb7-345" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-346"><a href="#cb7-346" aria-hidden="true" tabindex="-1"></a><span class="in">`~allowed`</span> reverses the Boolean entries, selecting the forbidden positions for replacement. <span class="in">`dim=-1`</span> applies softmax along the key columns within each query row. Each row has at least its own position available, so there is always an allowed entry to normalise. Implementations often use a very large negative number in place of $-\infty$, which gives the same zero weight, and the same masking removes padding positions when sequences of different lengths are processed together (Zhang et al. 2023, Section 11.3.2).</span>
+<span id="cb7-347"><a href="#cb7-347" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-348"><a href="#cb7-348" aria-hidden="true" tabindex="-1"></a><span class="fu">## The labs {#sec-attention-training}</span></span>
+<span id="cb7-349"><a href="#cb7-349" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-350"><a href="#cb7-350" aria-hidden="true" tabindex="-1"></a><span class="fu">### From the training run to Lab 5 {#sec-attention-practical-bridge}</span></span>
+<span id="cb7-351"><a href="#cb7-351" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-352"><a href="#cb7-352" aria-hidden="true" tabindex="-1"></a>Lab 5 trains Lab 4's model with the loop above. It performs the same attention operations with the sizes given earlier, and an output head with seventeen token columns, including the three colour targets <span class="in">`red`</span>, <span class="in">`blue`</span> and <span class="in">`black`</span>. Its starting values are the ones used in the training run above: random embeddings and matrices, and an output bias of zero. The embedding table, query/key/value matrices, output matrix and output bias are all trainable parameters. PyTorch packages these together in the supplied model, whose <span class="in">`parameters()`</span> method provides the weights to the optimiser.</span>
+<span id="cb7-353"><a href="#cb7-353" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-354"><a href="#cb7-354" aria-hidden="true" tabindex="-1"></a><span class="fu">### The Lab 5 experiment {#sec-attention-training-evaluation}</span></span>
+<span id="cb7-355"><a href="#cb7-355" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-356"><a href="#cb7-356" aria-hidden="true" tabindex="-1"></a>Lab 5 trains the model with learning rate 0.03 for 200 updates and draws the loss, the <span class="in">`wear`</span> row and the colour probabilities across the updates. Its one change is a second run from the same starting parameters and data at one tenth of the learning rate, given 1000 updates so that it has time to finish.</span>
+<span id="cb7-357"><a href="#cb7-357" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-358"><a href="#cb7-358" aria-hidden="true" tabindex="-1"></a>Lab 5's one-layer colour-recall model scores only the final context row, whose prefix positions are all allowed, so the causal mask does not change that prediction. A full next-token language model scores predictions at each training position over the whole vocabulary.</span>
+<span id="cb7-359"><a href="#cb7-359" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-360"><a href="#cb7-360" aria-hidden="true" tabindex="-1"></a><span class="fu">## From one layer to many {#sec-attention-limits}</span></span>
+<span id="cb7-361"><a href="#cb7-361" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-362"><a href="#cb7-362" aria-hidden="true" tabindex="-1"></a>In the trained model, the query computed from the token at the current position gives weight to the positions whose keys match it, and the values at those positions are carried into the prediction. After training, that was the colour's position. That is what one attention layer does, and it is enough for recalling a stated colour.</span>
+<span id="cb7-363"><a href="#cb7-363" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-364"><a href="#cb7-364" aria-hidden="true" tabindex="-1"></a>Two small changes to the task show what it cannot do on its own. First, state two colours and ask for the more recent one. In this model the key and value at a position depend only on the token there, so swapping the two colours' positions leaves every score, weight and prediction unchanged; nothing in the calculation says which came later. Second, give the sentence two subjects:</span>
+<span id="cb7-365"><a href="#cb7-365" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-366"><a href="#cb7-366" aria-hidden="true" tabindex="-1"></a><span class="at">&gt; The teams wear blue. The referees wear red. So the players wear</span></span>
+<span id="cb7-367"><a href="#cb7-367" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-368"><a href="#cb7-368" aria-hidden="true" tabindex="-1"></a>and compare it with the same sentence ending <span class="in">`So the officials wear`</span>. The query comes from the embedding at <span class="in">`wear`</span> and is identical in the two sentences, and so are the keys at <span class="in">`blue`</span> and <span class="in">`red`</span>, so this one layer gives the two colours the same relative weight in both cases. Preferring the team's colour for the players needs a query that already knows what its subject is, which is information gathered at <span class="in">`wear`</span> by an earlier layer.</span>
+<span id="cb7-369"><a href="#cb7-369" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-370"><a href="#cb7-370" aria-hidden="true" tabindex="-1"></a>The next chapter adds position information, so that the same token at different positions can have different keys; stacks attention layers, so that later queries can use what earlier layers gathered; and runs several heads in parallel, each with its own weighting of the positions, so that a position receives several context vectors rather than one.</span>
+<span id="cb7-371"><a href="#cb7-371" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-372"><a href="#cb7-372" aria-hidden="true" tabindex="-1"></a><span class="fu">## References and further reading {#sec-language-references}</span></span>
+<span id="cb7-373"><a href="#cb7-373" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-374"><a href="#cb7-374" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Mikolov, T., Chen, K., Corrado, G. and Dean, J. (2013). <span class="co">[</span><span class="ot">*Efficient Estimation of Word Representations in Vector Space*</span><span class="co">](https://arxiv.org/abs/1301.3781)</span>. Introduces the word2vec architectures discussed in the previous chapter.</span>
+<span id="cb7-375"><a href="#cb7-375" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Sennrich, R., Haddow, B. and Birch, A. (2016). <span class="co">[</span><span class="ot">*Neural Machine Translation of Rare Words with Subword Units*</span><span class="co">](https://doi.org/10.18653/v1/P16-1162)</span>. Describes the adaptation of byte-pair encoding for subword segmentation.</span>
+<span id="cb7-376"><a href="#cb7-376" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Schuster, M. and Nakajima, K. (2012). <span class="co">[</span><span class="ot">*Japanese and Korean Voice Search*</span><span class="co">](https://doi.org/10.1109/ICASSP.2012.6289079)</span>. Introduces WordPiece tokenisation.</span>
+<span id="cb7-377"><a href="#cb7-377" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Bahdanau, D., Cho, K. and Bengio, Y. (2015). <span class="co">[</span><span class="ot">*Neural Machine Translation by Jointly Learning to Align and Translate*</span><span class="co">](https://arxiv.org/abs/1409.0473)</span>. The attention mechanism for translation discussed above.</span>
+<span id="cb7-378"><a href="#cb7-378" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Vaswani, A. et al. (2017). <span class="co">[</span><span class="ot">*Attention Is All You Need*</span><span class="co">](https://arxiv.org/abs/1706.03762)</span>. Introduces the Transformer architecture and scaled dot-product attention.</span>
+<span id="cb7-379"><a href="#cb7-379" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Zhang, A., Lipton, Z. C., Li, M. and Smola, A. J. (2023). <span class="co">[</span><span class="ot">*Dive into Deep Learning*</span><span class="co">](https://d2l.ai/chapter_attention-mechanisms-and-transformers/index.html)</span>, Cambridge University Press, Chapter 11. Section 11.3.1 derives dot-product attention from the Gaussian kernel and gives the variance argument for the $1/\sqrt{d}$ scaling; Section 11.3.2 covers the masked softmax; Section 11.6.3 the sinusoidal position encoding.</span>
+<span id="cb7-380"><a href="#cb7-380" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Brown, T. B. et al. (2020). <span class="co">[</span><span class="ot">*Language Models are Few-Shot Learners*</span><span class="co">](https://arxiv.org/abs/2005.14165)</span>, Table 2.1. Gives the dimensions of the GPT-3 model variants.</span>
+<span id="cb7-381"><a href="#cb7-381" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Huang, H., Stevens, E., Antiga, L. and Viehmann, T. (2026). <span class="co">[</span><span class="ot">*Deep Learning with PyTorch*, second edition</span><span class="co">](https://www.manning.com/books/deep-learning-with-pytorch-second-edition)</span>, Chapter 4, section on text embeddings. Source of the apple/lemon illustration quoted in the previous chapter.</span>
+<span id="cb7-382"><a href="#cb7-382" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>Raschka, S. <span class="co">[</span><span class="ot">*Build a Large Language Model (From Scratch)*</span><span class="co">](https://www.manning.com/books/build-a-large-language-model-from-scratch)</span>, Chapters 2–3. The token-lookup and one-query-at-a-time illustrations here draw on the teaching approach in these chapters.</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div></div></div></div></div>
 </div> <!-- /content -->
 <footer class="footer">
