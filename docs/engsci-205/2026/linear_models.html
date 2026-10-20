@@ -195,6 +195,12 @@ window.Quarto = {
 <span class="menu-text">Week 5: Neural networks</span></a>
 </div>
 </li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./hybrid_neural.html">
+<span class="menu-text">Week 6: Hybrid neural models</span></a>
+</div>
+</li>
 </ul>
 </div>
 </nav>
@@ -335,7 +341,7 @@ w = X^+y = (X^TX)^{-1}X^Ty
 <section id="solving-tall-linear-systems-example" class="level2">
 <h2 class="anchored" data-anchor-id="solving-tall-linear-systems-example">Solving tall linear systems: example</h2>
 <p>Here we compare specialised solver solutions and gradient descent.</p>
-<div id="3958cfde" class="cell" data-execution_count="1">
+<div id="0191111f" class="cell" data-execution_count="1">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># True parameters</span></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>w_true <span class="op">=</span> torch.tensor([<span class="dv">10</span>,<span class="dv">10</span>,<span class="fl">9.81</span>], dtype<span class="op">=</span>torch.float32)</span>
@@ -445,7 +451,7 @@ X^+XX^+ = X^+\\
 </section>
 <section id="example-wide-system" class="level2">
 <h2 class="anchored" data-anchor-id="example-wide-system">Example wide system</h2>
-<div id="00aa8dc8" class="cell" data-execution_count="2">
+<div id="702e68e7" class="cell" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># True parameters</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>w_true <span class="op">=</span> torch.tensor([<span class="dv">10</span>,<span class="dv">10</span>,<span class="fl">9.81</span>], dtype<span class="op">=</span>torch.float32)</span>
@@ -542,7 +548,7 @@ y_{m+1}
 <section id="example-constructing-x-for-prediction" class="level2">
 <h2 class="anchored" data-anchor-id="example-constructing-x-for-prediction">Example: constructing <span class="math inline">\(X\)</span> for prediction</h2>
 <p>The following function allows us to construct a design matrix to make predictions at any point of interest:</p>
-<div id="d69d4129" class="cell" data-execution_count="3">
+<div id="33afcfbc" class="cell" data-execution_count="3">
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> prediction_design_matrix(t_rows):</span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="co"># make columns separately</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    one_col <span class="op">=</span> torch.ones(t_rows.shape[<span class="dv">0</span>], <span class="dv">1</span>)  </span>
@@ -558,7 +564,7 @@ y_{m+1}
 <section id="example-1" class="level2">
 <h2 class="anchored" data-anchor-id="example-1">Example</h2>
 <p><strong>Tall:</strong></p>
-<div id="5d92c943" class="cell" data-execution_count="5">
+<div id="8be6d039" class="cell" data-execution_count="5">
 <div class="cell-output cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -568,7 +574,7 @@ y_{m+1}
 </div>
 </div>
 <p><strong>Wide:</strong></p>
-<div id="7420e230" class="cell" data-execution_count="7">
+<div id="fbeecd87" class="cell" data-execution_count="7">
 <div class="cell-output cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -610,7 +616,7 @@ y_{m+1}
 </section>
 <section id="example-2" class="level2">
 <h2 class="anchored" data-anchor-id="example-2">Example</h2>
-<div id="087e42d0" class="cell" data-execution_count="8">
+<div id="8fdec447" class="cell" data-execution_count="8">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="co"># True parameters</span></span>
@@ -649,7 +655,7 @@ y_{m+1}
 </div>
 </div>
 <p>Fitted:</p>
-<div id="eacb3bbf" class="cell" data-execution_count="9">
+<div id="516f3934" class="cell" data-execution_count="9">
 <div class="cell-output cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -663,7 +669,7 @@ y_{m+1}
 <section id="solving-in-pytorch-with-gradient-descent" class="level2">
 <h2 class="anchored" data-anchor-id="solving-in-pytorch-with-gradient-descent">Solving in PyTorch with gradient descent</h2>
 <p>Nothing much is changed in our PyTorch implementation – we just use a different <span class="math inline">\(\lambda\)</span>.</p>
-<div id="f4682958" class="cell" data-execution_count="10">
+<div id="4c0df303" class="cell" data-execution_count="10">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Solution using gradient descent</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>w <span class="op">=</span> torch.zeros(X.shape[<span class="dv">1</span>], requires_grad<span class="op">=</span><span class="va">True</span>)</span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a></span>
@@ -702,7 +708,7 @@ True:
 tensor([10.0000, 10.0000,  9.8100])</code></pre>
 </div>
 </div>
-<div id="08f629c6" class="cell" data-execution_count="11">
+<div id="012cd4cf" class="cell" data-execution_count="11">
 <div class="cell-output cell-output-display">
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
@@ -1124,13 +1130,13 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
 <footer class="footer">
 <div class="nav-footer">
 <div class="nav-footer-left">
-<p>ENGSCI 205 — Weeks 1–5 notes.</p>
+<p>ENGSCI 205 — Weeks 1–6 notes.</p>
 </div>
 <div class="nav-footer-center">
        
     </div>
 <div class="nav-footer-right">
-<p><a href="downloads/EML-Week-01.pdf">Week 1 PDF</a> · <a href="downloads/EML-Week-02.pdf">Week 2 PDF</a> · <a href="downloads/EML-Week-03.pdf">Week 3 PDF</a> · <a href="downloads/EML-Week-04.pdf">Week 4 PDF</a> · <a href="downloads/EML-Week-05.pdf">Week 5 PDF</a></p>
+<p><a href="downloads/EML-Week-01.pdf">Week 1 PDF</a> · <a href="downloads/EML-Week-02.pdf">Week 2 PDF</a> · <a href="downloads/EML-Week-03.pdf">Week 3 PDF</a> · <a href="downloads/EML-Week-04.pdf">Week 4 PDF</a> · <a href="downloads/EML-Week-05.pdf">Week 5 PDF</a> · <a href="downloads/EML-Week-06.pdf">Week 6 PDF</a></p>
 </div>
 </div>
 </footer>

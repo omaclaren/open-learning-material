@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+
+<html lang="en" xml:lang="en" xmlns="http://www.w3.org/1999/xhtml"><head>
+<meta charset="utf-8"/>
+<meta content="quarto-1.4.549" name="generator"/>
+<meta content="width=device-width, initial-scale=1.0, user-scalable=yes" name="viewport"/>
+<title>EngSci 205: Engineering-Centric Machine Learning - Hybrid neural models</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+<script src="site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="site_libs/quarto-nav/headroom.min.js"></script>
+<script src="site_libs/clipboard/clipboard.min.js"></script>
+<script src="site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="site_libs/quarto-search/fuse.min.js"></script>
+<script src="site_libs/quarto-search/quarto-search.js"></script>
+<meta content="./" name="quarto:offset"/>
+<link href="./neural_models.html" rel="prev"/>
+<script src="site_libs/quarto-html/quarto.js"></script>
+<script src="site_libs/quarto-html/popper.min.js"></script>
+<script src="site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="site_libs/quarto-html/anchor.min.js"></script>
+<link href="site_libs/quarto-html/tippy.css" rel="stylesheet"/>
+<link href="site_libs/quarto-html/quarto-syntax-highlighting.css" id="quarto-text-highlighting-styles" rel="stylesheet"/>
+<script src="site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet"/>
+<link data-mode="light" href="site_libs/bootstrap/bootstrap.min.css" id="quarto-bootstrap" rel="stylesheet"/>
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 50,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "show-item-context": false,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN") {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+<link href="html-preview.css" rel="stylesheet"/>
+<link href="navigation-preview.css" rel="stylesheet"/><script defer="" src="navigation-preview.js"></script></head>
+<body class="nav-sidebar floating">
+<div id="quarto-search-results"></div>
+<header class="headroom fixed-top" id="quarto-header">
+<nav class="quarto-secondary-nav">
+<div class="container-fluid d-flex">
+<button aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" class="quarto-btn-toggle btn" data-bs-target=".quarto-sidebar-collapse-item" data-bs-toggle="collapse" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }" type="button">
+<i class="bi bi-layout-text-sidebar-reverse"></i>
+</button>
+<nav aria-label="breadcrumb" class="quarto-page-breadcrumbs"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="./hybrid_neural.html">Week 6: Hybrid neural models</a></li></ol></nav>
+<a aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Toggle sidebar navigation" class="flex-grow-1" data-bs-target=".quarto-sidebar-collapse-item" data-bs-toggle="collapse" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }" role="button">
+</a>
+<button aria-label="" class="btn quarto-search-button" onclick="window.quartoOpenSearch();" type="button">
+<i class="bi bi-search"></i>
+</button>
+</div>
+</nav>
+</header>
+<!-- content -->
+<div class="quarto-container page-columns page-rows-contents page-layout-article" id="quarto-content">
+<!-- sidebar -->
+<nav class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto" id="quarto-sidebar">
+<div class="pt-lg-2 mt-2 text-left sidebar-header">
+<div class="sidebar-title mb-0 py-0">
+<a href="./">ENGSCI 205: Engineering-Centric Machine Learning</a>
+</div>
+</div>
+<div class="mt-2 flex-shrink-0 align-items-center">
+<div class="sidebar-search">
+<div class="" id="quarto-search" title="Search"></div>
+</div>
+</div>
+<div class="sidebar-menu-container">
+<ul class="list-unstyled mt-1">
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./index.html">
+<span class="menu-text">Preface</span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./intro.html">
+<span class="menu-text">Week 1: Key ideas</span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./vectors_matrices_tensors.html">
+<span class="menu-text">Week 2: Tensors and PyTorch</span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./linear_models.html">
+<span class="menu-text">Week 3: Linear models</span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./hybrid_linear.html">
+<span class="menu-text">Week 4: Hybrid linear models</span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link" href="./neural_models.html">
+<span class="menu-text">Week 5: Neural networks</span></a>
+</div>
+</li>
+<li class="sidebar-item">
+<div class="sidebar-item-container">
+<a class="sidebar-item-text sidebar-link active" href="./hybrid_neural.html">
+<span class="menu-text">Week 6: Hybrid neural models</span></a>
+</div>
+</li>
+</ul>
+</div>
+</nav>
+<div class="quarto-sidebar-collapse-item" data-bs-target=".quarto-sidebar-collapse-item" data-bs-toggle="collapse" id="quarto-sidebar-glass"></div>
+<!-- margin-sidebar -->
+<div class="sidebar margin-sidebar" id="quarto-margin-sidebar">
+<nav class="engsci205-toc" id="TOC" role="doc-toc"><h2 id="toc-title">Table of contents</h2><ul class="toc-groups"><li class="toc-group-item"><details data-sections="title-block-header from-hybrid-linear-to-hybrid-neural-models"><summary>Hybrid neural models</summary><ul class="toc-group-links"><li><a data-section="title-block-header" href="#title-block-header">Overview</a></li><li><a data-section="from-hybrid-linear-to-hybrid-neural-models" href="#from-hybrid-linear-to-hybrid-neural-models">From hybrid linear to hybrid neural models</a></li></ul></details></li><li class="toc-group-item"><details data-sections="pendulum-revisited predicting-the-pendulum"><summary>The pendulum problem</summary><ul class="toc-group-links"><li><a data-section="pendulum-revisited" href="#pendulum-revisited">Pendulum revisited</a></li><li><a data-section="predicting-the-pendulum" href="#predicting-the-pendulum">Prediction task</a></li></ul></details></li><li class="toc-group-item"><details data-sections="two-time-grids-two-losses physics-loss-and-time-derivatives"><summary>Data and physics losses</summary><ul class="toc-group-links"><li><a data-section="two-time-grids-two-losses" href="#two-time-grids-two-losses">Two time grids, two losses</a></li><li><a data-section="physics-loss-and-time-derivatives" href="#physics-loss-and-time-derivatives">Physics loss and time derivatives</a></li></ul></details></li><li class="toc-group-item"><details data-sections="derivatives-with-respect-to-time derivatives-at-many-times differentiating-a-derivative-create_graphtrue constructing-the-physics-loss"><summary>Time derivatives with autograd</summary><ul class="toc-group-links"><li><a data-section="derivatives-with-respect-to-time" href="#derivatives-with-respect-to-time">Derivatives with respect to time</a></li><li><a data-section="derivatives-at-many-times" href="#derivatives-at-many-times">Derivatives at many times</a></li><li><a data-section="differentiating-a-derivative-create_graphtrue" href="#differentiating-a-derivative-create_graphtrue">Differentiating a derivative: create_graph=True</a></li><li><a data-section="constructing-the-physics-loss" href="#constructing-the-physics-loss">Constructing the physics loss</a></li></ul></details></li><li class="toc-group-item"><details data-sections="combining-the-losses simple-neural-network-model putting-it-all-together"><summary>The network and training</summary><ul class="toc-group-links"><li><a data-section="combining-the-losses" href="#combining-the-losses">Combining the losses</a></li><li><a data-section="simple-neural-network-model" href="#simple-neural-network-model">Simple neural network model</a></li><li><a data-section="putting-it-all-together" href="#putting-it-all-together">Putting it all together</a></li></ul></details></li><li class="toc-group-item"><details data-sections="takeaways cautionary-notes"><summary>Results and cautions</summary><ul class="toc-group-links"><li><a data-section="takeaways" href="#takeaways">Takeaways</a></li><li><a data-section="cautionary-notes" href="#cautionary-notes">Cautionary notes</a></li></ul></details></li></ul></nav>
+</div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">Hybrid neural models</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>For our last (brief) section we look at combining a neural network data model with a scientific penalty term to produce a <strong>hybrid neural model</strong>. Others call this (depending on the scientific knowledge included) <strong>physics-informed neural networks</strong> (PINNs). This is also what <a href="https://doi.org/10.1038/s42254-021-00314-5">Karniadakis et al.&nbsp;(2021)</a> call <em>learning bias</em>:</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figures/bias-extended.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:45.0%"></p>
+</figure>
+</div>
+<p>Whatever we call it, we’ve now learned enough to do it ourselves!</p>
+<section id="from-hybrid-linear-to-hybrid-neural-models" class="level2">
+<h2 class="anchored" data-anchor-id="from-hybrid-linear-to-hybrid-neural-models">From hybrid linear to hybrid neural models</h2>
+<p>In the <a href="./hybrid_linear.html">hybrid linear models</a> section we represented a time series on a <strong>fine time grid</strong> with a spline data model, <span class="math inline">\(y=Bw\)</span>, linked it to the observations with an <strong>observation matrix</strong> <span class="math inline">\(A_{\text{obs}}\)</span>, and fitted it by minimising a data loss plus <span class="math inline">\(\lambda\)</span> times a penalty on a differential equation. We represented the derivatives in the differential equation with <strong>finite-difference matrices</strong>, such as <span class="math inline">\(D\)</span> in <span class="math inline">\(DBw\)</span>. A hybrid neural model keeps this structure and changes two things:</p>
+<table class="table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>Hybrid linear model</th>
+<th>Hybrid neural model</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Data model</td>
+<td>splines, <span class="math inline">\(Bw\)</span></td>
+<td>a neural network, <span class="math inline">\(f_{\text{NN}}(t;w)\)</span></td>
+</tr>
+<tr class="even">
+<td>Time derivatives</td>
+<td>finite-difference matrices, e.g.&nbsp;<span class="math inline">\(DBw\)</span></td>
+<td>automatic differentiation with respect to <span class="math inline">\(t\)</span></td>
+</tr>
+<tr class="odd">
+<td>Grids and loss</td>
+<td>fine and observation grids; data loss <span class="math inline">\(+\ \lambda\times\)</span> physics loss</td>
+<td>the same</td>
+</tr>
+<tr class="even">
+<td>Fitting</td>
+<td>one least-squares solve (stacking)</td>
+<td>gradient descent</td>
+</tr>
+</tbody>
+</table>
+<p>Note that we could make either change without the other, e.g.&nbsp;we could apply difference matrices to a network’s predictions on the fine grid. Both data models are functions of <span class="math inline">\(t\)</span> with weights fitted to data. The spline is a weighted sum of fixed basis functions, so its predictions are linear in <span class="math inline">\(w\)</span>, and we fitted it with one least-squares solve. A network’s predictions are nonlinear in its weights, so we minimise the loss by gradient descent instead, as in the <a href="./neural_models.html">neural networks</a> section.</p>
+</section>
+<section id="pendulum-revisited" class="level2">
+<h2 class="anchored" data-anchor-id="pendulum-revisited">Pendulum revisited</h2>
+<p>Recall that the angular motion <span class="math inline">\(\theta(t)\)</span> of a pendulum with length <span class="math inline">\(l\)</span> subject to Newton’s laws and no friction or air resistance, is given by <span class="math display">\[
+\frac{d^2\theta}{dt^2} + \frac{g}{l}\sin \theta = 0
+\]</span> with initial conditions <span class="math display">\[
+\theta(0) = \theta_0,\ \ \frac{d\theta}{dt}(0) = v_0
+\]</span> A schematic is shown below.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figures/pendulum.svg" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+<p>The <strong>small angle approximation</strong> uses <span class="math inline">\(\sin \theta \approx \theta\)</span>, giving the <strong>linear pendulum</strong> model: <span class="math display">\[
+\frac{d^2\theta}{dt^2} + \frac{g}{l}\theta = 0
+\]</span> with the same initial conditions.</p>
+</section>
+<section id="predicting-the-pendulum" class="level2">
+<h2 class="anchored" data-anchor-id="predicting-the-pendulum">Predicting the pendulum</h2>
+<p>Now, let’s consider a variation on our original pendulum prediction problem. Suppose we have <span class="math inline">\(M\)</span> (possibly noisy) observations of the form <span class="math display">\[(t_i,\theta_i),\ i=1,\dots,M\]</span> from a nonlinear pendulum and wish to predict <span class="math inline">\(\theta_j\)</span> for a collection of new, future <span class="math inline">\(t_j\)</span> values <span class="math display">\[(t_j,\theta_j),\ j=M+1,\dots,M+K\]</span></p>
+<p>For example, below we show the observed data in blue, the future (not yet seen) data in red, and the true, unobserved angle trajectory in black. Here the pendulum is released from rest at <span class="math inline">\(160^\circ\)</span> and observed every 0.2 s up to <span class="math inline">\(t=5\)</span>, with noise of standard deviation 0.1.</p>
+<div id="8b87bdde" class="cell" data-execution_count="1">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="hybrid_neural_files/figure-html/cell-2-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="two-time-grids-two-losses" class="level2">
+<h2 class="anchored" data-anchor-id="two-time-grids-two-losses">Two time grids, two losses</h2>
+<p>As in our discussion of hybrid linear models, we again have <strong>two</strong> time grids: a <strong>fine time grid</strong> associated with the underlying <em>physical process</em> (as governed by the ODE/Newton’s Laws), and a <strong>coarse time grid</strong> associated with our <em>observations</em> of the physical process. (Reality may of course involve continuous time physics but here we use a very fine grid as a proxy for this.) In the hybrid linear model, the fine grid also set the spacing of the difference matrices, and so the accuracy of the derivatives. With a neural network, automatic differentiation gives the time derivatives exactly at any <span class="math inline">\(t\)</span>, as we’ll see, so the fine grid is just the set of times at which we check the ODE.</p>
+<p>These two time grids naturally lead to two types of loss functions: a <strong>data loss</strong> associated with the observations, and a <strong>physics loss</strong> associated with the underlying physical process. First, we will consider the data loss.</p>
+<p>If we denote the ‘underlying’ angular motion defined on the fine time grid, <span class="math inline">\(t_{\text{fine}}\)</span>, by <span class="math inline">\(\theta_{\text{fine}}\)</span>, and our observations of the angular motion on the coarse time grid, <span class="math inline">\(t_{\text{obs}}\)</span>, by <span class="math inline">\(\theta_{\text{obs}}\)</span>, we can (conceptually at least) use an observation matrix <span class="math inline">\(A_{\text{obs}}\)</span> to relate the variables on the two grids: <span class="math display">\[
+t_{\text{obs}} = A_{\text{obs}}t_{\text{fine}},\ \ \theta_{\text{obs}} = A_{\text{obs}}\theta_{\text{fine}}.
+\]</span> Rather than directly enforce the physics right now, we will first assume that the fine-scale dynamics can be <strong>approximated by a neural network model</strong>: <span class="math display">\[
+\theta_{\text{fine}}= f_{\text{NN}}(t_{\text{fine}};w),
+\]</span> where <span class="math inline">\(w\)</span> are the parameters (weights and biases) of the neural network, and <span class="math inline">\(f_{\text{NN}}(t_{\text{fine}};w)\)</span> represents the vector of predictions at the fine time grid <span class="math inline">\(t_{\text{fine}}\)</span>. We explicitly represent the fine-scale dynamics here because we ultimately want to predict the angular motion at times we have not observed.</p>
+<p>These elements lead to a <strong>data loss</strong> term that, for fixed data, depends on the neural network parameters and takes a form such as: <span class="math display">\[
+\begin{aligned}
+\text{loss}_{\text{data}}(w) &amp;= \frac{1}{M}\|\theta_{\text{obs}}-A_{\text{obs}}f_{\text{NN}}(t_{\text{fine}};w)\|^2 \\
+&amp;= \frac{1}{M}\|\theta_{\text{obs}}-f_{\text{NN}}(t_{\text{obs}};w)\|^2
+\end{aligned}
+\]</span> where <span class="math inline">\(M\)</span> is the number of observations, which we may or may not divide by (dividing by <span class="math inline">\(M\)</span> doesn’t change which <span class="math inline">\(w\)</span> minimises the data loss on its own, but it does change the balance with the physics loss below, and so what a given <span class="math inline">\(\lambda\)</span> means).</p>
+</section>
+<section id="physics-loss-and-time-derivatives" class="level2">
+<h2 class="anchored" data-anchor-id="physics-loss-and-time-derivatives">Physics loss and time derivatives</h2>
+<p>We will consider the neural network model in more detail shortly. First we consider, at a high level, how to construct the <strong>physics loss</strong>, and in particular how to evaluate the <strong>derivatives</strong> in the ODE on the fine time grid.</p>
+<p>In the hybrid linear model, a <a href="./hybrid_linear.html#derivative-matrices">finite-difference matrix</a> <span class="math inline">\(D\)</span> mapped the spline’s values on the fine grid to approximate derivatives, <span class="math inline">\(DBw\)</span>. Here we use PyTorch’s <strong>automatic differentiation</strong> (its <code>autograd</code> engine) instead, which gives the exact derivative of the network’s prediction with respect to time.</p>
+<p>We have used automatic differentiation before, in the <a href="./vectors_matrices_tensors.html#computation-graphs">computation graphs</a> part of Week 2 and to train models since, but always to get the derivative of a <strong>loss</strong> with respect to a model’s <strong>parameters</strong>, which <code>loss.backward()</code> computed by working back through the recorded calculation and then added to each parameter’s <code>.grad</code>. The physics loss instead needs the derivative of the model’s <strong>prediction</strong> with respect to its <strong>input</strong>, time. PyTorch computes this from the same recorded calculation and with the same chain rule, since as far as PyTorch is concerned the weights, biases and times are all just tensors with <code>requires_grad=True</code>. The only differences are in which derivative we ask for and how we then use it. To handle these we need three new ideas, which we’ll take in turn using simple functions whose derivatives we already know:</p>
+<ul>
+<li>getting a derivative with respect to time back as a tensor;</li>
+<li>getting the derivative at every time at once;</li>
+<li>differentiating that derivative again.</li>
+</ul>
+</section>
+<section id="derivatives-with-respect-to-time" class="level2">
+<h2 class="anchored" data-anchor-id="derivatives-with-respect-to-time">Derivatives with respect to time</h2>
+<p>Let’s start with a derivative at a single time. Like <code>backward()</code> in Week 2, <code>torch.autograd.grad</code> differentiates a single number, so consider <span class="math inline">\(y=\sin t\)</span> at <span class="math inline">\(t=1\)</span>, where the derivative should be <span class="math inline">\(\cos 1=0.5403\)</span>. As for the parameter <span class="math inline">\(x\)</span> in Week 2, we set <code>requires_grad=True</code> on <code>t</code> so that PyTorch records the operations that use it. (We didn’t need to do this for the network in Week 5, because by default PyTorch sets <code>requires_grad=True</code> on a network’s weights and biases when it creates them.)</p>
+<div id="3dfd4210" class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> torch.tensor(<span class="fl">1.0</span>, requires_grad<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> torch.sin(t)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(torch.autograd.grad(y, t))</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(t.grad)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>(tensor(0.5403),)
+None</code></pre>
+</div>
+</div>
+<p><code>torch.autograd.grad</code> computes the derivative from the recorded calculation in the same way as <code>backward()</code>, but <strong>returns</strong> it rather than adding it to <code>.grad</code>, which is why <code>t.grad</code> is still <code>None</code>. The first argument of <code>grad</code> (<code>outputs</code>) is what we differentiate, and the second (<code>inputs</code>) is what we differentiate with respect to. Since we could list several tensors as inputs, the result is a tuple with one derivative for each, and so here, with just one input, we take the tuple’s first element, <code>[0]</code>.</p>
+<p>We use <code>grad</code> for the time derivatives because we need them as part of the next calculation, the ODE residual. If we used <code>backward()</code> on a network’s prediction instead, it would also add derivatives to the <code>.grad</code> of every weight and bias, and the optimiser would then use these in its update. We still use <code>loss.backward()</code> for the derivative of the total loss with respect to the weights and biases, though, since the optimiser reads it from their <code>.grad</code>.</p>
+</section>
+<section id="derivatives-at-many-times" class="level2">
+<h2 class="anchored" data-anchor-id="derivatives-at-many-times">Derivatives at many times</h2>
+<p>Now let’s move from one time to a grid of times. On the fine grid, a function <span class="math inline">\(y(t)\)</span> becomes a vector of values <span class="math inline">\(y_i=y(t_i)\)</span>, and its time derivative becomes another vector. In the hybrid linear model, the difference matrix <span class="math inline">\(D\)</span> mapped the vector of values to the slopes of the lines through neighbouring points, while automatic differentiation treats each <span class="math inline">\(t_i\)</span> as a separate number and gives the slope of the tangent at each point, <span class="math inline">\(y'(t_i)\)</span>. The figure below shows both for <span class="math inline">\(y=\sin t\)</span> on a coarse grid, with times 1 apart.</p>
+<div id="3d8e7c4c" class="cell" data-execution_count="3">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="hybrid_neural_files/figure-html/cell-4-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The physics loss needs the derivative at every fine-grid time, but <code>grad</code> only differentiates a single number. One trick for getting the derivatives at all the grid points at once is to differentiate the <strong>sum</strong> of the entries. To see why this works, take a function <span class="math inline">\(y(t)\)</span> at three times <span class="math inline">\(t_1,t_2,t_3\)</span>, with <span class="math inline">\(y_i=y(t_i)\)</span> and sum <span class="math inline">\(S=y_1+y_2+y_3\)</span>. For <span class="math inline">\(y(t)=t^2\)</span> we get:</p>
+<div id="edf4cdd7" class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> torch.tensor([<span class="fl">1.0</span>, <span class="fl">2.0</span>, <span class="fl">3.0</span>], requires_grad<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> t<span class="op">**</span><span class="dv">2</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(torch.autograd.grad(y.<span class="bu">sum</span>(), t)[<span class="dv">0</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>tensor([2., 4., 6.])</code></pre>
+</div>
+</div>
+<p>Here <code>t</code> is a single tensor holding three numbers, but PyTorch treats each entry as a separate variable, so entry <span class="math inline">\(i\)</span> of the result is <span class="math inline">\(\partial S/\partial t_i\)</span>. Since <code>t**2</code> squares each entry separately, only <span class="math inline">\(y_i\)</span> depends on <span class="math inline">\(t_i\)</span>, and so <span class="math inline">\(\partial S/\partial t_i=y'(t_i)=2t_i\)</span>, i.e.&nbsp;2, 4 and 6 here. The same is true for our network, since each time is a separate row of its input and each layer acts on each row separately, giving <span class="math inline">\(\theta_i=f_{\text{NN}}(t_i;w)\)</span>.</p>
+<p>In the hybrid linear models section we <a href="./hybrid_linear.html#derivative-matrices">applied a difference matrix</a> to <span class="math inline">\(y=\sin t\)</span> at 100 times between 0 and 12. The same trick gives the derivative at all 100 times:</p>
+<div id="e3edf153" class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> torch.linspace(<span class="dv">0</span>, <span class="dv">12</span>, <span class="dv">100</span>, requires_grad<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> torch.sin(t)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>dy_dt <span class="op">=</span> torch.autograd.grad(y.<span class="bu">sum</span>(), t)[<span class="dv">0</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The top plot compares the two ways of getting the derivative of <span class="math inline">\(\sin t\)</span> with the exact derivative, <span class="math inline">\(\cos t\)</span>, and the bottom plot shows their errors. The difference matrix gives approximations at all but the first time, with errors up to about 0.06 here (the times are 0.12 apart). Automatic differentiation gives <span class="math inline">\(\cos t\)</span> at all 100 times, up to rounding.</p>
+<div id="574b9b9f" class="cell" data-execution_count="6">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="hybrid_neural_files/figure-html/cell-7-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>What if an output depends on more than one input? A cumulative sum is a simple example, since output <span class="math inline">\(i\)</span> adds up inputs <span class="math inline">\(1,\dots,i\)</span>:</p>
+<div id="9453e9de" class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> torch.linspace(<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">5</span>, requires_grad<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> torch.cumsum(x, <span class="dv">0</span>)   <span class="co"># each output adds up the inputs so far</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(torch.autograd.grad(y.<span class="bu">sum</span>(), x)[<span class="dv">0</span>])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>tensor([5., 4., 3., 2., 1.])</code></pre>
+</div>
+</div>
+<p>Each <span class="math inline">\(dy_i/dx_i\)</span> is 1, but the result is not all ones. It is still the derivative of the sum <span class="math inline">\(S\)</span>, but now entry <span class="math inline">\(i\)</span> is <span class="math inline">\(\sum_j \partial y_j/\partial x_i\)</span>, which adds up the effect of <span class="math inline">\(x_i\)</span> on every output that includes it. This reduces to <span class="math inline">\(dy_i/dx_i\)</span> only when each output depends on its own input alone. Our network has no dependence between times, so for the network the sum does give the derivative at every time.</p>
+<p>The sum is in fact a special case of the <code>grad_outputs</code> argument of <code>grad</code>, which lets us give a weight <span class="math inline">\(v_i\)</span> to each output <span class="math inline">\(y_i\)</span>. PyTorch then differentiates the weighted sum <span class="math inline">\(\sum_i v_iy_i\)</span>, and our sum <span class="math inline">\(S\)</span> corresponds to setting every weight to 1, which is how other code often writes the call. <code>backward()</code> can give the same derivatives too, adding them to <code>t.grad</code> and taking the same weights through its argument <code>gradient</code>:</p>
+<div id="6252ca16" class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> torch.tensor([<span class="fl">1.0</span>, <span class="fl">2.0</span>, <span class="fl">3.0</span>], requires_grad<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(torch.autograd.grad(t<span class="op">**</span><span class="dv">2</span>, t, grad_outputs<span class="op">=</span>torch.ones(<span class="dv">3</span>))[<span class="dv">0</span>])</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>(t<span class="op">**</span><span class="dv">2</span>).<span class="bu">sum</span>().backward()   <span class="co"># the same derivatives, added to t.grad</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(t.grad)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>tensor([2., 4., 6.])
+tensor([2., 4., 6.])</code></pre>
+</div>
+</div>
+</section>
+<section id="differentiating-a-derivative-create_graphtrue" class="level2">
+<h2 class="anchored" data-anchor-id="differentiating-a-derivative-create_graphtrue">Differentiating a derivative: <code>create_graph=True</code></h2>
+<p>The ODE also needs the second derivative, <span class="math inline">\(d^2\theta/dt^2\)</span>. In the hybrid linear model we got this by multiplying difference matrices together, and here we instead call <code>grad</code> again, this time on the first derivative. However, to differentiate the first derivative, PyTorch needs a record of how it was calculated from <span class="math inline">\(t\)</span>, in the same way as it records the forward calculation, and by default it doesn’t keep one. For example, for <span class="math inline">\(y=t^3\)</span> the derivative <span class="math inline">\(3t^2\)</span> comes back from <code>grad</code> as plain numbers, with no record of how they depend on <span class="math inline">\(t\)</span>. Setting <code>create_graph=True</code> tells PyTorch to also record the derivative calculation, so that we can differentiate the result again:</p>
+<div id="018c9fca" class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> torch.tensor([<span class="fl">1.0</span>, <span class="fl">2.0</span>, <span class="fl">3.0</span>], requires_grad<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> t<span class="op">**</span><span class="dv">3</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>dy_dt <span class="op">=</span> torch.autograd.grad(y.<span class="bu">sum</span>(), t, create_graph<span class="op">=</span><span class="va">True</span>)[<span class="dv">0</span>]</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(dy_dt)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>d2y_dt2 <span class="op">=</span> torch.autograd.grad(dy_dt.<span class="bu">sum</span>(), t)[<span class="dv">0</span>]</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(d2y_dt2)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>tensor([ 3., 12., 27.], grad_fn=&lt;MulBackward0&gt;)
+tensor([ 6., 12., 18.])</code></pre>
+</div>
+</div>
+<p>These are <span class="math inline">\(3t^2\)</span> and <span class="math inline">\(6t\)</span> at <span class="math inline">\(t=1,2,3\)</span>, and the <code>grad_fn</code> in the first printout is PyTorch’s record of the operation that produced <code>dy_dt</code>. Without <code>create_graph=True</code>, <code>dy_dt</code> prints as <code>tensor([ 3., 12., 27.])</code>, with no <code>grad_fn</code>, and the second call fails with <code>RuntimeError: element 0 of tensors does not require grad and does not have a grad_fn</code>. (Note that Week 2’s <code>retain_graph=True</code> doesn’t help here, since it only keeps the saved forward values for a second backward pass through the same calculation, and doesn’t record the derivative calculation.)</p>
+<p>Training needs <code>create_graph=True</code> for a second reason. The physics loss is computed from the time derivatives, which themselves depend on the weights, so when <code>loss.backward()</code> differentiates the physics loss with respect to the weights it has to work back through the derivative calculation too, and that needs a record of it. We can see this with a model that has a single weight <span class="math inline">\(a\)</span>, <span class="math inline">\(\theta(t)=\sin(at)\)</span>, so that <span class="math inline">\(d\theta/dt=a\cos(at)\)</span>, and the loss <span class="math inline">\(L=(d\theta/dt)^2\)</span>, which, like the physics loss, is built from the time derivative. By the chain rule and the product rule, <span class="math display">\[
+\frac{dL}{da}=2\,\frac{d\theta}{dt}\,\frac{d}{da}\Big(\frac{d\theta}{dt}\Big)=2a\cos(at)\big(\cos(at)-at\sin(at)\big),
+\]</span> which is <span class="math inline">\(-0.6509\)</span> at <span class="math inline">\(a=2\)</span> and <span class="math inline">\(t=0.5\)</span>. PyTorch gives the same:</p>
+<div id="ad0d3586" class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>a <span class="op">=</span> torch.tensor(<span class="fl">2.0</span>, requires_grad<span class="op">=</span><span class="va">True</span>)    <span class="co"># one weight</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>t <span class="op">=</span> torch.tensor([<span class="fl">0.5</span>], requires_grad<span class="op">=</span><span class="va">True</span>)  <span class="co"># one time</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>theta <span class="op">=</span> torch.sin(a <span class="op">*</span> t)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>dtheta_dt <span class="op">=</span> torch.autograd.grad(theta.<span class="bu">sum</span>(), t, create_graph<span class="op">=</span><span class="va">True</span>)[<span class="dv">0</span>]</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> torch.mean(dtheta_dt<span class="op">**</span><span class="dv">2</span>)   <span class="co"># mean, as in the physics loss</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>loss.backward()</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(a.grad)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>tensor(-0.6509)</code></pre>
+</div>
+</div>
+<p>Without <code>create_graph=True</code> in the <code>grad</code> call, <code>dtheta_dt</code> has no record of how it depends on <span class="math inline">\(a\)</span>, and <code>loss.backward()</code> fails with the same error. We could also have used <code>torch.autograd.grad(loss, a)</code> here, which returns the same value.</p>
+</section>
+<section id="constructing-the-physics-loss" class="level2">
+<h2 class="anchored" data-anchor-id="constructing-the-physics-loss">Constructing the physics loss</h2>
+<p>Given the ability to compute time derivatives in PyTorch, we can do this for the neural network model <span class="math inline">\(f_{\text{NN}}(t_{\text{fine}};w)\)</span>, and then use these derivatives to construct the physics loss. This will have the general form:</p>
+<div id="01f99102" class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch.autograd <span class="im">as</span> autograd</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># e.g. 100 times, one per row (nn.Linear(1, 50) needs [100, 1])</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>t_fine <span class="op">=</span> torch.linspace(<span class="dv">0</span>,<span class="dv">10</span>,<span class="dv">100</span>,requires_grad<span class="op">=</span><span class="va">True</span>).unsqueeze(<span class="dv">1</span>)</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>theta_fine_pred <span class="op">=</span> model(t_fine)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute first derivative dtheta/dt</span></span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="co"># note: grad always returns a tuple of gradients, </span></span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="co"># even if only one, so take first element</span></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>dtheta_dt_fine <span class="op">=</span> torch.autograd.grad(</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    outputs<span class="op">=</span>theta_fine_pred.<span class="bu">sum</span>(),</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>    inputs<span class="op">=</span>t_fine,</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>    create_graph<span class="op">=</span><span class="va">True</span></span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>)[<span class="dv">0</span>] </span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute second derivative d2theta/dt2</span></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>d2theta_dt2 <span class="op">=</span> torch.autograd.grad(</span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>    outputs<span class="op">=</span>dtheta_dt_fine.<span class="bu">sum</span>(),</span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>    inputs<span class="op">=</span>t_fine,</span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>    create_graph<span class="op">=</span><span class="va">True</span></span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>)[<span class="dv">0</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Here <code>torch.linspace</code> gives a tensor of shape <code>[100]</code>, and <code>.unsqueeze(1)</code> adds a second dimension of size 1, giving shape <code>[100, 1]</code>, with one time per row, as <code>nn.Linear(1, 50)</code> expects.</p>
+<p>Both calls need <code>create_graph=True</code>: the first so that the second call can differentiate <code>dtheta_dt_fine</code>, and the second because the physics loss is computed from <code>d2theta_dt2</code>, so in training <code>loss.backward()</code> needs a record of how <code>d2theta_dt2</code> depends on the weights.</p>
+<p>Assuming the ODE holds at every fine-grid time, the physics loss for the network has the form <span class="math display">\[
+\text{loss}_{\text{physics}}(w) = \frac{1}{P}\|\frac{\partial^2 f_{\text{NN}}(t_{\text{fine}};w)}{\partial t^2} + \frac{g}{l}\sin f_{\text{NN}}(t_{\text{fine}};w)\|^2
+\]</span> where <span class="math inline">\(P\)</span> is the number of fine-grid times.</p>
+</section>
+<section id="combining-the-losses" class="level2">
+<h2 class="anchored" data-anchor-id="combining-the-losses">Combining the losses</h2>
+<p>The overall loss function is then a combination of the data loss and the physics loss: <span class="math display">\[
+\text{loss}_{\text{total}}(w) = \text{loss}_{\text{data}}(w) + \lambda\times\text{loss}_{\text{physics}}(w)
+\]</span> where <span class="math inline">\(\lambda\)</span> is a hyperparameter that weights the relative importance of the data and physics terms.</p>
+<p>As for the linear model, <span class="math inline">\(\lambda\)</span> can be chosen by using a simple hold-out validation set, a more sophisticated method such as cross-validation, or set by the user based on external knowledge. Since we want to predict forward in time, the validation observations should be the latest ones (a chronological split, as in the <a href="./hybrid_linear.html#choosing-regularisation-parameters">hybrid linear models chapter</a>). Here we just manually set (by trial and error…) <span class="math inline">\(\lambda\)</span> for simplicity.</p>
+<p>We’re almost ready to put this all together, but first let’s consider the neural network model in a bit more detail.</p>
+</section>
+<section id="simple-neural-network-model" class="level2">
+<h2 class="anchored" data-anchor-id="simple-neural-network-model">Simple neural network model</h2>
+<p>Here is a simple example of a neural network model in PyTorch, with two hidden layers and tanh activation functions. We use tanh here because it is smooth (infinitely differentiable) which tends to be appropriate for ODE models (requiring derivatives in time), cf.&nbsp;ReLU which is technically not smooth and more common in classification tasks. ReLU is linear on each side of zero and the network’s other layers are linear, so a ReLU network’s output is piecewise linear in its input, here <span class="math inline">\(t\)</span>. Its second derivative with respect to <span class="math inline">\(t\)</span>, which the physics loss needs, is therefore zero almost everywhere.</p>
+<p>We will again use <code>torch.nn.Sequential</code> to define the model:</p>
+<div id="defe9d79" class="cell" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch.nn <span class="im">as</span> nn</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>nn.Sequential(</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>        nn.Linear(<span class="dv">1</span>, <span class="dv">50</span>),</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>        nn.Tanh(),</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>        nn.Linear(<span class="dv">50</span>, <span class="dv">50</span>),</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>        nn.Tanh(),</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>        nn.Linear(<span class="dv">50</span>, <span class="dv">1</span>)</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>        )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>This has a single input neuron (representing time), two hidden layers with 50 neurons each, and a single output neuron (representing the angular motion). The <code>nn.Linear</code> layers are fully connected layers, and the <code>nn.Tanh</code> layers are the activation functions.</p>
+<p>The input is a single scalar ‘feature’ <span class="math inline">\(t\)</span> and the output is a single scalar ‘response’ <span class="math inline">\(\theta(t)\)</span>. As with our other models, we can evaluate this model for a collection of input values, e.g.&nbsp;at <span class="math inline">\(t_{\text{obs}}\)</span> or <span class="math inline">\(t_{\text{fine}}\)</span>, to get a collection of output values. Each evaluation is like a ‘row’ of a linear model, though now we have a nonlinear model, and PyTorch evaluates all the rows (the batch dimension) at once.</p>
+</section>
+<section id="putting-it-all-together" class="level2">
+<h2 class="anchored" data-anchor-id="putting-it-all-together">Putting it all together</h2>
+<p>We can now put all these elements together to construct a hybrid neural model for the pendulum motion. We assume that the data has been generated already as above.</p>
+<p>In contrast to the linear example (a projectile), the physics here is nonlinear: we generate the data with the <strong>nonlinear pendulum</strong> equation and use the same equation in the physics loss, so the physics model is ‘perfect’. A linear model can’t use this equation directly, since <span class="math inline">\(\sin\theta\)</span> makes the problem nonlinear in the weights. We could still fit a spline model with this equation by <strong>nonlinear least squares</strong>, which repeatedly linearises the problem and solves a least-squares problem like those in the hybrid linear models section at each step. The network’s loss is nonlinear in its weights anyway, so this is no harder. We could also try the linear pendulum equation in the physics loss, i.e.&nbsp;an imperfect physics model.</p>
+<div id="5177f1fa" class="cell" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch.nn <span class="im">as</span> nn</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch.optim <span class="im">as</span> optim</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co"># NN parameters</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(<span class="dv">0</span>)</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>lambda_reg <span class="op">=</span> <span class="fl">1.5e-3</span>  <span class="co"># Regularization parameter λ</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>num_epochs <span class="op">=</span> <span class="dv">10000</span>  <span class="co"># Number of training epochs</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Define the neural network model using nn.Sequential</span></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> nn.Sequential(</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>        nn.Linear(<span class="dv">1</span>, <span class="dv">50</span>),</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>        nn.Tanh(),</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>        nn.Linear(<span class="dv">50</span>, <span class="dv">50</span>),</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>        nn.Tanh(),</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>        nn.Linear(<span class="dv">50</span>, <span class="dv">1</span>)</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Set up the optimizer</span></span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>optimizer <span class="op">=</span> optim.Adam(model.parameters(), lr<span class="op">=</span><span class="fl">0.001</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="f6b92b0d" class="cell" data-execution_count="14">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert t_data, t_grid and y_data to torch.float32, once</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="co"># (unsqueeze adds a dimension: one time per row)</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>t_data_tensor <span class="op">=</span> torch.tensor(t_data,</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>        dtype<span class="op">=</span>torch.float32).unsqueeze(<span class="dv">1</span>)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>t_grid_tensor <span class="op">=</span> torch.tensor(t_grid,</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>        dtype<span class="op">=</span>torch.float32,</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>        requires_grad<span class="op">=</span><span class="va">True</span>).unsqueeze(<span class="dv">1</span>)</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>y_data_tensor <span class="op">=</span> torch.tensor(y_data, dtype<span class="op">=</span>torch.float32)</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Training loop</span></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> epoch <span class="kw">in</span> <span class="bu">range</span>(num_epochs):</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>    optimizer.zero_grad()</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Compute the model predictions at observation points</span></span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>    y_pred_obs <span class="op">=</span> model(t_data_tensor)</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Compute the data loss</span></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>    data_loss <span class="op">=</span> torch.mean((</span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>        y_pred_obs.squeeze() <span class="op">-</span> y_data_tensor) <span class="op">**</span> <span class="dv">2</span>) </span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Compute the model predictions at fine grid </span></span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>    y_pred_grid <span class="op">=</span> model(t_grid_tensor)</span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Compute first derivative dy/dt on fine grid</span></span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>    dy_dt <span class="op">=</span> torch.autograd.grad(</span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>        outputs<span class="op">=</span>y_pred_grid.<span class="bu">sum</span>(),</span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>        inputs<span class="op">=</span>t_grid_tensor,</span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a>        create_graph<span class="op">=</span><span class="va">True</span></span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a>    )[<span class="dv">0</span>]</span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Compute second derivative d2y/dt2</span></span>
+<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a>    d2y_dt2 <span class="op">=</span> torch.autograd.grad(</span>
+<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a>        outputs<span class="op">=</span>dy_dt.<span class="bu">sum</span>(),</span>
+<span id="cb17-31"><a href="#cb17-31" aria-hidden="true" tabindex="-1"></a>        inputs<span class="op">=</span>t_grid_tensor,</span>
+<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a>        create_graph<span class="op">=</span><span class="va">True</span></span>
+<span id="cb17-33"><a href="#cb17-33" aria-hidden="true" tabindex="-1"></a>    )[<span class="dv">0</span>]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div id="491ab6e2" class="cell" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Define the ODE residual</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    ode_residual <span class="op">=</span> d2y_dt2 <span class="op">+</span> g_true<span class="op">/</span>l_true<span class="op">*</span>torch.sin(y_pred_grid)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Compute the physics loss</span></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    physics_loss <span class="op">=</span> torch.mean(ode_residual <span class="op">**</span> <span class="dv">2</span>)</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Total loss</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    loss <span class="op">=</span> data_loss <span class="op">+</span> lambda_reg <span class="op">*</span> physics_loss</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Backward pass and optimization</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a>    loss.backward()</span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>    optimizer.step()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>The loop uses both kinds of derivative from the previous sections. The two <code>torch.autograd.grad</code> calls give the first and second time derivatives for the ODE residual, and <code>loss.backward()</code> then gives the derivative of the total loss with respect to the weights and biases, working back through those time derivatives, and adds it to each parameter’s <code>.grad</code>. As in Week 2, <code>optimizer.step()</code> uses these to update the parameters we gave the optimiser, <code>model.parameters()</code>, and <code>optimizer.zero_grad()</code> clears them at the start of the next pass. (<code>loss.backward()</code> also adds a derivative to the <code>.grad</code> of the tensor of times, since we created it with <code>requires_grad=True</code>, but nothing uses it because the optimiser only updates the weights and biases.)</p>
+<p>Each pass through the loop uses all the observations and all the fine-grid times, so this is <strong>full-batch gradient descent</strong>. As with the images in Week 5, we could instead split the fine-grid times into <strong>minibatches</strong>, with one step for each minibatch.</p>
+<p>Result:</p>
+<div id="4f63801e" class="cell" data-execution_count="16">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="hybrid_neural_files/figure-html/cell-17-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The network fits the data well, but after about <span class="math inline">\(t=7\)</span> the prediction stops swinging and sits at <span class="math inline">\(\theta\approx-\pi\)</span>, i.e.&nbsp;the pendulum balanced upside down. Why does it end up there? The ODE on its own has many solutions, including every swing of the pendulum and constants such as <span class="math inline">\(\theta=0\)</span> (at rest) and <span class="math inline">\(\theta=-\pi\)</span>, which satisfy the ODE exactly because <span class="math inline">\(\sin\theta=0\)</span> and the second derivative is zero. Initial conditions would pick out one of these, but the physics loss doesn’t include any. Up to <span class="math inline">\(t=5\)</span> the data play that role and select the swinging solution, but after the last observation nothing does.</p>
+<p>Since the physics loss is only a soft penalty and <span class="math inline">\(\lambda\)</span> is small, breaking the ODE slightly for a short time (here between about <span class="math inline">\(t=5\)</span> and <span class="math inline">\(t=7\)</span>) costs very little, and lets the curve move onto a different solution. Constants are especially easy for training to reach, since they make the residual exactly zero. This is a known difficulty with PINNs: fixed points (equilibria) of a dynamical system, like this one, create local minima in the physics loss that training can get stuck in, especially when the system starts close to one (our pendulum starts at 160°, nearly upside down) or the time interval is long (<a href="https://arxiv.org/abs/2203.13648">Rohrhofer et al., 2023</a>).</p>
+<p>The same difficulty arises without a neural network. If we use the spline data model from the hybrid linear models section, <span class="math inline">\(\theta=Bw\)</span>, with the same nonlinear physics loss and the same <span class="math inline">\(\lambda\)</span>, the loss is nonlinear in <span class="math inline">\(w\)</span>, and we can fit it by nonlinear least squares, as described above. The figure compares the result with the network’s. Up to <span class="math inline">\(t=5\)</span> both fit the data. After that the splines keep swinging, but with a smaller amplitude and a shorter period than the true motion, close to another solution of the pendulum equation (a pendulum’s smaller swings are faster). Neither model is pinned to the true motion once the data stop.</p>
+<div id="4655e6af" class="cell" data-execution_count="17">
+<div class="cell-output cell-output-display">
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="hybrid_neural_files/figure-html/cell-18-output-1.png" class="img-fluid quarto-figure quarto-figure-center figure-img"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="takeaways" class="level2">
+<h2 class="anchored" data-anchor-id="takeaways">Takeaways</h2>
+<p>Notes:</p>
+<ul>
+<li><p>Within the data, both hybrid models, the network and the splines, fit more flexibly than a pure physics model would, closely enough to follow the noise. Beyond the data the physics is enforced only weakly, so the fit can switch to another solution of the ODE. A hybrid model doesn’t by itself solve the extrapolation problem.</p></li>
+<li><p>Here the physics is exact, and the pure physics model, the pendulum ODE with its initial angle and velocity fitted to the data, extrapolates well, while the hybrid models do less well. A hybrid model is of most use when the physics is only approximately right, particularly within the range of the available data. (Fitting the pure model is also a nonlinear least-squares problem, and from a poor starting guess it can stop at a wrong solution too.)</p></li>
+<li><p><strong>I found it quite difficult</strong> to tune the training parameters for the neural network model! The model was very sensitive to the learning rate, the number of epochs, and the regularisation parameter. I also gave up on SGD and used the Adam optimiser instead! (Adam is a version of gradient descent that adapts the step size for each parameter as it goes. In PyTorch it is used just like <code>optim.SGD</code>.) Even then <strong>my results were not really that great.</strong></p></li>
+<li><p>Changing <span class="math inline">\(\lambda\)</span> doesn’t simply fix this. With <span class="math inline">\(\lambda = 0.1\)</span> the swings after <span class="math inline">\(t=5\)</span> shrink and die away, and with <span class="math inline">\(\lambda = 1\)</span> the network ignores the data altogether and predicts <span class="math inline">\(\theta\approx 0\)</span> throughout, i.e.&nbsp;the pendulum at rest, which also satisfies the ODE exactly. The true motion would score better on both losses, so here the loss doesn’t prefer the wrong answer, and training has instead got stuck on an easy solution.</p></li>
+<li><p>While this may be <strong>my own limitations</strong>, it is also a common issue with neural networks: they can be difficult to tune and interpret. This is another reason why we included simpler <strong>linear models</strong> in this course – they are often <strong>much easier to interpret and tune</strong>. In addition, the same ideas can be extended to nonlinear models using a similar approach to the linear model approach, without the need for neural networks.</p></li>
+<li><p>Having said that, with more time and effort, neural networks <strong>can</strong> be very impressive and powerful tools!</p></li>
+</ul>
+<p><strong>YOUR CHALLENGE: Try to improve the results above!</strong></p>
+<p>Further warnings<span class="math inline">\(\dots\)</span></p>
+</section>
+<section id="cautionary-notes" class="level2">
+<h2 class="anchored" data-anchor-id="cautionary-notes">Cautionary notes</h2>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="figures/pinns-hype2.png" class="img-fluid quarto-figure quarto-figure-center figure-img" style="width:50.0%"></p>
+</figure>
+</div>
+<p>From McGreivy and Hakim (2024), <a href="https://doi.org/10.1038/s42256-024-00897-5">Weak baselines and reporting biases lead to overoptimism in machine learning for fluid-related partial differential equations</a>, <em>Nature Machine Intelligence</em> 6, 1256–1269: <img src="figures/pinns-hype.png" class="img-fluid quarto-figure quarto-figure-center" style="width:60.0%"></p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<nav class="page-navigation">
+<div class="nav-page nav-page-previous">
+<a class="pagination-link aria-label=" href="./neural_models.html" networks"="" neural="">
+<i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Week 5: Neural networks</span>
+</a>
+</div>
+<div class="nav-page nav-page-next">
+</div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+<div class="nav-footer">
+<div class="nav-footer-left">
+<p>ENGSCI 205 — Weeks 1–6 notes.</p>
+</div>
+<div class="nav-footer-center">
+       
+    </div>
+<div class="nav-footer-right">
+<p><a href="downloads/EML-Week-01.pdf">Week 1 PDF</a> · <a href="downloads/EML-Week-02.pdf">Week 2 PDF</a> · <a href="downloads/EML-Week-03.pdf">Week 3 PDF</a> · <a href="downloads/EML-Week-04.pdf">Week 4 PDF</a> · <a href="downloads/EML-Week-05.pdf">Week 5 PDF</a> · <a href="downloads/EML-Week-06.pdf">Week 6 PDF</a></p>
+</div>
+</div>
+</footer>
+</body></html>
