@@ -29,3 +29,7 @@ Notes and problem sheets for my part of ENGSCI 721 at the University of Auckland
 ## Supplement
 
 - [Linear algebra](supplements/engsci-721-2026-supplement-I.pdf)
+
+## Revision game
+
+- [Regularisation Run](https://omaclaren.github.io/open-learning-material/engsci-721/2026/regularisation-run/): a snowboarding revision game for this part of the course, playable in a phone or desktop browser.
