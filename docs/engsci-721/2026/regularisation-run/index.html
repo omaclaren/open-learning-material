@@ -1,0 +1,1865 @@
+<!doctype html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Regularisation Run: a snowboarding revision game for ENGSCI 721 inverse problems. Answer at the slalom gates and in mid-air, collect procedures in order, and stop a Landweber iteration at the right moment.">
+<style>
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; font-size: 14px; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+<title>Regularisation Run</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Noto+Sans+Math&family=Russo+One&display=swap">
+<style>
+/* Layout: one full-screen canvas (a winding piste under a bright alpine sky, drawn at low resolution and scaled up
+   for a late-90s console look); a thin HUD on top, banners and answer chips laid over it, and overlay cards for the
+   menu, questions, feedback and results. The game commits to one look, so it sets its colours explicitly. */
+:root {
+  --ink: #0d1a2e;
+  --navy: #13284a;
+  --ice: #cfe6ff;
+  --snow: #f6fbff;
+  --flag: #e8413c;
+  --gateblue: #2f6fe0;
+  --gold: #ffc93c;
+  --good: #3ddc97;
+  --bad: #ff7468;
+  --muted: #a7bcd8;
+  --panel: rgba(12, 25, 46, 0.9);
+  --line: rgba(207, 230, 255, 0.22);
+  --font-display: "Russo One", "Arial Black", Impact, sans-serif;
+  --font-body: "Atkinson Hyperlegible", "Noto Sans Math", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-math: "Atkinson Hyperlegible", "Noto Sans Math", "Cambria Math", "STIX Two Math", system-ui, sans-serif;
+  color-scheme: dark;
+}
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body { background: var(--ink); color: var(--snow); font-family: var(--font-body); overflow: hidden; }
+#app { position: relative; height: 100%; overflow: hidden; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent; }
+#view { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; image-rendering: pixelated; image-rendering: crisp-edges; }
+
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+
+/* HUD */
+.hud {
+  position: absolute; top: 0; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding-block: 10px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  pointer-events: none;
+}
+.hud-group { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.score-box { display: flex; flex-direction: column; line-height: 1.05; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 5px 11px 6px; }
+.score { font-family: var(--font-display); font-size: clamp(20px, 3vw, 28px); color: var(--gold); font-variant-numeric: tabular-nums; }
+.tally { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 0.03em; font-variant-numeric: tabular-nums; }
+.lives { display: flex; gap: 5px; background: var(--panel); border-radius: 999px; padding: 6px 8px; }
+.lives:empty { display: none; }
+.pip { width: 12px; height: 12px; border-radius: 50%; background: var(--flag); box-shadow: 0 0 0 2px rgba(13,26,46,0.35); }
+.pip.lost { background: transparent; box-shadow: inset 0 0 0 2px rgba(207,230,255,0.4); }
+.pill-btn {
+  pointer-events: auto; border: 1px solid var(--line); background: var(--panel);
+  border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 700; letter-spacing: 0.02em;
+}
+
+/* Sequence banner */
+.banner {
+  position: absolute; left: 0; right: 0; top: 54px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  pointer-events: none;
+}
+.banner-box {
+  max-width: 760px; margin-inline: auto; background: rgba(12, 25, 46, 0.94); border: 1px solid rgba(255,201,60,0.5);
+  border-radius: 14px; padding: 12px 14px 10px; display: flex; flex-direction: column; gap: 10px;
+}
+.tag { font-family: var(--font-display); font-size: 12px; letter-spacing: 0.08em; color: var(--gold); }
+.prompt { font-size: clamp(19px, 1.2vw + 14px, 26px); font-weight: 700; line-height: 1.25; text-wrap: balance; min-width: 0; }
+.goal { font-size: 15px; color: #dbe7f7; }
+.goal b { color: var(--gold); }
+
+/* Answer chips, one per lane, above the piste */
+.lanes {
+  position: absolute; left: 0; right: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  pointer-events: none;
+}
+.lanes-row { max-width: 820px; margin-inline: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.lane-chip {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  min-height: 64px; padding: 10px 8px; border-radius: 12px; text-align: center; min-width: 0;
+  background: rgba(12, 25, 46, 0.94); border: 2px solid rgba(207,230,255,0.3);
+  box-shadow: 0 6px 16px rgba(13,26,46,0.35);
+}
+.lane-chip .lane-text { font-family: var(--font-math); font-weight: 700; font-size: clamp(15px, 0.9vw + 11px, 21px); line-height: 1.2; overflow-wrap: anywhere; }
+.lane-chip .lane-tag { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lane-chip.here { background: var(--gold); border-color: #fff0c2; color: var(--ink); }
+.lane-chip.here .lane-tag { color: #6b4d00; }
+.seq-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip-step { font-family: var(--font-math); font-size: 13px; font-weight: 700; padding: 4px 8px; border-radius: 7px; background: rgba(61,220,151,0.16); color: #c8f6e1; }
+.chip-step.todo { background: transparent; box-shadow: inset 0 0 0 1.5px rgba(207,230,255,0.35); color: var(--snow); }
+.chips-label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); align-self: center; }
+.q-steps .chip-step { font-size: 15px; padding: 6px 10px; }
+
+/* Label for the nearest hazard in the rider's lane (one at a time, so labels never overlap) */
+.haz-tag {
+  position: absolute; left: 0; top: 0; pointer-events: none; will-change: transform;
+  display: flex; align-items: baseline; gap: 6px; white-space: nowrap;
+  background: var(--flag); color: #fff; border-radius: 8px; padding: 5px 9px;
+  font-family: var(--font-math); font-weight: 700; font-size: 14px; box-shadow: 0 4px 12px rgba(13,26,46,0.35);
+}
+.haz-tag::after {
+  content: ""; position: absolute; left: 50%; bottom: -6px; margin-left: -6px;
+  border: 6px solid transparent; border-bottom: 0; border-top-color: var(--flag);
+}
+.haz-tag .haz-k { font-family: var(--font-display); font-size: 10px; letter-spacing: 0.08em; color: #ffe0dc; }
+
+/* Toast */
+.toast {
+  position: absolute; left: 50%; top: 58px; transform: translate(-50%, -8px);
+  width: max-content; max-width: min(640px, calc(100% - 32px));
+  background: rgba(12, 25, 46, 0.94); border: 1px solid rgba(61,220,151,0.5); border-radius: 14px; padding: 12px 16px;
+  display: flex; flex-direction: column; gap: 4px; text-align: center;
+  opacity: 0; transition: opacity 160ms ease, transform 160ms ease; pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast b { font-family: var(--font-display); font-weight: 400; font-size: 20px; letter-spacing: 0.04em; }
+.toast.good b { color: var(--good); }
+.toast.trick b { color: var(--gold); font-size: 24px; }
+.toast span { font-size: 16px; line-height: 1.4; color: #e2ecf8; }
+
+/* Overlays */
+.overlay {
+  position: absolute; inset: 0; display: grid; place-items: center;
+  padding-block: 20px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  background: rgba(8, 16, 30, 0.45); overflow-y: auto;
+}
+.card {
+  width: min(580px, 100%); max-height: 100%; overflow-y: auto;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 18px;
+  padding: 22px; display: flex; flex-direction: column; gap: 14px;
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+.eyebrow { font-family: var(--font-display); font-size: 12px; letter-spacing: 0.1em; color: var(--gold); margin: 0; }
+.title {
+  font-family: var(--font-display); font-weight: 400; margin: 0; line-height: 0.95; letter-spacing: 0.01em;
+  font-size: clamp(34px, 8.4vw, 58px); color: var(--snow); text-wrap: balance;
+  text-shadow: 3px 3px 0 var(--gateblue), 6px 6px 0 var(--flag);
+}
+.lede { margin: 0; font-size: 16px; line-height: 1.5; color: #dbe7f7; max-width: 62ch; }
+fieldset { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+legend { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); padding: 0; margin-bottom: 8px; }
+.topic-chips { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 8px; }
+.topic {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left;
+  border: 1.5px solid var(--line); background: rgba(207,230,255,0.04); border-radius: 11px; padding: 8px 10px;
+}
+.topic b { font-size: 14px; }
+.topic small { font-size: 12px; color: var(--muted); }
+.topic[aria-pressed="true"] { border-color: var(--gold); background: rgba(255,201,60,0.12); }
+.primary {
+  border: 0; border-radius: 12px; padding: 13px 18px; background: var(--gold); color: var(--ink);
+  font-family: var(--font-display); font-size: 17px; letter-spacing: 0.05em; box-shadow: 0 3px 0 #c28f10;
+}
+.primary:active { transform: translateY(2px); box-shadow: 0 1px 0 #c28f10; }
+.primary:disabled { opacity: 0.45; cursor: not-allowed; }
+.secondary { border: 1.5px solid var(--line); border-radius: 12px; padding: 12px 16px; background: transparent; font-weight: 700; }
+.event {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; text-align: left;
+  border: 1.5px solid rgba(47,111,224,0.7); background: rgba(47,111,224,0.14); border-radius: 12px; padding: 10px 12px;
+}
+.event b { font-family: var(--font-display); font-weight: 400; font-size: 16px; letter-spacing: 0.04em; color: var(--ice); }
+.event small { grid-column: 1; font-size: 13px; line-height: 1.4; color: #c8d8ee; }
+.event .go { grid-row: 1 / span 2; grid-column: 2; font-family: var(--font-display); font-size: 14px; color: var(--gold); }
+.controls { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: #dbe7f7; }
+kbd {
+  font-family: var(--font-body); font-size: 12px; font-weight: 700; border: 1px solid var(--line); border-bottom-width: 2px;
+  border-radius: 5px; padding: 1px 6px; background: rgba(207,230,255,0.06); color: var(--snow);
+}
+.fine { margin: 0; font-size: 13px; color: var(--muted); }
+.row { display: flex; flex-wrap: wrap; gap: 10px; }
+.row > button { flex: 1 1 160px; }
+
+.kind { align-self: flex-start; margin: 0; font-family: var(--font-display); font-size: 12px; letter-spacing: 0.08em; padding: 4px 10px; border-radius: 999px; background: rgba(255,116,104,0.16); color: var(--bad); }
+.fb-title { margin: 0; font-size: 20px; line-height: 1.3; text-wrap: balance; }
+.answers { display: flex; flex-direction: column; gap: 8px; }
+.ans { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 10px; align-items: baseline; }
+.ans dt { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.ans dd { margin: 0; font-family: var(--font-math); font-weight: 700; font-size: 15px; overflow-wrap: anywhere; }
+.ans dd.wrong { color: var(--bad); text-decoration: line-through; text-decoration-thickness: 2px; }
+.ans dd.right { color: var(--good); }
+.why { margin: 0; font-size: 16px; line-height: 1.5; color: #e2ecf8; }
+.hint { margin: 0; font-size: 12px; color: var(--muted); text-align: center; }
+
+/* Question pop-up: the three options are the three gates */
+#qOv { background: rgba(8, 16, 30, 0.5); }
+.q-card, .q-card:focus-visible { border-color: rgba(255,201,60,0.55); outline: none; }
+.q-card.air { border-color: rgba(47,111,224,0.9); box-shadow: 0 0 0 3px rgba(47,111,224,0.25); }
+.q-prompt { margin: 0; font-size: clamp(21px, 1.4vw + 15px, 28px); line-height: 1.25; text-wrap: balance; }
+.q-opts { display: flex; flex-direction: column; gap: 10px; }
+.q-opt {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; text-align: left;
+  padding: 13px 14px; border-radius: 12px; border: 2px solid rgba(207,230,255,0.25); background: rgba(207,230,255,0.06);
+  font-family: var(--font-math); font-weight: 700; font-size: clamp(17px, 0.6vw + 14px, 21px); line-height: 1.25;
+}
+.q-opt span { overflow-wrap: anywhere; }
+.q-opt i { font-style: normal; font-family: var(--font-body); font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.q-opt:hover:not(:disabled) { border-color: var(--gold); background: rgba(255,201,60,0.12); }
+.q-opt:disabled { cursor: default; opacity: 0.55; }
+.q-opt.right { border-color: var(--good); background: rgba(61,220,151,0.2); opacity: 1; }
+.q-opt.wrong { border-color: var(--bad); background: rgba(255,116,104,0.16); opacity: 1; }
+.q-opt.right span { color: #c8f6e1; }
+.q-opt.wrong span { color: #ffd2cd; text-decoration: line-through; }
+.verdict { margin: 0; font-family: var(--font-display); font-size: 20px; letter-spacing: 0.04em; }
+.verdict.good { color: var(--good); }
+.verdict.bad { color: var(--bad); }
+.q-result { display: flex; flex-direction: column; gap: 6px; }
+
+.final { display: flex; align-items: baseline; gap: 10px; }
+.big { font-family: var(--font-display); font-size: clamp(44px, 10vw, 66px); color: var(--gold); line-height: 1; font-variant-numeric: tabular-nums; }
+.unit { font-size: 15px; color: var(--muted); }
+.stats { margin: 0; font-size: 15px; color: #dbe7f7; line-height: 1.5; }
+.review { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.review li { border-top: 1px solid var(--line); padding-top: 10px; display: flex; flex-direction: column; gap: 4px; }
+.review .rk { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); }
+.review .rq { font-weight: 700; font-size: 15px; line-height: 1.35; }
+.review .ra { font-family: var(--font-math); font-weight: 700; font-size: 14px; color: var(--good); overflow-wrap: anywhere; }
+.review .rw { font-size: 14px; color: var(--muted); line-height: 1.45; }
+.share { display: flex; flex-direction: column; gap: 8px; }
+.share .row > button { flex: 0 1 auto; }
+.copy-text { width: 100%; font-family: var(--font-body); font-size: 14px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: rgba(207,230,255,0.06); color: var(--snow); }
+.bests { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; counter-reset: best; }
+.bests li {
+  counter-increment: best; display: grid; grid-template-columns: 2ch 7ch minmax(0, 1fr); gap: 10px; align-items: baseline;
+  font-size: 14px; color: #dbe7f7; font-variant-numeric: tabular-nums; padding: 3px 6px; border-radius: 6px;
+}
+.bests li::before { content: counter(best); color: var(--muted); text-align: right; }
+.bests li b { color: var(--snow); text-align: right; }
+.bests li.now { background: rgba(255,201,60,0.14); }
+.bests li.now b { color: var(--gold); }
+h3 { margin: 0; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+
+/* Early Stopping event */
+.es-panel {
+  position: absolute; top: 70px; right: 0; left: 0; pointer-events: none;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.es-box {
+  margin-left: auto; width: min(340px, 100%); background: rgba(12, 25, 46, 0.9); border: 1px solid rgba(47,111,224,0.7);
+  border-radius: 14px; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px;
+}
+.es-k { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.es-k b { font-family: var(--font-display); font-weight: 400; font-size: 24px; color: var(--gold); font-variant-numeric: tabular-nums; }
+.es-k span { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.es-plot { width: 100%; height: auto; display: block; }
+.es-cap { margin: 0; font-size: 12px; line-height: 1.35; color: #c8d8ee; }
+.stop-wrap {
+  position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: center; pointer-events: none;
+  padding-bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.stop-btn {
+  pointer-events: auto; border: 0; border-radius: 16px; padding: 14px 34px; min-width: min(320px, 100%);
+  background: var(--flag); color: #fff; font-family: var(--font-display); font-size: 24px; letter-spacing: 0.08em;
+  box-shadow: 0 4px 0 #9d221d, 0 10px 24px rgba(13,26,46,0.4);
+}
+.stop-btn small { display: block; font-family: var(--font-body); font-size: 12px; font-weight: 700; letter-spacing: 0.04em; opacity: 0.85; }
+.stop-btn:active { transform: translateY(3px); box-shadow: 0 1px 0 #9d221d; }
+.es-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 0; padding: 0; list-style: none; font-size: 13px; color: #dbe7f7; }
+.es-legend li { display: flex; align-items: center; gap: 6px; }
+.es-legend i { width: 14px; height: 4px; border-radius: 2px; display: inline-block; }
+.es-figure { width: 100%; height: auto; display: block; border-radius: 10px; background: rgba(207,230,255,0.04); }
+
+@media (max-width: 420px) {
+  .card { padding: 18px; gap: 12px; }
+  .banner { top: 50px; }
+  .ans { grid-template-columns: 1fr; gap: 2px; }
+  .es-box { padding: 8px 10px; }
+}
+@media (max-width: 560px) {
+  .es-cap { display: none; }
+  .es-plot { max-height: 150px; width: auto; max-width: 100%; margin-inline: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast { transition: none; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <canvas id="view" aria-label="Regularisation Run piste"></canvas>
+
+  <header class="hud" id="hud" hidden>
+    <div class="hud-group">
+      <div class="score-box"><span class="score" id="score">0</span><span class="tally" id="tally">0 of 0 right</span></div>
+    </div>
+    <div class="hud-group">
+      <div class="lives" id="lives" aria-label="Lives"></div>
+      <button class="pill-btn" id="soundBtn" type="button" aria-pressed="true">Sound on</button>
+      <button class="pill-btn" id="pauseBtn" type="button">Pause</button>
+    </div>
+  </header>
+
+  <section class="banner" id="sBanner" hidden aria-live="polite">
+    <div class="banner-box">
+      <span class="tag" id="sTag">IN ORDER</span>
+      <span class="prompt" id="sTitle"></span>
+      <span class="goal" id="sGoal"></span>
+      <div class="seq-chips" id="sChips"></div>
+    </div>
+  </section>
+
+  <section class="lanes" id="laneChips" hidden aria-label="Steps by lane">
+    <div class="lanes-row">
+      <div class="lane-chip"><span class="lane-tag">Left</span><span class="lane-text"></span></div>
+      <div class="lane-chip"><span class="lane-tag">Middle</span><span class="lane-text"></span></div>
+      <div class="lane-chip"><span class="lane-tag">Right</span><span class="lane-text"></span></div>
+    </div>
+  </section>
+
+  <div class="haz-tag" id="hazTag" hidden><span class="haz-k">AVOID</span><span id="hazName"></span></div>
+
+  <section class="es-panel" id="esPanel" hidden aria-live="off">
+    <div class="es-box">
+      <div class="es-k"><span>Landweber iteration</span><b id="esK">k = 1</b></div>
+      <canvas class="es-plot" id="esPlot" width="320" height="190" aria-label="Residual and current reconstruction"></canvas>
+      <p class="es-cap">Top: data misfit ‖Ax<sub>k</sub> − y‖ against k, with the noise level δ dashed. Bottom: your reconstruction x<sub>k</sub> over the blurred, noisy data y.</p>
+    </div>
+  </section>
+  <div class="stop-wrap" id="stopWrap" hidden><button class="stop-btn" id="stopBtn" type="button">STOP<small>Space or Enter</small></button></div>
+
+  <div class="toast" id="toast" role="status"><b id="toastHead"></b><span id="toastBody"></span></div>
+
+  <div class="overlay" id="menu">
+    <div class="card">
+      <p class="eyebrow">ENGSCI 721 · Inverse problems revision</p>
+      <h1 class="title">Regularisation Run</h1>
+      <p class="lede">Carve down the piste and stay stable. At each slalom the run pauses for a question: the three answers are the three gates. Off a kicker you answer in mid-air to land the trick. On some stretches you collect the steps of a procedure in order.</p>
+      <fieldset>
+        <legend>Runs to revise</legend>
+        <div class="topic-chips" id="topicChips"></div>
+      </fieldset>
+      <button class="primary" id="startBtn" type="button">Drop in</button>
+      <button class="event" id="esBtn" type="button">
+        <b>Event: Early Stopping</b>
+        <small>Each metre down the hill is another Landweber iteration on a noisy deconvolution. Stop at the right moment.</small>
+        <span class="go">Go</span>
+      </button>
+      <button class="secondary" id="menuSoundBtn" type="button" aria-pressed="true">Sound and music: on</button>
+      <ul class="controls">
+        <li><kbd>←</kbd> <kbd>→</kbd> or swipe sideways to carve to the next lane</li>
+        <li><kbd>↑</kbd> or <kbd>Space</kbd> or swipe up to ollie over logs</li>
+        <li><kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> pick the left, middle or right gate. <kbd>P</kbd> pauses. On a phone, tap the left, middle or right of the piste.</li>
+      </ul>
+      <p class="fine" id="bestLine" hidden></p>
+    </div>
+  </div>
+
+  <div class="overlay" id="qOv" hidden>
+    <div class="card q-card" id="qCard" role="dialog" aria-modal="true" aria-labelledby="qPrompt" tabindex="-1">
+      <p class="eyebrow" id="qTag">RUN 1 · SLALOM</p>
+      <h2 class="q-prompt" id="qPrompt"></h2>
+      <div class="q-opts" id="qOpts">
+        <button class="q-opt" type="button" data-i="0"><kbd>1</kbd><span></span><i>Left gate</i></button>
+        <button class="q-opt" type="button" data-i="1"><kbd>2</kbd><span></span><i>Middle gate</i></button>
+        <button class="q-opt" type="button" data-i="2"><kbd>3</kbd><span></span><i>Right gate</i></button>
+      </div>
+      <div class="q-result" id="qResult" hidden><p class="verdict" id="qVerdict"></p><p class="why" id="qWhy"></p></div>
+      <div class="seq-chips q-steps" id="qSteps" hidden></div>
+      <button class="primary" id="qGo" type="button" hidden>Keep riding</button>
+      <p class="hint" id="qHint">Tap a gate, or press 1, 2 or 3</p>
+    </div>
+  </div>
+
+  <div class="overlay" id="cardOv" hidden>
+    <div class="card" role="dialog" aria-modal="true" aria-labelledby="fbTitle">
+      <p class="kind" id="fbKind">Wipeout</p>
+      <h2 class="fb-title" id="fbTitle"></h2>
+      <dl class="answers" id="fbAnswers"></dl>
+      <p class="why" id="fbWhy"></p>
+      <button class="primary" id="fbBtn" type="button">Keep riding</button>
+      <p class="hint" id="fbHint">Space or Enter also continues</p>
+    </div>
+  </div>
+
+  <div class="overlay" id="pauseOv" hidden>
+    <div class="card">
+      <p class="eyebrow">Paused</p>
+      <div class="row">
+        <button class="primary" id="resumeBtn" type="button">Resume</button>
+        <button class="secondary" id="quitBtn" type="button">End run</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="overOv" hidden>
+    <div class="card">
+      <p class="eyebrow">Run over</p>
+      <div class="final"><span class="big" id="finalScore">0</span><span class="unit">points</span></div>
+      <p class="stats" id="finalStats"></p>
+      <div class="row">
+        <button class="primary" id="againBtn" type="button">Ride again</button>
+        <button class="secondary" id="menuBtn" type="button">Change runs</button>
+      </div>
+      <div class="share">
+        <div class="row"><button class="secondary" id="copyBtn" type="button">Copy my result</button></div>
+        <input class="copy-text" id="copyText" type="text" readonly hidden aria-label="Your result">
+        <p class="fine" id="copyNote">Then paste it into the leaderboard thread on Canvas.</p>
+      </div>
+      <section id="reviewSec" class="answers">
+        <h3>Worth another look</h3>
+        <ol class="review" id="reviewList"></ol>
+      </section>
+      <section class="answers">
+        <h3>Your best runs on this device</h3>
+        <ol class="bests" id="bestsList"></ol>
+      </section>
+    </div>
+  </div>
+
+  <div class="overlay" id="esOv" hidden>
+    <div class="card">
+      <p class="eyebrow">Early Stopping · result</p>
+      <div class="final"><span class="big" id="esScore">0</span><span class="unit">of 1,000</span></div>
+      <p class="stats" id="esStats"></p>
+      <canvas class="es-figure" id="esFig" width="540" height="420" aria-label="Error and misfit against iteration, and the reconstructions"></canvas>
+      <ul class="es-legend" id="esLegend"></ul>
+      <p class="why" id="esWhy"></p>
+      <div class="row">
+        <button class="primary" id="esAgainBtn" type="button">Ride it again</button>
+        <button class="secondary" id="esMenuBtn" type="button">Back to the lodge</button>
+      </div>
+      <div class="share">
+        <div class="row"><button class="secondary" id="esCopyBtn" type="button">Copy my result</button></div>
+        <input class="copy-text" id="esCopyText" type="text" readonly hidden aria-label="Your Early Stopping result">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Question bank. Each gate has exactly three options and the index of the right one; "why" is shown after the answer.
+     "air" marks the harder questions asked mid-air off a kicker. Sequences are collected in the order given.
+     Hazards label the trees and logs. Limits are asserted by build.py. -->
+<script type="application/json" id="bank">
+{"gates":[{"topic":1,"air":false,"prompt":"Hadamard: a well-posed problem has a solution that exists, is unique and is...","options":["linear","stable","sparse"],"answer":1,"why":"Hadamard's third condition is stability: small changes in the data should give small changes in the solution.","source":"engsci-721-2026-lecture-01-overview.pdf p.7"},{"topic":1,"air":false,"prompt":"A forward model blurs a sharp image. Which task is the inverse problem?","options":["Recover the sharp image from the blur","Predict the blur from a sharp image","Apply the blur twice to a sharp image"],"answer":0,"why":"The forward map goes from a sharp image to a blurred one. Inversion uses the blurred observations to infer the sharp image.","source":"engsci-721-2026-lecture-01-overview.pdf p.6, p.13"},{"topic":1,"air":false,"prompt":"A = [1 −1] and y = 1. What is the minimum-norm solution x⁺ of Ax = y?","options":["(1, 0)","(0.5, −0.5)","(1, −1)"],"answer":1,"why":"A⁺ = Aᵀ(AAᵀ)⁻¹ = (1, −1)/2, so x⁺ = (0.5, −0.5). (1, 0) also fits exactly but has a larger norm; (1, −1) gives Ax = 2.","source":"engsci-721-lecture-02-inverses-I.pdf p.9; engsci-721-2026-problems-L01-L05.pdf P6, P10"},{"topic":1,"air":false,"prompt":"Tall A (m > n) with independent columns. Which inverse exists?","options":["Right: AR = I","Two-sided A⁻¹","Left: LA = I"],"answer":2,"why":"Independent columns make AᵀA invertible, so L = (AᵀA)⁻¹Aᵀ gives LA = I; AR = I is impossible when m > n.","source":"engsci-721-lecture-03-inverses-II.pdf p.4-5; engsci-721-2026-problems-L01-L05.pdf P5"},{"topic":1,"air":false,"prompt":"For inconsistent data, what does switching to least squares achieve?","options":["It makes the exact solution unique","It prevents noise amplification","It provides a best approximate fit"],"answer":2,"why":"No exact fit exists when y lies outside the image of A. Least squares instead finds a model with minimum residual.","source":"engsci-721-lecture-02-inverses-I.pdf p.5, p.10; engsci-721-2026-problems-L01-L05.pdf P5"},{"topic":1,"air":false,"prompt":"Wide A, independent rows: which exact solution does Aᵀ(AAᵀ)⁻¹y pick?","options":["The exact fit with least variation","The exact fit with smallest norm","The exact fit with fewest nonzeros"],"answer":1,"why":"Every exact solution has zero residual; the right inverse Aᵀ(AAᵀ)⁻¹ picks the one of minimum norm.","source":"engsci-721-lecture-02-inverses-I.pdf p.9; engsci-721-2026-problems-L01-L05.pdf P6, P10"},{"topic":1,"air":false,"prompt":"Wide A with independent rows. Which resolution matrix equals the identity?","options":["Model: A⁺A","Neither of them","Data: AA⁺"],"answer":2,"why":"A⁺ is then a right inverse, so AA⁺ = I and any data can be fitted exactly. A⁺A only projects onto the row space.","source":"engsci-721-lecture-03-inverses-II.pdf p.10; test/main.tex Q1(b) (idea only); engsci-721-2026-problems-L01-L05.pdf P11"},{"topic":1,"air":false,"prompt":"Which matrix is the model resolution matrix?","options":["AA⁺","AᵀA","A⁺A"],"answer":2,"why":"A⁺A maps model space to model space and shows how the model is smeared; AA⁺ is the data resolution matrix.","source":"engsci-721-lecture-03-inverses-II.pdf p.8; engsci-721-2026-problems-L01-L05.pdf P11"},{"topic":1,"air":false,"prompt":"Tall A with independent columns. Which resolution matrix equals I?","options":["Model: A⁺A","Data: AA⁺","Both of them"],"answer":0,"why":"A⁺ is then a left inverse, so A⁺A = I and noise-free models are recovered exactly, while AA⁺ only projects the data.","source":"engsci-721-lecture-03-inverses-II.pdf p.10; engsci-721-2026-problems-L01-L05.pdf P11"},{"topic":1,"air":false,"prompt":"Least-squares fit of the constant model yᵢ ≈ a to y = (1, 2, 6). a = ?","options":["2","3","9"],"answer":1,"why":"A is a column of ones, so AᵀA = 3 and Aᵀy = 9, and the normal equations give a = 3, the mean.","source":"engsci-721-lecture-02-inverses-I.pdf p.8; engsci-721-lecture-05-calculus.pdf p.7"},{"topic":1,"air":false,"prompt":"A⁺y gives one estimate for any data y. Which practical difficulty can remain?","options":["Amplification of small data errors","Nonexistence of A⁺ for rectangular A","Several pseudoinverses for the same A"],"answer":0,"why":"The pseudoinverse is uniquely defined for every matrix, but its estimate can be very sensitive to data errors.","source":"engsci-721-lecture-03-inverses-II.pdf p.6, p.10; engsci-721-lecture-06-regularisation.pdf p.2"},{"topic":1,"air":true,"prompt":"Exact solutions of Ax = y are x⁺ + z with Az = 0. To which vectors is the minimum-norm x⁺ orthogonal?","options":["Every null-space vector z","Every row of A","The data vector y"],"answer":0,"why":"x⁺ lies in the row space of A, which is orthogonal to the null space, so adding any z ≠ 0 can only increase the norm.","source":"engsci-721-lecture-02-inverses-I.pdf p.9; test/main.tex Q1(e) (idea only); engsci-721-2026-problems-L01-L05.pdf P8"},{"topic":1,"air":true,"prompt":"For inconsistent data, A⁺y has the smallest model norm among which candidates?","options":["All possible model vectors","All least-squares minimisers","All vectors with sparse entries"],"answer":1,"why":"The restriction to least-squares minimisers is essential. Minimising norm over every model would simply choose zero.","source":"engsci-721-lecture-03-inverses-II.pdf p.7; engsci-721-2026-problems-L01-L05.pdf P9"},{"topic":2,"air":false,"prompt":"For fixed inputs t, y = a + bt + ct² + dt³ is linear in which quantities?","options":["The coefficients, but not generally t","The input t, but not the coefficients","Both t and the coefficients"],"answer":0,"why":"Each observation is a fixed combination of a, b, c and d. The matrix columns are 1, t, t² and t³.","source":"engsci-721-2026-problems-L01-L05.pdf P1; engsci-721-lecture-02-inverses-I.pdf p.10"},{"topic":2,"air":false,"prompt":"For linear F, eⱼ is input unit vector j. What gives column j of its matrix?","options":["F(eⱼ), the response to unit input j","Row j of the matrix, written as a column","xⱼF(x), the scaled response at x"],"answer":0,"why":"Writing x = Σ xⱼeⱼ, linearity gives F(x) = Σ xⱼF(eⱼ), so the columns of A are the images F(eⱼ).","source":"engsci-721-lecture-04-linearity.pdf p.7; engsci-721-2026-problems-L01-L05.pdf P12"},{"topic":2,"air":false,"prompt":"Which map from vectors to vectors is NOT linear?","options":["Cumulative summation","Adding a constant, x ↦ x + c","Finite differencing"],"answer":1,"why":"For c ≠ 0, F(0) = c ≠ 0, so linearity fails. Summation and differencing are matrix operations, like the lecture examples.","source":"engsci-721-2026-problems-L01-L05.pdf P3; engsci-721-lecture-04-linearity.pdf"},{"topic":2,"air":false,"prompt":"Image X blurred as Bc X Brᵀ. Then vec(blurred) = M vec(X) with M = ?","options":["Bc ⊗ Br","Brᵀ ⊗ Bc","Br ⊗ Bc"],"answer":2,"why":"vec(ABC) = (Cᵀ ⊗ A)vec(B) with C = Brᵀ, so Cᵀ = Br and M = Br ⊗ Bc.","source":"engsci-721-2026-problems-L01-L05.pdf P15; engsci-721-lecture-04-linearity.pdf p.17, p.19"},{"topic":2,"air":false,"prompt":"A linear blur maps a 100 × 100 image to another 100 × 100 image. Matrix size?","options":["100 × 100","10⁴ × 10⁴","10⁴ × 100"],"answer":1,"why":"vec(X) and the blurred vec(B) each have 100² = 10⁴ entries, so A vec(X) = vec(B) needs a 10⁴ × 10⁴ matrix.","source":"engsci-721-lecture-04-linearity.pdf p.11, p.13"},{"topic":2,"air":false,"prompt":"A is 5 × 3. What are the sizes of AᵀA and AAᵀ?","options":["3 × 3 and 5 × 5","5 × 5 and 3 × 3","5 × 3 and 3 × 5"],"answer":0,"why":"Aᵀ is 3 × 5, so AᵀA is (3 × 5)(5 × 3) = 3 × 3 and AAᵀ is 5 × 5. Checking sizes catches transpose and order errors.","source":"engsci-721-lecture-05-calculus.pdf; test/engsci-721-2026-test-1-worked-solutions-marking-scheme.tex Q2(b) notes"},{"topic":2,"air":false,"prompt":"In outer-product form, AB is a sum over k of which products?","options":["(row k of A)(column k of B)","(column k of A)(column k of B)","(column k of A)(row k of B)"],"answer":2,"why":"Each column-times-row term is a full matrix, and AB = Σₖ aₖbₖᵀ. Row-times-column gives single entries: the dot-product form.","source":"engsci-721-2026-problems-L01-L05.pdf P13; engsci-721-lecture-04-linearity.pdf"},{"topic":2,"air":false,"prompt":"Jacobian layout, A constant: the derivative Dₓ(Ax) is...","options":["Aᵀ","A","2A"],"answer":1,"why":"This is the linear rule: Dₓ(Ax) = A, whose row i is the derivative of output i.","source":"engsci-721-lecture-05-calculus.pdf p.5-6"},{"topic":2,"air":false,"prompt":"For a general square A, what is Dₓ(xᵀAx) in row-derivative layout?","options":["xᵀ(A + Aᵀ)","2xᵀA","xᵀA"],"answer":0,"why":"The derivative is the row vector xᵀ(A + Aᵀ); it equals 2xᵀA only when A is symmetric.","source":"engsci-721-lecture-05-calculus.pdf p.6, p.17"},{"topic":2,"air":false,"prompt":"f(x) = ‖y − Ax‖². What is the gradient ∇ₓf = (Dₓf)ᵀ?","options":["2Aᵀ(y − Ax)","2Aᵀ(Ax − y)","2A(Ax − y)"],"answer":1,"why":"Dₓf = −2yᵀA + 2xᵀAᵀA, a row vector; transposing gives ∇ₓf = 2Aᵀ(Ax − y). 2A(Ax − y) has the wrong size unless A is square.","source":"engsci-721-lecture-05-calculus.pdf p.7; engsci-721-2026-problems-L01-L05.pdf P17"},{"topic":2,"air":false,"prompt":"Setting the gradient of ‖Ax − y‖² + λ‖x‖² to zero gives which equations?","options":["(AᵀA + λ²I)x = Aᵀy","(AAᵀ + λI)x = y","(AᵀA + λI)x = Aᵀy"],"answer":2,"why":"The gradient is 2AᵀAx − 2Aᵀy + 2λx; setting it to zero gives (AᵀA + λI)x = Aᵀy. The penalty adds λ, not λ², to AᵀA.","source":"engsci-721-lecture-06-regularisation.pdf p.9-11; test/main.tex Q2(b) (idea only)"},{"topic":2,"air":true,"prompt":"For a scalar loss J, dJ = gᵀdx. If g is nonzero, which direction does g point?","options":["The direction of steepest increase in J","The direction of steepest decrease in J","The direction directly to the minimum of J"],"answer":0,"why":"The differential gives the local change in J. Its gradient points uphill most steeply; it need not point at the minimiser.","source":"engsci-721-lecture-05-calculus.pdf (differentials); engsci-721-lecture-11-iterative.pdf p.10"},{"topic":2,"air":true,"prompt":"J(x) = ½xᵀAᵀAx − yᵀAx + ½yᵀy. What is its Hessian (matrix of second derivatives)?","options":["AᵀA","2AᵀA","AᵀAx − Aᵀy"],"answer":0,"why":"The quadratic term ½xᵀ(AᵀA)x has Hessian AᵀA (symmetric). AᵀAx − Aᵀy is the gradient; 2AᵀA forgets the ½.","source":"engsci-721-lecture-05-calculus.pdf p.18; engsci-721-2026-problems-L01-L05.pdf P19"},{"topic":3,"air":false,"prompt":"Tikhonov: minimise ‖Ax − y‖² + λ‖x‖². As λ → 0 (λ > 0), x(λ) tends to...","options":["A⁺y","The zero vector","Aᵀy"],"answer":0,"why":"The Tikhonov inverse (AᵀA + λI)⁻¹Aᵀ tends to the pseudoinverse: the unregularised, possibly unstable solution.","source":"engsci-721-lecture-06-regularisation.pdf p.11; engsci-721-2026-problems-L06-L10.qmd P3"},{"topic":3,"air":false,"prompt":"Tikhonov with penalty λ‖x‖² and λ → ∞: x(λ) tends to...","options":["The zero vector","A⁺y","Aᵀy"],"answer":0,"why":"The size penalty increasingly dominates, driving x towards zero rather than towards the unregularised least-squares fit.","source":"engsci-721-lecture-06-regularisation.pdf p.11; engsci-721-2026-problems-L06-L10.qmd P3"},{"topic":3,"air":false,"prompt":"D₁ forms neighbouring differences. What does the penalty ‖D₁x‖₁ encourage to be sparse?","options":["The values of x themselves","The neighbouring differences in x","The second differences in x"],"answer":1,"why":"The L1 norm acts on D₁x, not x. Sparse differences mean many flat stretches separated by a few jumps.","source":"engsci-721-lecture-08-l1-norm.pdf p.6; engsci-721-2026-problems-L06-L10.qmd P6"},{"topic":3,"air":false,"prompt":"Why does [A; √λ I] have independent columns for any A when λ > 0?","options":["λ > 0 makes A itself full column rank","Stacking makes the system tall, so it is","[A; √λ I]x = 0 forces √λ x = 0, so x = 0"],"answer":2,"why":"Any x with [A; √λ I]x = 0 has √λ x = 0, so x = 0. A itself is unchanged, and being tall alone never guarantees independent columns.","source":"engsci-721-lecture-06-regularisation.pdf p.10; engsci-721-2026-problems-L06-L10.qmd P3"},{"topic":3,"air":false,"prompt":"x = (1, 4, 9, 16). Second differences D₂x (rows 1, −2, 1) are...","options":["(3, 5, 7)","(−2, −2)","(2, 2)"],"answer":2,"why":"Each row gives xᵢ − 2xᵢ₊₁ + xᵢ₊₂: 1 − 8 + 9 = 2 and 4 − 18 + 16 = 2, while (3, 5, 7) are first differences.","source":"engsci-721-lecture-07-higher-order-tikhonov.pdf p.5-6"},{"topic":3,"air":false,"prompt":"Which penalty promotes sparse solutions (few nonzero entries)?","options":["λ‖x‖₂²","λ‖x‖₁","λ‖D₂x‖₂²"],"answer":1,"why":"The L1 ball has corners on the axes, so solutions often have exact zeros; L2 gives many small nonzero entries.","source":"engsci-721-lecture-08-l1-norm.pdf p.3-5; test/main.tex and worked solutions Q2(d)"},{"topic":3,"air":false,"prompt":"Which penalty suits a piecewise-constant x with a few sharp jumps?","options":["λ‖D₁x‖₂²","λ‖D₁x‖₁","λ‖x‖₂²"],"answer":1,"why":"Total variation makes most differences exactly zero while allowing a few big jumps; squared differences blur edges.","source":"engsci-721-lecture-08-l1-norm.pdf p.6; engsci-721-2026-problems-L06-L10.qmd P6"},{"topic":3,"air":false,"prompt":"IRLS writes |xᵢ| as wᵢxᵢ² using the current iterate. Which weight makes this work?","options":["wᵢ = |xᵢ|, so large entries weigh more","wᵢ = 1/|xᵢ|, capped near zero","wᵢ = xᵢ², squaring the entries again"],"answer":1,"why":"|xᵢ| = xᵢ²/|xᵢ|, so wᵢ = 1/|xᵢ|. It is recomputed each pass and capped as 1/max(|xᵢ|, δ) to avoid dividing by zero.","source":"engsci-721-lecture-08-l1-norm.pdf p.7; engsci-721-2026-problems-L06-L10.qmd P7"},{"topic":3,"air":false,"prompt":"x = (2, 2, 5, 5). What is D₁x, where row i of D₁x is xᵢ₊₁ − xᵢ?","options":["(2, 0, 3, 0)","(0, 3, 0)","(0, −3, 0)"],"answer":1,"why":"D₁x = (x₂ − x₁, x₃ − x₂, x₄ − x₃) = (0, 3, 0). A piecewise-constant x has sparse differences, which ‖D₁x‖₁ favours.","source":"engsci-721-lecture-07-higher-order-tikhonov.pdf p.5-6; engsci-721-lecture-08-l1-norm.pdf p.6"},{"topic":3,"air":false,"prompt":"For standard Tikhonov, increasing λ favours which trade-off?","options":["Larger model norm, smaller data misfit","Smaller model norm, smaller data misfit","Smaller model norm, larger data misfit"],"answer":2,"why":"More weight on model size favours a smaller norm at the expense of fitting the observations as closely.","source":"engsci-721-lecture-06-regularisation.pdf p.6, p.9"},{"topic":3,"air":false,"prompt":"Which optimisation problem defines the standard Tikhonov solution?","options":["min ‖x‖ subject to Ax = y","min ‖Ax − y‖² + λ‖x‖₁","min ‖Ax − y‖² + λ‖x‖²"],"answer":2,"why":"Tikhonov adds a squared size penalty to the misfit. Min ‖x‖ subject to Ax = y is the exact-data pseudoinverse; the L1 penalty targets sparsity.","source":"engsci-721-lecture-06-regularisation.pdf p.4-9; engsci-721-2026-problems-L06-L10.qmd P1"},{"topic":3,"air":true,"prompt":"With zero-mean data noise, what is the usual effect of Tikhonov regularisation?","options":["Less bias, more variation across datasets","No bias, no variation across datasets","More bias, less variation across datasets"],"answer":2,"why":"Shrinking estimates towards zero can introduce bias while reducing their sensitivity to changes in the noisy observations.","source":"engsci-721-lecture-06-regularisation.pdf p.16-18"},{"topic":3,"air":true,"prompt":"On an equally spaced grid, which sequences have zero second differences D₂x?","options":["Straight lines, including constant sequences","Constant sequences, but no sloping lines","Zero sequences, but no nonzero constants"],"answer":0,"why":"A straight line has constant first differences, so its second differences vanish. Its height and slope need not be zero.","source":"engsci-721-lecture-07-higher-order-tikhonov.pdf p.5-6; engsci-721-2026-assignment-1(-model-answers).qmd P1(e)"},{"topic":4,"air":false,"prompt":"Reduced SVD A = UᵣΣᵣVᵣᵀ. Which product is NOT the identity in general?","options":["VᵣᵀVᵣ","VᵣVᵣᵀ","UᵣᵀUᵣ"],"answer":1,"why":"The columns of Vᵣ are orthonormal, so VᵣᵀVᵣ = I, but VᵣVᵣᵀ is only a projection unless r = n.","source":"engsci-721-lecture-09-10-svd.pdf p.13"},{"topic":4,"air":false,"prompt":"Pseudoinverse from the reduced SVD A = UᵣΣᵣVᵣᵀ:","options":["UᵣΣᵣ⁻¹Vᵣᵀ","VᵣΣᵣ⁻¹Uᵣᵀ","VᵣΣᵣUᵣᵀ"],"answer":1,"why":"A⁺ swaps the roles of U and V and inverts the nonzero singular values: A⁺ = Σ vᵢuᵢᵀ/σᵢ.","source":"engsci-721-lecture-09-10-svd.pdf p.14-15; engsci-721-2026-problems-L06-L10.qmd P10"},{"topic":4,"air":false,"prompt":"V has two orthonormal columns in a six-dimensional model space. Shape of VVᵀ?","options":["2 × 2","6 × 2","6 × 6"],"answer":2,"why":"V is 6 × 2, so VVᵀ is 6 × 6. Its rank is two, but it takes a full six-dimensional model vector as input.","source":"engsci-721-lecture-09-10-svd.pdf p.13, p.18-19; engsci-721-2026-problems-L06-L10.qmd P11"},{"topic":4,"air":false,"prompt":"Right singular vectors vᵢ of A are eigenvectors of...","options":["AAᵀ","A itself","AᵀA"],"answer":2,"why":"AᵀAvᵢ = σᵢ²vᵢ, while the uᵢ are eigenvectors of AAᵀ; a non-square A has no eigenvectors.","source":"engsci-721-lecture-09-10-svd.pdf p.9-11; engsci-721-2026-problems-L06-L10.qmd P8"},{"topic":4,"air":false,"prompt":"In x⁺ = Σ cᵢvᵢ, what is the coefficient cᵢ for a nonzero singular value σᵢ?","options":["uᵢᵀy/σᵢ","1/σᵢ","σᵢuᵢᵀy"],"answer":0,"why":"The coefficient includes both the data projection uᵢᵀy and the inverse singular value. The reciprocal alone ignores the data.","source":"engsci-721-lecture-09-10-svd.pdf p.14-15, p.21; engsci-721-2026-problems-L06-L10.qmd P10"},{"topic":4,"air":false,"prompt":"Full-column-rank A has σ₁ = 50 and σₙ = 0.05. Its 2-norm condition number?","options":["10⁶","1000","2.5"],"answer":1,"why":"cond = σ₁/σᵣ = 50/0.05 = 1000, while 10⁶ would be the condition number of AᵀA.","source":"engsci-721-lecture-09-10-svd.pdf p.18-19"},{"topic":4,"air":false,"prompt":"Increasing the number k of TSVD components generally makes which trade-off?","options":["Less model detail, greater noise sensitivity","More model detail, greater noise sensitivity","More model detail, lower noise sensitivity"],"answer":1,"why":"Keeping more directions can recover more signal but also admits smaller-singular-value directions with larger inverse weights.","source":"engsci-721-lecture-09-10-svd.pdf p.19, p.21"},{"topic":4,"air":false,"prompt":"In a noisy Picard plot, a sustained rise in |uᵢᵀy|/σᵢ suggests...","options":["Later terms are dominated by signal","Earlier terms are dominated by noise","Later terms are dominated by noise"],"answer":2,"why":"Noise can stop the data projections decaying while singular values keep shrinking. The growing tail suggests where to truncate.","source":"engsci-721-lecture-09-10-svd.pdf p.21"},{"topic":4,"air":false,"prompt":"Tikhonov filter factor fᵢ = σᵢ²/(σᵢ² + λ). For σᵢ = 3 and λ = 1, fᵢ = ?","options":["0.75","0.9","0.1"],"answer":1,"why":"fᵢ = 9/(9 + 1) = 0.9 (0.75 forgets to square σᵢ): large σᵢ pass almost unchanged while small ones are damped.","source":"engsci-721-lecture-09-10-svd.pdf p.23"},{"topic":4,"air":false,"prompt":"For the smoothing inverse problems in the lectures, singular values typically...","options":["decay with no gap","show a clear gap","are roughly equal"],"answer":0,"why":"They decay gradually towards zero with no clear gap, so the effective rank is hard to define.","source":"engsci-721-lecture-09-10-svd.pdf p.17; engsci-721-2026-problems-L06-L10.qmd P12"},{"topic":4,"air":false,"prompt":"A has σ = (4, 2, 0.01) and data with uᵢᵀy = (8, 1, 0.03). Coefficients of A⁺y on the vᵢ?","options":["(2, 0.5, 3)","(32, 2, 0.0003)","(8, 1, 0.03)"],"answer":0,"why":"Each coefficient is uᵢᵀy/σᵢ: 8/4 = 2, 1/2 = 0.5 and 0.03/0.01 = 3. The tiny σ₃ turns a small data component into a large one.","source":"engsci-721-lecture-09-10-svd.pdf p.17-21; test/main.tex Q3(a), (c) (idea only)"},{"topic":4,"air":true,"prompt":"Rank-k TSVD has model resolution VₖVₖᵀ. What happens to a true-model component along vₖ₊₁?","options":["Amplified by the projector","Preserved by the projector","Removed by the projector"],"answer":2,"why":"VₖVₖᵀ projects onto span{v₁, …, vₖ}, so components along discarded vᵢ are set to zero: stability bought with bias.","source":"engsci-721-lecture-09-10-svd.pdf p.18-19; test/main.tex and worked solutions Q3(d) (idea only)"},{"topic":4,"air":true,"prompt":"A has singular values σ = (5, 1, 0.01) and data with uᵢᵀy = (10, 2, 0.05). What is the rank-2 TSVD solution?","options":["2v₁ + 2v₂ + 5v₃","50v₁ + 2v₂","2v₁ + 2v₂"],"answer":2,"why":"TSVD keeps the first two terms uᵢᵀy/σᵢ: 10/5 = 2 and 2/1 = 2. The full x⁺ would add 0.05/0.01 = 5 times v₃.","source":"engsci-721-lecture-09-10-svd.pdf p.18-21; engsci-721-2026-problems-L06-L10.qmd P13"},{"topic":5,"air":false,"prompt":"Landweber iteration for least squares: xₖ₊₁ = ?","options":["xₖ − αAᵀ(y − Axₖ)","xₖ + αAᵀ(y − Axₖ)","xₖ + αA(y − Axₖ)"],"answer":1,"why":"It is gradient descent on ½‖Ax − y‖², whose gradient is Aᵀ(Ax − y), so a downhill step adds αAᵀ(y − Axₖ).","source":"engsci-721-lecture-11-iterative.pdf p.10-11; engsci-721-2026-problems-L11-L14(-model-solutions).qmd P2"},{"topic":5,"air":false,"prompt":"Landweber with largest singular value σ₁ = 2 converges for 0 < α < ?","options":["1","0.5","0.25"],"answer":1,"why":"The condition is 0 < α < 2/σ₁² = 2/4 = 0.5; the answer 1 forgets to square σ₁.","source":"engsci-721-lecture-11-iterative.pdf p.11"},{"topic":5,"air":false,"prompt":"For matrix-free least-squares iteration, what must you be able to evaluate?","options":["A full factorisation of the matrix","An explicit inverse of the matrix","Forward and adjoint products Av and Aᵀw"],"answer":2,"why":"These products let the method use the forward map and its adjoint without forming a dense matrix or its factorisation.","source":"engsci-721-lecture-11-iterative.pdf p.3, p.11; engsci-721-2026-problems-L11-L14(-model-solutions).qmd P1"},{"topic":5,"air":false,"prompt":"Semi-convergence: with noisy data, the error ‖xₖ − x*‖ as k grows...","options":["falls, then rises","rises, then falls","falls steadily"],"answer":0,"why":"Early iterates are too simple, intermediate ones are close to the truth, and late ones start fitting the noise.","source":"engsci-721-lecture-11-iterative.pdf p.4, p.12; engsci-721-2026-problems-L11-L14(-model-solutions).qmd P3"},{"topic":5,"air":false,"prompt":"In iterative regularisation, what plays the role of λ?","options":["The stopping index k","The batch size","The noise level"],"answer":0,"why":"Too few iterations underfit and too many fit noise, so the iteration count controls the effective complexity.","source":"engsci-721-lecture-11-iterative.pdf p.4-5"},{"topic":5,"air":false,"prompt":"Landweber has converged on noisy data. What does convergence guarantee?","options":["An accurate x, because the misfit is smallest","Best fit to noisy data, not an accurate x","A smaller error than every earlier iterate"],"answer":1,"why":"It reaches the least-squares fit to the noisy data, which includes noise amplified by small σᵢ, so an earlier iterate can be closer to the truth.","source":"markdown-2026/engsci-721-2026-L12-loss-and-plot-guide.md §4"},{"topic":5,"air":false,"prompt":"1000 observations, non-overlapping batches of 50, 4 epochs. How many updates?","options":["80","4000","4"],"answer":0,"why":"Each epoch has 1000/50 = 20 minibatches with one update each, so 4 epochs give 80 updates.","source":"engsci-721-lecture-12-sgd.pdf p.7; engsci-721-2026-problems-L11-L14(-model-solutions).qmd P5"},{"topic":5,"air":false,"prompt":"Minibatch gradient descent with batch size b = 1 is called...","options":["Full-batch GD","Landweber","Stochastic GD"],"answer":2,"why":"b = 1 uses one random observation per update; b = m uses all of them and is standard (full-batch) gradient descent.","source":"engsci-721-lecture-12-sgd.pdf p.6; engsci-721-2026-problems-L11-L14(-model-solutions).qmd P4"},{"topic":5,"air":false,"prompt":"Main advantage of minibatches over the full batch?","options":["More work per update, with an exact gradient","Less work per update, with a noisy gradient","Less work per update, with an exact gradient"],"answer":1,"why":"A minibatch uses fewer observations for an update. Its gradient estimates the full-data gradient and varies with the sampled batch.","source":"engsci-721-lecture-12-sgd.pdf p.8; engsci-721-2026-problems-L11-L14(-model-solutions).qmd P5"},{"topic":5,"air":false,"prompt":"A = diag(1, 0.5), y = (1, 1), α = 1 and x₀ = 0. What is the first Landweber iterate x₁?","options":["(1, 1)","(1, 0.5)","(1, 2)"],"answer":1,"why":"x₁ = x₀ + αAᵀ(y − Ax₀) = Aᵀy = (1, 0.5). (1, 2) is A⁻¹y, which the iteration only approaches as k → ∞.","source":"engsci-721-2026-problems-L11-L14(-model-solutions).qmd P3"},{"topic":5,"air":false,"prompt":"For the average loss over all m data points, a random minibatch’s average gradient is…","options":["Exactly the full-data gradient","The gradient for a single data point","A noisy estimate of the full-data gradient"],"answer":2,"why":"It averages per-point gradients over b random points to estimate the average over all m. Each batch gives a different, noisy estimate.","source":"engsci-721-lecture-12-sgd.pdf p.6-8; engsci-721-2026-problems-L11-L14(-model-solutions).qmd P4"},{"topic":5,"air":true,"prompt":"Landweber with 0 < ασᵢ² ≤ 1 has filter factors fᵢ = 1 − (1 − ασᵢ²)ᵏ. Which components are recovered first?","options":["Small-σᵢ components, whose fᵢ → 1 fast","All components, at the same rate","Large-σᵢ components, whose fᵢ → 1 fast"],"answer":2,"why":"(1 − ασᵢ²)ᵏ shrinks fastest when σᵢ is large, so those terms enter first; small-σᵢ terms, which amplify noise, enter slowly.","source":"engsci-721-lecture-11-iterative.pdf p.11; engsci-721-2026-problems-L11-L14(-model-solutions).qmd P3"},{"topic":5,"air":true,"prompt":"Misfits ‖Axₖ − y‖ for k = 1, 2, 3, 4: 2.0, 0.9, 0.48, 0.3. Noise level δ = 0.5. Where does discrepancy stop?","options":["k = 4, the smallest misfit","k = 3, the first misfit ≤ δ","k = 2, just above δ"],"answer":1,"why":"Stop at the first iterate whose misfit reaches the noise level: 0.48 ≤ 0.5 at k = 3. Going on to 0.3 starts fitting the noise.","source":"engsci-721-lecture-11-iterative.pdf p.11; engsci-721-lecture-13-regularisation-parameter-choice.pdf p.3-7; engsci-721-2026-problems-L11-L14(-model-solutions).qmd P3, P6"},{"topic":6,"air":false,"prompt":"An L-curve plots, on log–log axes, the residual norm against...","options":["The regularisation weight λ","The penalty norm ‖Lx‖","The noise norm ‖e‖"],"answer":1,"why":"Each λ gives one point (‖Lx(λ)‖, ‖Ax(λ) − y‖), and λ is chosen near the corner of the resulting curve.","source":"engsci-721-lecture-06-regularisation.pdf p.15; engsci-721-lecture-13-regularisation-parameter-choice.pdf p.3; test/main.tex and worked solutions Q2(c)"},{"topic":6,"air":false,"prompt":"40 zero-mean errors each have SD 0.5. What is their expected squared norm?","options":["20","0.25","10"],"answer":2,"why":"Each zero-mean error has expected square 0.5² = 0.25. Adding 40 gives 10; the answer 20 uses the SD without squaring.","source":"engsci-721-lecture-13-regularisation-parameter-choice.pdf p.5, p.7; engsci-721-2026-problems-L11-L14(-model-solutions).qmd P6"},{"topic":6,"air":false,"prompt":"Which parameter-choice method needs an estimate of the noise level?","options":["L-curve","Discrepancy","Cross-validation"],"answer":1,"why":"Discrepancy matches the misfit to the noise level; the L-curve uses only the path and CV uses held-out data.","source":"engsci-721-2026-problems-L11-L14(-model-solutions).qmd P8; engsci-721-lecture-13-regularisation-parameter-choice.pdf p.3"},{"topic":6,"air":false,"prompt":"Discrepancy principle with σ badly under-estimated: the chosen λ is...","options":["Too small: it tries to fit too closely","Too large: it rejects too much detail","Unchanged: selection ignores the noise level"],"answer":0,"why":"A smaller target misfit forces a closer fit to the data, so λ shrinks and more noise is fitted.","source":"engsci-721-2026-problems-L11-L14(-model-solutions).qmd P6"},{"topic":6,"air":false,"prompt":"Among fits compatible with the noise level, which does discrepancy favour?","options":["The smallest-penalty compatible fit","The smallest-residual compatible fit","The largest-penalty compatible fit"],"answer":0,"why":"Discrepancy minimises the penalty among fits compatible with the noise tolerance. It does not simply minimise the training residual.","source":"engsci-721-lecture-13-regularisation-parameter-choice.pdf p.3, p.7"},{"topic":6,"air":false,"prompt":"In LOOCV, the prediction of yₖ must come from a fit that...","options":["used all the data","left (aₖ, yₖ) out","used only yₖ"],"answer":1,"why":"If yₖ was used in fitting, its noise is already in the fit and the score rewards reproducing noise.","source":"engsci-721-lecture-13-regularisation-parameter-choice.pdf p.11-12; engsci-721-2026-problems-L11-L14(-model-solutions).qmd P7"},{"topic":6,"air":false,"prompt":"Choosing λ by minimising the training misfit alone tends to pick...","options":["the largest λ","the smallest λ","a balanced λ"],"answer":1,"why":"Reducing λ cannot worsen the optimal training fit. This can reward fitting observational noise rather than predicting new data.","source":"engsci-721-2026-problems-L11-L14(-model-solutions).qmd P7; engsci-721-lecture-13-regularisation-parameter-choice.pdf p.11"},{"topic":6,"air":false,"prompt":"B maps coefficients to grid values; S selects observed points. How do we predict data?","options":["Select β with S, then apply B","Apply B to β, then select with S","Apply B to β, then select with Sᵀ"],"answer":1,"why":"First build all grid values Bβ. Then S selects the observed locations, giving SBβ; coefficient space is not grid space.","source":"engsci-721-lecture-14-hybrid.pdf p.5; engsci-721-2026-problems-L11-L14.qmd P10"},{"topic":6,"air":false,"prompt":"100 observations, noise SD 0.1. A fit has ‖Ax − y‖² = 0.02. What does that suggest?","options":["It fits about as well as expected","It is probably fitting the noise","It is probably underfitting"],"answer":1,"why":"The true model has expected squared misfit mσ² = 100 × 0.01 = 1. A residual of 0.02 is far smaller, so the fit is reproducing noise.","source":"engsci-721-2026-problems-L11-L14(-model-solutions).qmd P6"},{"topic":6,"air":false,"prompt":"Fine grid of 100 points, 8 of them observed. Shape of the observation matrix?","options":["100 × 8","100 × 100","8 × 100"],"answer":2,"why":"Each row is eⱼᵀ for an observed grid point j, so it maps the 100 fine-grid values to 8 observations.","source":"engsci-721-lecture-14-hybrid.pdf p.5"},{"topic":6,"air":false,"prompt":"A spline can represent y″ = −g. A strong penalty on departures favours...","options":["Curvature chosen only by the data fit","Curvature matching the gravity model","Curvature vanishing across the time grid"],"answer":1,"why":"The penalty favours the specified acceleration, not zero curvature. Stronger weighting gives that relation more influence on the fit.","source":"engsci-721-2026-problems-L11-L14(-model-solutions).qmd P10; engsci-721-lecture-14-hybrid.pdf p.10"},{"topic":6,"air":false,"prompt":"A penalty on the residual of a differential equation puts the physics mainly in…","options":["The loss or regularisation term","The forward model","The training data"],"answer":0,"why":"The residual penalty is added to the data misfit, so it is a soft constraint whose weight trades physics against fit.","source":"engsci-721-2026-problems-L11-L14(-model-solutions).qmd P9; engsci-721-lecture-14-hybrid.pdf p.9"},{"topic":6,"air":true,"prompt":"Bβ gives values on a time grid. What does D₂Bβ measure if D₂ approximates the second derivative?","options":["Curvature of the fitted function on the grid","Curvature of the coefficient sequence β","Mismatch between the fit and the data"],"answer":0,"why":"Bβ gives the function values on the fine grid, so D₂Bβ approximates y''. D₂β would difference coefficients, which are not values in time.","source":"engsci-721-2026-problems-L11-L14(-model-solutions).qmd P10; engsci-721-lecture-14-hybrid.pdf p.9"},{"topic":6,"air":true,"prompt":"A physics penalty omits drag that is present. What can a very large penalty weight do?","options":["Force the fit towards the wrong dynamics","Let the data override the wrong dynamics","Correct the physics equation from the data"],"answer":0,"why":"A large weight prioritises the assumed equation. If that equation omits real physics, the fitted trajectory can be biased.","source":"engsci-721-lecture-14-hybrid.pdf p.11-12; engsci-721-2026-problems-L11-L14.qmd P9-P10"}],"sequences":[{"topic":1,"title":"Pseudoinverse in two stages","steps":["Minimise ‖y − Ax‖","Keep all minimisers","Pick smallest ‖x‖"],"why":"A⁺y fits the data first and then takes the minimum-norm fit; reducing the model first would just give x = 0.","source":"engsci-721-lecture-03-inverses-II.pdf p.7; engsci-721-lecture-06-regularisation.pdf p.4, p.6"},{"topic":2,"title":"Deriving normal equations","steps":["Write rᵀr, r = y − Ax","Expand into 3 terms","Apply the 3 key rules","Set Dₓf = 0ᵀ","Transpose: AᵀAx = Aᵀy"],"why":"Expand the squared norm, differentiate each term with the key rules, set the row derivative to zero, then transpose.","source":"engsci-721-lecture-05-calculus.pdf p.3-7; engsci-721-2026-problems-L01-L05.pdf P17"},{"topic":3,"title":"IRLS for an L1 penalty","steps":["Set δ > 0 and start x","wᵢ = 1/max(|xᵢ|, δ)","Solve weighted LS","Repeat to convergence"],"why":"Weights come from the current x, a weighted least-squares solve updates x, and the loop repeats until x settles.","source":"engsci-721-lecture-08-l1-norm.pdf p.7; engsci-721-2026-problems-L06-L10.qmd P7"},{"topic":4,"title":"TSVD with a Picard plot","steps":["Compute the SVD","Find uᵢᵀy/σᵢ","Plot their magnitudes","Choose truncation k","Sum the first k terms"],"why":"Use the projected coefficients to inspect the tail. Choose a cutoff before noise-dominated growth, then reconstruct with retained terms.","source":"engsci-721-lecture-09-10-svd.pdf p.17-18, p.21; engsci-721-2026-problems-L06-L10.qmd P13"},{"topic":6,"title":"Leave-one-out CV for λ","steps":["Select a trial λ","Omit one observation","Fit without it; score","Average all omissions","Repeat for other λ","Pick λ, refit all data"],"why":"Score each omitted observation using a fit that excludes it. Compare mean scores across λ values, then refit all data at the selected λ.","source":"engsci-721-lecture-13-regularisation-parameter-choice.pdf p.11-12; engsci-721-2026-problems-L11-L14(-model-solutions).qmd P7; engsci-721-2026-L13-standalone-examples.md §4"},{"topic":6,"title":"Tracing an L-curve","steps":["Log-spaced λ grid","Solve for each x(λ)","Record ‖Ax − y‖, ‖Lx‖","Plot on log–log axes","Pick λ at the corner"],"why":"Solve along a log-spaced λ path, record both norms, plot them log–log and choose the corner where fit and size balance.","source":"engsci-721-lecture-06-regularisation.pdf p.14-15; engsci-721-2026-assignment-1(-model-answers).qmd P2(e)"}],"hazards":[{"topic":1,"name":"Exists means fine","tip":"An inverse can exist and be unique yet still amplify noise wildly: check stability too.","source":"engsci-721-2026-lecture-01-overview.pdf p.9"},{"topic":1,"name":"AL = I","tip":"LA = I does not give AL = I: for tall A, AL only projects data onto the image of A.","source":"engsci-721-lecture-03-inverses-II.pdf p.4"},{"topic":1,"name":"Swapped inverses","tip":"Independent columns: (AᵀA)⁻¹Aᵀ. Independent rows: Aᵀ(AAᵀ)⁻¹. Shape alone is not enough.","source":"engsci-721-lecture-03-inverses-II.pdf p.4-5"},{"topic":1,"name":"Fitting the noise","tip":"An exact fit to noisy data need not recover the true model. Check more than the training residual.","source":"engsci-721-lecture-06-regularisation.pdf p.5, p.14"},{"topic":2,"name":"Row-wise vec","tip":"vec stacks columns. Reshaping by rows (NumPy's default) scrambles images: use order='F'.","source":"engsci-721-lecture-04-linearity.pdf p.9; engsci-721-2026-assignment-1(-model-answers).qmd P2"},{"topic":2,"name":"2xᵀA for any A","tip":"Dₓ(xᵀAx) = xᵀ(A + Aᵀ); it only simplifies to 2xᵀA when A is symmetric.","source":"engsci-721-lecture-05-calculus.pdf p.6"},{"topic":2,"name":"Layout mix-up","tip":"Dₓf is a row vector in Jacobian layout; the gradient ∇f = (Dₓf)ᵀ is a column.","source":"engsci-721-lecture-05-calculus.pdf p.5"},{"topic":2,"name":"Unchecked sizes","tip":"Check every product conforms: Aᵀ(Ax − y) is n × 1, but A(Ax − y) fails unless A is square.","source":"engsci-721-lecture-05-calculus.pdf; Test 1 class summary (transposes and factor order)"},{"topic":2,"name":"Twin cross terms","tip":"yᵀAx is a scalar, so it equals xᵀAᵀy: the two cross terms combine into −2yᵀAx.","source":"engsci-721-lecture-05-calculus.pdf p.3-4"},{"topic":3,"name":"λ instead of √λ","tip":"Multiplying a residual by √λ makes its squared contribution λ times larger, not √λ times larger.","source":"engsci-721-2026-L13-page-outline.md p.12; engsci-721-lecture-06-regularisation.pdf p.9"},{"topic":3,"name":"Ridge for sparsity","tip":"Squared L2 penalties shrink entries but rarely zero them; use ‖x‖₁ when you want sparsity.","source":"engsci-721-lecture-08-l1-norm.pdf p.4"},{"topic":3,"name":"Smoothed-out edges","tip":"‖D₁x‖₂² rounds off sharp jumps; total variation ‖D₁x‖₁ keeps a few of them.","source":"engsci-721-lecture-08-l1-norm.pdf p.6"},{"topic":3,"name":"Dividing by zero","tip":"IRLS weights 1/|xᵢ| blow up at xᵢ = 0: cap them as 1/max(|xᵢ|, δ).","source":"engsci-721-lecture-08-l1-norm.pdf p.7"},{"topic":3,"name":"Free lunch","tip":"Reducing noise sensitivity can introduce bias, such as shrinking peaks. Balance both effects.","source":"engsci-721-lecture-06-regularisation.pdf p.16"},{"topic":4,"name":"VᵣVᵣᵀ = I?","tip":"VᵣᵀVᵣ = I always, but VᵣVᵣᵀ = I only when r = n; otherwise it is a projection.","source":"engsci-721-lecture-09-10-svd.pdf p.13"},{"topic":4,"name":"Missing uᵢᵀy","tip":"1/σᵢ is an inverse weight, not the whole coefficient. Include the data projection: uᵢᵀy/σᵢ.","source":"engsci-721-lecture-09-10-svd.pdf p.14-15, p.21"},{"topic":4,"name":"Keeping every term","tip":"Keeping every nonzero singular component gives the untruncated pseudoinverse; no TSVD filtering remains.","source":"engsci-721-lecture-09-10-svd.pdf p.18-21"},{"topic":4,"name":"Eigenvalues of A","tip":"A non-square A has no eigenvalues; its σᵢ are square roots of eigenvalues of AᵀA.","source":"engsci-721-lecture-09-10-svd.pdf p.8-10"},{"topic":4,"name":"Judging |uᵢᵀy| alone","tip":"In a Picard plot judge how |uᵢᵀy| decays relative to σᵢ, not the size of either alone.","source":"engsci-721-lecture-09-10-svd.pdf p.21"},{"topic":5,"name":"Converged = accurate","tip":"Convergence concerns the optimisation problem; it does not establish that the fitted model is accurate.","source":"markdown-2026/engsci-721-2026-L12-loss-and-plot-guide.md §4"},{"topic":5,"name":"Step too big","tip":"A step that is too large can oscillate or diverge; a very small step can make progress slow.","source":"engsci-721-lecture-11-iterative.pdf p.11"},{"topic":5,"name":"Epochs vs updates","tip":"One epoch is one pass through all the data; updates per epoch = number of minibatches.","source":"engsci-721-lecture-12-sgd.pdf p.7"},{"topic":5,"name":"Oracle error","tip":"True-model error needs the true model. Use it for synthetic checks, not when the truth is unknown.","source":"engsci-721-2026-L12-loss-and-plot-guide.md §3"},{"topic":5,"name":"Jumpy batch loss","tip":"Different batches can have different losses. Compare optimisation progress using a common full-data loss.","source":"engsci-721-2026-L12-loss-and-plot-guide.md §1"},{"topic":6,"name":"Peeking at yₖ","tip":"In LOOCV, predict yₖ from a fit that never saw it, or the score rewards fitting noise.","source":"engsci-721-lecture-13-regularisation-parameter-choice.pdf p.11; engsci-721-2026-problems-L11-L14(-model-solutions).qmd P7"},{"topic":6,"name":"Training misfit","tip":"Training misfit alone tends to favour too little regularisation. Use a criterion beyond fitting the same data.","source":"engsci-721-2026-problems-L11-L14(-model-solutions).qmd P7"},{"topic":6,"name":"Differencing β","tip":"For function curvature on a grid, apply D₂ to Bβ. Differencing β instead penalises coefficient variation.","source":"engsci-721-lecture-14-hybrid.pdf p.9; engsci-721-2026-problems-L11-L14(-model-solutions).qmd P10"},{"topic":6,"name":"No final refit","tip":"After CV picks λ, refit on all the data to get the final solution.","source":"engsci-721-lecture-13-regularisation-parameter-choice.pdf p.12; engsci-721-2026-problems-L11-L14(-model-solutions).qmd P7"},{"topic":6,"name":"Discrepancy = truth","tip":"Discrepancy selects a simple fit compatible with the noise level. Compatibility does not establish truth.","source":"engsci-721-lecture-13-regularisation-parameter-choice.pdf p.7-8"}]}
+</script>
+
+<script>
+(() => {
+'use strict';
+const $ = (id) => document.getElementById(id);
+const BANK = JSON.parse($('bank').textContent);
+const TOPICS = [[1, 'Inverses'], [2, 'Linearity and calculus'], [3, 'Regularisation'], [4, 'SVD and resolution'], [5, 'Iteration and SGD'], [6, 'Choosing λ and physics']];
+const TRICKS = ['Method grab', 'Indy grab', 'Backside 360', 'Frontside 540', 'Stalefish', 'Mute grab', 'Melon grab', 'Japan air', 'Rodeo 720', 'Tail grab', 'Lien air', 'Cab 540'];
+
+// ---------- small helpers ----------
+const store = {
+  get(k, d) { try { const v = localStorage.getItem('regularisation-run:' + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('regularisation-run:' + k, JSON.stringify(v)); } catch (e) { /* storage unavailable */ } },
+};
+const rand = (a, b) => a + Math.random() * (b - a);
+const randInt = (a, b) => Math.floor(rand(a, b + 1));
+const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function deck(items) { let pile = []; return { size: items.length, next() { if (!items.length) return null; if (!pile.length) pile = shuffle(items); return pile.pop(); } }; }
+const fmt = (n) => Math.round(n).toLocaleString('en-NZ');
+const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const topicName = (n) => (TOPICS.find((t) => t[0] === n) || [n, ''])[1];
+
+// ---------- world constants ----------
+const LANE_W = 2.4, PISTE = 4.9, CAM_BACK = 8, NEAR = -CAM_BACK + 0.9, Z_VIS = 110, Z_FAR = 190;
+const JUMP_V = 8.6, GRAV = 26, LAUNCH_V = 10.5, MAX_SPEED = 25, SEQ_SPEED = 15, ASK_Z = 7;
+const BODY = '"Atkinson Hyperlegible", system-ui, sans-serif';
+const DISPLAY = '"Russo One", Impact, "Arial Black", sans-serif';
+const laneX = (l) => (l - 1) * LANE_W;
+const COL = {
+  pine: { front: '#1d5a45', side: '#164536', top: '#2f7a5c' },
+  trunk: { front: '#6b4428', side: '#4f311c', top: '#84593a' },
+  log: { front: '#7a4b2a', side: '#5a361d', top: '#9a6a43' },
+  pole: { front: '#ff8a2a', side: '#cc6a17', top: '#ffb36e' },
+  gateRed: { front: '#e8413c', side: '#b02f2b', top: '#ff6f68' },
+  gateBlue: { front: '#2f6fe0', side: '#2152a8', top: '#5d92f2' },
+  pass: { front: '#3ddc97', side: '#25a56f', top: '#7cf0c0' },
+  fail: { front: '#ff7468', side: '#c4473d', top: '#ffa79f' },
+  banner: { front: '#f6fbff', side: '#c3d6ee', top: '#ffffff' },
+  sign: { front: '#13284a', side: '#0d1a2e', top: '#24477e' },
+};
+
+// ---------- canvas and projection ----------
+// The world is drawn at about 400 px tall and scaled up without smoothing, for a chunky late-90s look.
+// Everything players need to read is HTML laid over the canvas, so it stays sharp.
+const cv = $('view');
+const ctx = cv.getContext('2d');
+let W = 0, H = 0, PX = 1;
+const view = { s0: 50, F: 250, groundY: 0, camH: 4, horizon: 0 };
+const cam = { x: 0 };
+function resize() {
+  const r = cv.getBoundingClientRect();
+  W = Math.max(1, r.width); H = Math.max(1, r.height);
+  PX = clamp(400 / H, 0.32, 1);
+  cv.width = Math.max(1, Math.round(W * PX)); cv.height = Math.max(1, Math.round(H * PX));
+  ctx.setTransform(cv.width / W, 0, 0, cv.height / H, 0, 0);
+  ctx.imageSmoothingEnabled = false;
+  const s0 = Math.min(0.94 * W / (3 * LANE_W + 1.2), 0.11 * H);
+  const groundY = H * 0.8;
+  const horizonTarget = H * (W < H ? 0.32 : 0.36);
+  const camH = clamp((groundY - horizonTarget) / s0, 2.6, 9);
+  Object.assign(view, { s0, F: s0 * CAM_BACK, groundY, camH, horizon: groundY - camH * s0 });
+  if (typeof placeLanes === 'function') placeLanes();
+  skyCache = null;
+}
+// The piste bends: its centre drifts sideways with the square of the distance ahead (as in old racing games).
+const xoff = (z) => G.curve * Math.max(0, z) * Math.max(0, z);
+function P(x, y, z) {
+  const s = view.F / (z + CAM_BACK);
+  return [W / 2 + (x + xoff(z) - cam.x) * s, view.horizon + (view.camH - y) * s, s];
+}
+function quad(a, b, c, d, fill) {
+  ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.lineTo(c[0], c[1]); ctx.lineTo(d[0], d[1]); ctx.closePath();
+  ctx.fillStyle = fill; ctx.fill();
+}
+// Axis-aligned box; returns the near face as a screen rectangle (null when the near face is behind the clip plane).
+function box(x0, x1, y0, y1, z0, z1, col) {
+  if (z1 <= NEAR) return null;
+  const zn = Math.max(z0, NEAR), zf = Math.max(z1, NEAR + 0.01);
+  const nbl = P(x0, y0, zn), nbr = P(x1, y0, zn), ntl = P(x0, y1, zn), ntr = P(x1, y1, zn);
+  const fbl = P(x0, y0, zf), fbr = P(x1, y0, zf), ftl = P(x0, y1, zf), ftr = P(x1, y1, zf);
+  const off = xoff(zn);
+  if (x0 + off > cam.x) quad(nbl, ntl, ftl, fbl, col.side);
+  if (x1 + off < cam.x) quad(nbr, ntr, ftr, fbr, col.side);
+  if (y1 < view.camH) quad(ntl, ntr, ftr, ftl, col.top);
+  if (z0 < NEAR) return null;
+  quad(nbl, nbr, ntr, ntl, col.front);
+  return { x: nbl[0], y: ntl[1], w: nbr[0] - nbl[0], h: nbl[1] - ntl[1], s: nbl[2] };
+}
+// A pine: a trunk and three stacked triangles.
+function pine(x, z, h, col) {
+  if (z <= NEAR + 0.2) return;
+  const [bx, by, s] = P(x, 0, z);
+  if (s * h < 2) return;
+  ctx.fillStyle = COL.trunk.front; ctx.fillRect(bx - 0.09 * s, by - 0.45 * s, 0.18 * s, 0.45 * s);
+  for (let i = 0; i < 3; i++) {
+    const y0 = by - (0.35 + i * 0.28 * h) * s, w = (0.95 - i * 0.24) * h * 0.55 * s, th = 0.48 * h * s;
+    ctx.beginPath(); ctx.moveTo(bx - w, y0); ctx.lineTo(bx + w, y0); ctx.lineTo(bx, y0 - th); ctx.closePath();
+    ctx.fillStyle = col || COL.pine.front; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(bx - w * 0.55, y0 - th * 0.46); ctx.lineTo(bx + w * 0.1, y0 - th * 0.46); ctx.lineTo(bx, y0 - th); ctx.closePath();
+    ctx.fillStyle = '#f2f8ff'; ctx.fill();
+  }
+}
+function rrect(x, y, w, h, r) {
+  ctx.beginPath();
+  if (ctx.roundRect) ctx.roundRect(x, y, w, h, r); else ctx.rect(x, y, w, h);
+}
+function canvasText(text, cx, cy, px, family, weight, color) {
+  if (px < 6) return;
+  ctx.font = `${weight} ${Math.floor(px)}px ${family}`; ctx.fillStyle = color; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, cx, cy);
+}
+
+// ---------- settings ----------
+let selectedTopics = new Set(store.get('topics', [1, 2, 3, 4, 5, 6]));
+let soundOn = store.get('sound', true);
+let best = store.get('best', 0);
+let esBest = store.get('esBest', 0);
+
+// ---------- game state ----------
+const player = { lane: 1, x: 0, y: 0, vy: 0, lean: 0, spin: 0, tumble: 0, air: false, trick: false };
+let G = makeWorld('menu');
+function makeWorld(state, prev) {
+  return {
+    state, mode: 'run', t: 0, dist: prev ? prev.dist : 0, speed: 12, bonus: 0, flakes: 0, lives: 3,
+    asked: 0, correct: 0, seqDone: 0, tricks: 0,
+    objs: prev ? prev.objs.filter((o) => o.scenery) : [],
+    frontier: 34, sceneryFrontier: prev ? prev.sceneryFrontier : 0, poleN: prev ? prev.poleN : 0,
+    rowsUntil: 2, challengeN: 0, seq: null, invuln: 0, shake: 0, jumpBuf: 0, cardAt: 0, steerLock: 0,
+    curve: prev ? prev.curve : 0, curveTarget: 0, curveTimer: 0, bg: prev ? prev.bg : 0,
+    missed: [], missedKeys: new Set(), decks: null, wipe: 0, pendingWipe: false, es: null,
+  };
+}
+function startRun() {
+  const topics = selectedTopics;
+  const gates = BANK.gates.filter((g) => topics.has(g.topic) && !g.air);
+  const air = BANK.gates.filter((g) => topics.has(g.topic) && g.air);
+  const seqs = BANK.sequences.filter((s) => topics.has(s.topic));
+  let hazards = BANK.hazards.filter((b) => topics.has(b.topic));
+  if (!hazards.length) hazards = BANK.hazards;
+  G = makeWorld('run', G);
+  G.decks = { gates: deck(gates), air: deck(air.length ? air : gates), seqs: deck(seqs), hazards: deck(hazards) };
+  resetPlayer();
+  hideAllOverlays(); show('hud');
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  updateHud(true); last = performance.now();
+}
+function resetPlayer() { Object.assign(player, { lane: 1, x: 0, y: 0, vy: 0, lean: 0, spin: 0, tumble: 0, air: false, trick: false }); }
+const currentScore = () => Math.floor(G.dist / 2) + G.bonus;
+
+// ---------- spawning ----------
+const CYCLE = ['gate', 'gate', 'air', 'gate', 'seq'];
+// Local testing only: ?test=kicker makes every challenge a kicker and leaves out hazard rows.
+const TEST = new URLSearchParams(location.search).get('test');
+function nextChallengeKind() {
+  const want = TEST === 'kicker' ? 'air' : CYCLE[G.challengeN % CYCLE.length];
+  const hasGate = G.decks.gates.size > 0 || G.decks.air.size > 0, hasSeq = G.decks.seqs.size > 0;
+  if (want === 'seq' && hasSeq && !G.seq) return 'seq';
+  if (want === 'air' && G.decks.air.size > 0) return 'air';
+  return hasGate ? 'gate' : hasSeq && !G.seq ? 'seq' : null;
+}
+function spawnAhead() {
+  const far = Math.max(160, G.speed * 8.5 + 40);
+  while (G.sceneryFrontier < far) {
+    const z = G.sceneryFrontier;
+    if (G.poleN % 2 === 0) G.objs.push({ kind: 'pole', side: -1, z, prevZ: z, scenery: true }, { kind: 'pole', side: 1, z, prevZ: z, scenery: true });
+    for (let i = 0; i < 2; i++) {
+      const side = Math.random() < 0.5 ? -1 : 1, zz = z + rand(0, 6);
+      G.objs.push({ kind: 'pine', x: side * rand(PISTE + 1.8, PISTE + 13), z: zz, prevZ: zz, h: rand(2.6, 4.6), scenery: true });
+    }
+    G.poleN++; G.sceneryFrontier += 6;
+  }
+  if (G.state !== 'run' || G.mode !== 'run') return;
+  let guard = 0;
+  while (G.frontier < far && guard++ < 20) {
+    if (G.rowsUntil > 0 && TEST !== 'kicker') { G.rowsUntil--; spawnRow(G.rowsUntil < 2); }
+    else { spawnChallenge(); G.rowsUntil = randInt(3, 4); }
+  }
+}
+function spawnRow(easy) {
+  const z = G.frontier, d = Math.min(1, G.t / 150), r = Math.random(), L = shuffle([0, 1, 2]);
+  const lanes = [null, null, null];
+  if (easy) lanes[L[0]] = Math.random() < 0.6 ? 'tree' : 'log';
+  else if (r < 0.36 - 0.1 * d) lanes[L[0]] = 'tree';
+  else if (r < 0.56 - 0.12 * d) lanes[L[0]] = 'log';
+  else if (r < 0.8) { lanes[L[0]] = 'tree'; lanes[L[1]] = 'tree'; }
+  else if (r < 0.92) { lanes[L[0]] = 'tree'; lanes[L[1]] = 'log'; }
+  else { lanes[0] = lanes[1] = lanes[2] = 'log'; }
+  lanes.forEach((k, lane) => {
+    if (k) G.objs.push({ kind: k, lane, z, prevZ: z, len: k === 'tree' ? 1.1 : 0.5, haz: G.decks.hazards.next() });
+  });
+  const free = [0, 1, 2].filter((l) => lanes[l] !== 'tree');
+  if (free.length && Math.random() < 0.8) {
+    const cl = pick(free);
+    if (lanes[cl] === 'log') {
+      for (let i = -2; i <= 2; i++) G.objs.push({ kind: 'flake', lane: cl, z: z + i * 1.2, prevZ: z + i * 1.2, y: 0.6 + 1.0 * (1 - (i / 2.6) ** 2) });
+    } else {
+      for (let i = 0; i < 5; i++) G.objs.push({ kind: 'flake', lane: cl, z: z + 2 + i * 2.2, prevZ: z + 2 + i * 2.2, y: 0.6 });
+    }
+  }
+  G.frontier = z + 1.2 + Math.max(14, G.speed * 0.95);
+}
+function spawnChallenge() {
+  const kind = nextChallengeKind();
+  G.challengeN++;
+  if (kind === 'gate') {
+    const item = G.decks.gates.size ? G.decks.gates.next() : G.decks.air.next(), z = G.frontier + 20;
+    G.objs.push({ kind: 'gate', z, prevZ: z, item, order: shuffle([0, 1, 2]), red: G.challengeN % 2 === 0 });
+    G.frontier = z + Math.max(24, G.speed * 1.9);
+  } else if (kind === 'air') {
+    const item = G.decks.air.next(), z = G.frontier + 22;
+    G.objs.push({ kind: 'kicker', z, prevZ: z, len: 3.4, h: 1.15, item, order: shuffle([0, 1, 2]) });
+    G.frontier = z + 3.4 + Math.max(36, G.speed * 2.6);  // a long clear landing
+  } else if (kind === 'seq') {
+    const item = G.decks.seqs.next(), spacing = SEQ_SPEED * 5;  // about 5 s between rows
+    let display = shuffle(item.steps);
+    for (let i = 0; i < 5 && display.join('|') === item.steps.join('|'); i++) display = shuffle(item.steps);
+    const s = { item, progress: 0, rows: [], spacing, display };
+    const z0 = G.frontier + G.speed * 4.5 + 6;
+    flakeRuns(G.frontier + 8, z0 - 10);
+    item.steps.forEach((_, k) => {
+      const z = z0 + k * spacing;
+      const row = { kind: 'row', z, prevZ: z, correctLane: randInt(0, 2), tokens: [] };
+      s.rows.push(row); G.objs.push(row);
+    });
+    relabel(s);
+    G.seq = s;
+    G.frontier = s.rows[s.rows.length - 1].z + Math.max(22, G.speed * 1.8);
+  } else {
+    G.frontier += 10;
+  }
+}
+function flakeRuns(zA, zB) {
+  for (let z = zA; z + 7 < zB; z += 16) {
+    const lane = randInt(0, 2);
+    for (let i = 0; i < 4; i++) G.objs.push({ kind: 'flake', lane, z: z + i * 2.2, prevZ: z + i * 2.2, y: 0.6 });
+  }
+}
+// Label the pending rows so the nearest asks for the next step, the one after for the step after, and so on.
+function relabel(s) {
+  const steps = s.item.steps;
+  const pending = s.rows.filter((r) => !r.done).sort((a, b) => a.z - b.z);
+  pending.forEach((r, i) => {
+    const k = s.progress + i;
+    if (k >= steps.length) { r.done = true; r.dead = true; return; }
+    const need = steps[k];
+    const later = steps.filter((t, j) => j > k && t !== need), earlier = steps.filter((t, j) => j < k && t !== need);
+    const decoys = shuffle(later).concat(shuffle(earlier)).slice(0, 2);
+    const others = [0, 1, 2].filter((l) => l !== r.correctLane);
+    r.tokens = [];
+    r.tokens[r.correctLane] = { text: need, correct: true };
+    others.forEach((l, j) => { r.tokens[l] = decoys[j] ? { text: decoys[j], correct: false } : null; });
+  });
+}
+function addRowAfterLast(s) {
+  const pending = s.rows.filter((r) => !r.done);
+  const base = pending.length ? Math.max(...pending.map((r) => r.z)) : 0;
+  const gap = pending.length ? s.spacing : Math.max(s.spacing, G.speed * 1.6);
+  for (const o of G.objs) if (!o.scenery && o.z > base) { o.z += gap; o.prevZ += gap; }
+  G.frontier += gap;
+  const row = { kind: 'row', z: base + gap, prevZ: base + gap, correctLane: randInt(0, 2), tokens: [] };
+  s.rows.push(row); G.objs.push(row);
+}
+
+// ---------- update ----------
+function nearestLane() { return clamp(Math.round(player.x / LANE_W) + 1, 0, 2); }
+function laneBlocked(lane) { return G.objs.some((o) => o.kind === 'tree' && o.lane === lane && o.z < 1.0 && o.z + o.len > -0.8); }
+function move(dir) {
+  if (G.state !== 'run' || G.mode !== 'run' || G.steerLock > 0 || G.wipe > 0) return;
+  const target = clamp(player.lane + dir, 0, 2);
+  if (target === player.lane) return;
+  if (laneBlocked(target)) { G.shake = 0.35; sfx('bump'); return; }
+  player.lane = target; sfx('carve'); spray(dir, 10);
+}
+function jump() { if (G.state === 'run' && G.mode === 'run' && G.wipe <= 0) G.jumpBuf = 0.16; }
+function groundAt() {
+  for (const o of G.objs) if (o.kind === 'kicker' && o.z <= 0 && o.z + o.len > 0) return o.h * (-o.z / o.len);
+  return 0;
+}
+function update(dt) {
+  if (G.state === 'paused' || G.state === 'card' || G.state === 'question' || G.state === 'over' || G.state === 'esdone') return;
+  const running = G.state === 'run';
+  if (running) {
+    G.t += dt;
+    if (G.mode === 'es') esUpdate(dt);
+    let target = G.mode === 'es' ? G.es.speed : Math.min(MAX_SPEED, 14 + G.t * 0.06);
+    if (G.seq && G.seq.introduced) target = Math.min(target, SEQ_SPEED);
+    if (G.wipe > 0) target = 4;
+    G.speed += (target - G.speed) * Math.min(1, dt * 1.5);
+  } else if (G.state === 'braking') {
+    G.speed = Math.max(0, G.speed - dt * 30);
+  } else G.speed = 12;
+  const dz = G.speed * dt;
+  G.dist += dz;
+  for (const o of G.objs) { o.prevZ = o.z; o.z -= dz; }
+  G.frontier -= dz; G.sceneryFrontier -= dz;
+
+  // the piste bends gently left and right
+  G.curveTimer -= dt;
+  if (G.curveTimer <= 0) { G.curveTimer = rand(4, 8); G.curveTarget = Math.random() < 0.25 ? 0 : rand(-1, 1) * 0.0016; }
+  G.curve += (G.curveTarget - G.curve) * Math.min(1, dt * 0.6);
+  G.bg += G.curve * G.speed * dt * 260;
+
+  const tx = laneX(player.lane);
+  player.x += (tx - player.x) * Math.min(1, dt * 14);
+  player.lean += ((tx - player.x) * 0.2 + G.curve * 140 - player.lean) * Math.min(1, dt * 10);
+  G.steerLock = Math.max(0, G.steerLock - dt);
+  if (G.wipe > 0) {
+    G.wipe -= dt; player.tumble += dt * 9;
+    if (G.wipe <= 0) { G.wipe = 0; player.tumble = 0; finishWipe(); }
+  }
+  // ground: flat snow, or the ramp of a kicker under the board
+  const gnd = groundAt();
+  if (G.jumpBuf > 0) {
+    G.jumpBuf -= dt;
+    if (!player.air) { player.vy = JUMP_V; player.air = true; G.jumpBuf = 0; sfx('jump'); }
+  }
+  if (player.air) {
+    const wasRising = player.vy > 0;
+    player.vy -= GRAV * dt; player.y += player.vy * dt;
+    if (player.trick) player.spin += dt * Math.PI * 4.2;
+    if (wasRising && player.vy <= 0 && G.airItem && running) { const it = G.airItem; G.airItem = null; askAir(it); }
+    if (player.y <= gnd) land(gnd);
+  } else player.y = gnd;
+  // leaving the lip of a kicker
+  for (const o of G.objs) if (o.kind === 'kicker' && !o.launched && o.prevZ + o.len > 0 && o.z + o.len <= 0) {
+    o.launched = true; player.air = true; player.vy = LAUNCH_V; player.y = o.h; G.airItem = o.item ? o : null; sfx('jump');
+  }
+  cam.x += (player.x * 0.55 - cam.x) * Math.min(1, dt * 6);
+  G.shake = Math.max(0, G.shake - dt * 3);
+  if (!player.air && G.speed > 6 && Math.random() < dt * 14) spray(player.lean > 0 ? 1 : -1, 1);
+  updateParticles(dt);
+
+  if (running && G.mode === 'run') { G.invuln = Math.max(0, G.invuln - dt); interact(); }
+  if (G.state === 'run' && G.seq && !G.seq.introduced) {
+    const first = Math.min(...G.seq.rows.filter((r) => !r.done).map((r) => r.z));
+    if (first < G.speed * 4.4) introSequence(G.seq);
+  }
+  G.objs = G.objs.filter((o) => !o.dead && o.z + (o.len || 0.6) > NEAR - 1);
+  spawnAhead();
+  if (G.state === 'run' && G.mode === 'run') { updateHud(); updateBanner(); }
+}
+function land(gnd) {
+  player.y = gnd; player.vy = 0; player.air = false;
+  const hadTrick = player.trick; player.trick = false; player.spin = 0;
+  spray(-1, 14); spray(1, 14); sfx('land');
+  if (G.pendingWipe) { G.pendingWipe = false; G.wipe = 1.1; G.shake = 0.8; sfx('wipe'); return; }
+  if (hadTrick) G.shake = 0.15;
+}
+function finishWipe() { G.invuln = 1.5; clearNear(); }
+function clearNear() { for (const o of G.objs) if ((o.kind === 'tree' || o.kind === 'log') && o.z < 16 && o.z + (o.len || 0) > -2) o.dead = true; }
+function interact() {
+  const lane = nearestLane();
+  for (const o of G.objs) {
+    if (G.state !== 'run') return;
+    const crossed = o.prevZ > 0 && o.z <= 0;
+    const inLane = o.lane !== undefined && Math.abs(player.x - laneX(o.lane)) < 1.05;
+    switch (o.kind) {
+      case 'flake':
+        if (crossed && inLane && Math.abs(player.y + 0.6 - o.y) < 0.85) { o.dead = true; G.flakes++; G.bonus += 10; sfx('flake'); }
+        break;
+      case 'tree':
+        if (!G.invuln && G.wipe <= 0 && inLane && o.z < 0.45 && o.z + o.len > -0.45) crash(o);
+        break;
+      case 'log':
+        if (!G.invuln && G.wipe <= 0 && crossed && inLane && player.y < 0.75) crash(o);
+        break;
+      case 'gate':
+        if (o.prevZ > ASK_Z && o.z <= ASK_Z && !o.asked) { o.asked = true; askGate(o); }
+        if (crossed && o.picked !== undefined && !o.passed) { o.passed = true; sfx(o.ok ? 'gate' : 'bad'); if (!o.ok) G.shake = 0.4; }
+        break;
+      case 'row':
+        if (crossed && !o.done) { o.done = true; resolveRow(o, lane); }
+        break;
+    }
+  }
+}
+
+// ---------- particles (snow spray, drawn in screen space) ----------
+const parts = [];
+function spray(dir, n) {
+  if (reduceMotion && n > 4) n = 4;
+  const [bx, by, s] = P(player.x, player.y, 0);
+  for (let i = 0; i < n; i++) {
+    parts.push({ x: bx + dir * rand(0.1, 0.6) * s, y: by - rand(0, 0.2) * s, vx: dir * rand(0.5, 2.6) * s, vy: -rand(0.6, 2.4) * s, life: rand(0.35, 0.7), r: rand(0.04, 0.1) * s });
+  }
+  if (parts.length > 220) parts.splice(0, parts.length - 220);
+}
+function updateParticles(dt) {
+  for (const p of parts) { p.life -= dt; p.vy += 5 * view.s0 * dt * 0.5; p.x += p.vx * dt; p.y += p.vy * dt; }
+  for (let i = parts.length - 1; i >= 0; i--) if (parts[i].life <= 0) parts.splice(i, 1);
+}
+
+// ---------- question pop-up (the run waits while it is open) ----------
+const Q = { mode: null, obj: null, answered: false, at: 0 };
+const qOptEls = [...document.querySelectorAll('.q-opt')];
+function openQ() {
+  G.state = 'question'; Q.at = performance.now(); Q.answered = false;
+  hideChallenge(); show('qOv'); $('qCard').scrollTop = 0;
+  setTimeout(() => { if (G.state === 'question') $('qCard').focus({ preventScroll: true }); }, 30);
+}
+function fillOptions(obj, air) {
+  const item = obj.item;
+  qOptEls.forEach((b, i) => {
+    b.querySelector('span').textContent = item.options[obj.order[i]];
+    b.querySelector('i').textContent = air ? '' : ['Left gate', 'Middle gate', 'Right gate'][i];
+    b.className = 'q-opt'; b.disabled = false;
+  });
+  $('qOpts').hidden = false; $('qResult').hidden = true; $('qGo').hidden = true; $('qSteps').hidden = true;
+}
+function askGate(gate) {
+  Q.mode = 'gate'; Q.obj = gate;
+  $('qCard').classList.remove('air');
+  $('qTag').textContent = `RUN ${gate.item.topic} · SLALOM · ${topicName(gate.item.topic)}`;  // no upper-casing: it would turn λ into Λ
+  $('qPrompt').textContent = gate.item.prompt;
+  fillOptions(gate, false);
+  $('qHint').textContent = 'Tap a gate, or press 1, 2 or 3';
+  openQ();
+}
+function askAir(kicker) {
+  Q.mode = 'air'; Q.obj = kicker;
+  $('qCard').classList.add('air');
+  $('qTag').textContent = `RUN ${kicker.item.topic} · BIG AIR`;
+  $('qPrompt').textContent = kicker.item.prompt;
+  fillOptions(kicker, true);
+  $('qHint').textContent = 'Answer before you land: tap one, or press 1, 2 or 3';
+  openQ();
+}
+function introSequence(s) {
+  s.introduced = true;
+  Q.mode = 'intro'; Q.obj = null;
+  $('qCard').classList.remove('air');
+  $('qTag').textContent = `RUN ${s.item.topic} · COLLECT IN ORDER`;
+  $('qPrompt').textContent = s.item.title;
+  $('qOpts').hidden = true;
+  $('qVerdict').textContent = `${s.item.steps.length} steps`; $('qVerdict').className = 'verdict';
+  $('qWhy').textContent = 'Here they are in random order. Each row of banners shows three of them, one per lane: carve into the one that comes next. A step out of order costs a life.';
+  $('qResult').hidden = false;
+  const qs = $('qSteps'); qs.replaceChildren();
+  s.display.forEach((t) => { const c = document.createElement('span'); c.className = 'chip-step todo'; c.textContent = t; qs.append(c); });
+  qs.hidden = false;
+  $('qGo').textContent = 'Go'; $('qGo').hidden = false;
+  $('qHint').textContent = 'Space or Enter also starts';
+  openQ();
+}
+function answerQ(i) {
+  if ((Q.mode !== 'gate' && Q.mode !== 'air') || Q.answered || performance.now() - Q.at < 350) return;
+  Q.answered = true; Q.at = performance.now();
+  const obj = Q.obj, item = obj.item, chosen = obj.order[i], right = obj.order.indexOf(item.answer), ok = chosen === item.answer;
+  const air = Q.mode === 'air';
+  G.asked++;
+  qOptEls.forEach((b) => { b.disabled = true; });
+  qOptEls[right].classList.add('right');
+  let verdict;
+  if (ok) {
+    G.correct++;
+    if (air) { const tr = pick(TRICKS); G.bonus += 250; G.tricks++; player.trick = true; obj.trickName = tr; verdict = `${tr}  +250`; }
+    else { G.bonus += 100; verdict = 'Clean gate  +100'; }
+    sfx('good');
+  } else {
+    qOptEls[i].classList.add('wrong');
+    G.lives--; sfx('bad');
+    if (air) G.pendingWipe = true;
+    verdict = air ? 'Wipeout on landing' : 'Missed the gate';
+    const rv = { key: 'g:' + item.prompt, kind: `Run ${item.topic} · ${air ? 'Big air' : 'Slalom'}`, q: item.prompt, a: item.options[item.answer], why: item.why };
+    if (!G.missedKeys.has(rv.key)) { G.missedKeys.add(rv.key); G.missed.push(rv); }
+  }
+  if (!air) { obj.picked = i; obj.ok = ok; player.lane = i; G.steerLock = 1.0; }
+  $('qVerdict').textContent = verdict;
+  $('qVerdict').className = 'verdict ' + (ok ? 'good' : 'bad');
+  $('qWhy').textContent = item.why;
+  $('qResult').hidden = false;
+  $('qGo').textContent = G.lives > 0 ? (ok ? 'Keep riding' : `Keep riding (${G.lives} ${G.lives === 1 ? 'life' : 'lives'} left)`) : 'See results';
+  $('qGo').hidden = false;
+  $('qHint').textContent = 'Space or Enter also continues';
+  updateHud(true);
+  $('qGo').focus({ preventScroll: true });
+}
+function continueQ() {
+  if (G.state !== 'question' || performance.now() - Q.at < 350 || ((Q.mode === 'gate' || Q.mode === 'air') && !Q.answered)) return;
+  hide('qOv');
+  if (G.lives <= 0) { gameOver(); return; }
+  G.state = 'run';
+  if (Q.mode === 'air' && Q.obj.trickName) toast(Q.obj.trickName.toUpperCase(), '+250', 'trick', 1600);
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  last = performance.now();
+}
+function resolveRow(row, lane) {
+  const s = G.seq;
+  if (!s || !s.rows.includes(row)) return;
+  const tok = row.tokens[lane];
+  row.picked = lane;
+  const steps = s.item.steps;
+  if (tok && tok.correct) {
+    s.progress++; G.bonus += 40; sfx('good');
+    if (s.progress >= steps.length) {
+      G.bonus += 200; G.seqDone++; G.seq = null;
+      toast('In order  +200', steps.join('  →  '), 'good', 4200);
+    }
+  } else {
+    const expected = steps[s.progress];
+    addRowAfterLast(s); relabel(s);
+    mistake({
+      kind: 'Out of order', title: s.item.title,
+      rows: [['You took', tok ? tok.text : '(nothing)', 'wrong'], ['Next was', expected, 'right'], ['Full order', steps.join(' → '), '']],
+      why: s.item.why,
+      review: { key: 's:' + s.item.title, kind: `Run ${s.item.topic} · In order`, q: s.item.title, a: steps.join(' → '), why: s.item.why },
+    });
+  }
+}
+function crash(o) {
+  const h = o.haz || { name: 'Hazard', tip: '', topic: '' };
+  G.shake = 1; player.tumble = 0.6;
+  mistake({
+    kind: o.kind === 'tree' ? 'Hit a tree' : 'Caught an edge on a log', title: h.name, rows: [], why: h.tip,
+    review: { key: 'h:' + h.name, kind: `Run ${h.topic} · Mistake`, q: h.name, a: '', why: h.tip },
+  });
+}
+
+// ---------- feedback, pause, game over ----------
+function mistake(info) {
+  G.lives--; G.state = 'card'; G.cardAt = performance.now(); sfx('bad');
+  if (!G.missedKeys.has(info.review.key)) { G.missedKeys.add(info.review.key); G.missed.push(info.review); }
+  $('fbKind').textContent = info.kind;
+  $('fbTitle').textContent = info.title;
+  const dl = $('fbAnswers'); dl.replaceChildren();
+  for (const [label, value, cls] of info.rows) {
+    const wrap = document.createElement('div'); wrap.className = 'ans';
+    const dt = document.createElement('dt'); dt.textContent = label;
+    const dd = document.createElement('dd'); dd.textContent = value; if (cls) dd.className = cls;
+    wrap.append(dt, dd); dl.append(wrap);
+  }
+  dl.hidden = !info.rows.length;
+  $('fbWhy').textContent = info.why;
+  $('fbBtn').textContent = G.lives > 0 ? `Keep riding (${G.lives} ${G.lives === 1 ? 'life' : 'lives'} left)` : 'See results';
+  updateHud(true);
+  hideChallenge();
+  show('cardOv');
+  setTimeout(() => { if (G.state === 'card') $('fbBtn').focus({ preventScroll: true }); }, 50);
+}
+function continueFromCard() {
+  if (G.state !== 'card' || performance.now() - G.cardAt < 450) return;
+  hide('cardOv');
+  if (G.lives <= 0) { gameOver(); return; }
+  G.state = 'run'; G.invuln = 1.5; player.tumble = 0;
+  clearNear();
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  last = performance.now();
+}
+function pause() {
+  if (G.state !== 'run') return;
+  G.state = 'paused'; show('pauseOv'); $('resumeBtn').focus({ preventScroll: true });
+}
+function resume() {
+  if (G.state !== 'paused') return;
+  hide('pauseOv'); G.state = 'run'; last = performance.now();
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+}
+function endFromPause() {
+  hide('pauseOv');
+  if (G.mode === 'es') { toMenu(); return; }
+  gameOver();
+}
+function gameOver() {
+  G.state = 'over';
+  hide('hud'); hideChallenge();
+  const score = currentScore();
+  const isBest = score > best;
+  if (isBest) { best = score; store.set('best', best); }
+  $('finalScore').textContent = fmt(score);
+  const bits = [`${G.correct} of ${G.asked} right`];
+  if (G.tricks) bits.push(`${G.tricks} ${G.tricks === 1 ? 'trick' : 'tricks'} landed`);
+  if (G.seqDone) bits.push(`${G.seqDone} ${G.seqDone === 1 ? 'sequence' : 'sequences'} in order`);
+  bits.push(`${G.flakes} λ flakes`, `${fmt(G.dist)} m`);
+  $('finalStats').textContent = bits.join(' · ') + (isBest ? '. New best on this device.' : `. Best on this device: ${fmt(best)}.`);
+  const list = $('reviewList'); list.replaceChildren();
+  for (const m of G.missed) {
+    const li = document.createElement('li');
+    const k = document.createElement('span'); k.className = 'rk'; k.textContent = m.kind;
+    const q = document.createElement('span'); q.className = 'rq'; q.textContent = m.q;
+    li.append(k, q);
+    if (m.a) { const a = document.createElement('span'); a.className = 'ra'; a.textContent = m.a; li.append(a); }
+    if (m.why) { const w = document.createElement('span'); w.className = 'rw'; w.textContent = m.why; li.append(w); }
+    list.append(li);
+  }
+  $('reviewSec').hidden = !G.missed.length;
+  // this device's top ten, and a one-line result to paste into the class thread
+  const run = { score, right: G.correct, asked: G.asked, seqs: G.seqDone, topics: [...selectedTopics].sort((a, b) => a - b), at: Date.now() };
+  let runs = store.get('runs', []);
+  if (!Array.isArray(runs)) runs = [];
+  runs = runs.concat([run]).sort((a, b) => b.score - a.score || a.at - b.at).slice(0, 10);
+  store.set('runs', runs);
+  const bl = $('bestsList'); bl.replaceChildren();
+  for (const r of runs) {
+    const li = document.createElement('li'); if (r.at === run.at) li.className = 'now';
+    const sc = document.createElement('b'); sc.textContent = fmt(r.score);
+    const d = document.createElement('span');
+    d.textContent = `${r.right}/${r.asked} right · ${topicsLabel(r.topics || [])} · ${new Date(r.at).toLocaleDateString('en-NZ', { day: 'numeric', month: 'short' })}${r.at === run.at ? ' · this run' : ''}`;
+    li.append(sc, d); bl.append(li);
+  }
+  lastResult = `Regularisation Run: ${fmt(score)} points · ${G.correct}/${G.asked} right${G.tricks ? ` · ${G.tricks} tricks` : ''}${G.seqDone ? ` · ${G.seqDone} in order` : ''} · ${topicsLabel(run.topics)}`;
+  $('copyBtn').textContent = 'Copy my result'; $('copyText').hidden = true;
+  $('copyNote').textContent = 'Then paste it into the leaderboard thread on Canvas.';
+  show('overOv'); $('againBtn').focus({ preventScroll: true });
+}
+let lastResult = '';
+function topicsLabel(ts) {
+  if (!ts.length) return '';
+  const parts = []; let a = ts[0], b = ts[0];
+  for (const w of ts.slice(1).concat([null])) {
+    if (w === b + 1) { b = w; continue; }
+    parts.push(a === b ? `${a}` : `${a}–${b}`); a = b = w;
+  }
+  return (ts.length === 1 ? 'Run ' : 'Runs ') + parts.join(', ');
+}
+function copyText(text, btn, inp, note, after) {
+  const fallback = () => { inp.value = text; inp.hidden = false; inp.focus(); inp.select(); if (note) note.textContent = 'Copy the text above, then paste it into the leaderboard thread on Canvas.'; };
+  try {
+    navigator.clipboard.writeText(text).then(() => { btn.textContent = 'Copied'; if (note) note.textContent = after; }, fallback);
+  } catch (e) { fallback(); }
+}
+function hideAllOverlays() { for (const id of ['menu', 'overOv', 'pauseOv', 'cardOv', 'qOv', 'esOv']) hide(id); hide('esPanel'); hide('stopWrap'); }
+function toMenu() {
+  G = makeWorld('menu', G);
+  resetPlayer();
+  hideAllOverlays(); hide('hud'); hideChallenge();
+  renderMenu(); show('menu');
+}
+
+// ---------- HUD, banners, toast ----------
+const sBanner = $('sBanner'), laneChips = $('laneChips');
+const laneEls = [...laneChips.querySelectorAll('.lane-chip')];
+let hudCache = '', seqKey = '', laneKey = '';
+function hideChallenge() {
+  sBanner.hidden = true; laneChips.hidden = true;
+  seqKey = ''; laneKey = '';
+}
+function placeLanes() {
+  const app = $('app').getBoundingClientRect();
+  let top = view.horizon + (view.groundY - view.horizon) * 0.2;
+  if (!sBanner.hidden) top = Math.max(top, sBanner.querySelector('.banner-box').getBoundingClientRect().bottom - app.top + 12);
+  laneChips.style.top = Math.round(top) + 'px';
+}
+function updateHud(force) {
+  const key = `${currentScore()}|${G.correct}|${G.asked}|${G.lives}`;
+  if (!force && key === hudCache) return;
+  hudCache = key;
+  $('score').textContent = fmt(currentScore());
+  $('tally').textContent = `${G.correct} of ${G.asked} right`;
+  const lv = $('lives');
+  if (lv.children.length !== 3) { lv.replaceChildren(); for (let i = 0; i < 3; i++) { const p = document.createElement('span'); p.className = 'pip'; lv.append(p); } }
+  [...lv.children].forEach((p, i) => p.classList.toggle('lost', i >= G.lives));
+  lv.setAttribute('aria-label', `${G.lives} lives left`);
+}
+function updateBanner() {
+  let laneTexts = null;
+  const s = G.seq;
+  const pend = s ? s.rows.filter((r) => !r.done).sort((a, b) => a.z - b.z) : [];
+  if (s && s.introduced && pend.length && pend[0].z < G.speed * 6) {
+    const key = s.item.title + '|' + s.progress;
+    if (key !== seqKey) {
+      seqKey = key;
+      const n = s.item.steps.length;
+      $('sTag').textContent = `RUN ${s.item.topic} · COLLECT IN ORDER`;
+      $('sTitle').textContent = s.item.title;
+      const g = $('sGoal'), bold = document.createElement('b');
+      g.replaceChildren();
+      bold.textContent = `Step ${s.progress + 1} of ${n}:`;
+      g.append(bold, ' carve into the banner that comes next.');
+      const chips = $('sChips'); chips.replaceChildren();
+      const done = s.item.steps.slice(0, s.progress);
+      done.forEach((t, i) => { const c = document.createElement('span'); c.className = 'chip-step'; c.textContent = `${i + 1} ✓ ${t}`; chips.append(c); });
+      const left = s.display.filter((t) => !done.includes(t));
+      if (left.length) {
+        const lab = document.createElement('span'); lab.className = 'chips-label'; lab.textContent = done.length ? 'Still to place' : 'Steps to place'; chips.append(lab);
+        left.forEach((t) => { const c = document.createElement('span'); c.className = 'chip-step todo'; c.textContent = t; chips.append(c); });
+      }
+      sBanner.hidden = false; placeLanes();
+    }
+    if (pend[0].z < s.spacing + 5) laneTexts = pend[0].tokens.map((t) => (t ? t.text : '—'));
+  } else if (!sBanner.hidden) { sBanner.hidden = true; seqKey = ''; }
+  const key = laneTexts ? laneTexts.join('|') : '';
+  if (key !== laneKey) {
+    laneKey = key;
+    if (laneTexts) laneEls.forEach((el, l) => { el.querySelector('.lane-text').textContent = laneTexts[l]; });
+    laneChips.hidden = !laneTexts;
+    if (laneTexts) placeLanes();
+  }
+  if (laneTexts) { const lane = nearestLane(); laneEls.forEach((el, l) => el.classList.toggle('here', l === lane)); }
+}
+let toastTimer = 0;
+function toast(head, body, cls, ms) {
+  const t = $('toast');
+  $('toastHead').textContent = head; $('toastBody').textContent = body || '';
+  t.className = 'toast show ' + (cls || '');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.className = 'toast'; }, ms || 2400);
+}
+function show(id) { $(id).hidden = false; }
+function hide(id) { $(id).hidden = true; }
+
+// ---------- Early Stopping event ----------
+// A real Landweber iteration on a small deconvolution problem, as in Lecture 11: a sine wave blurred by a
+// Gaussian window and observed with noise. The iteration count grows with the distance ridden, roughly
+// exponentially, so the whole run from k = 1 to k = 3000 takes about 45 seconds.
+const ES = { n: 64, width: 2.5, sigma: 0.005, kmax: 3000, secs: 45 };
+function gauss() { let u = 0, v = 0; while (u === 0) u = Math.random(); while (v === 0) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+function makeES() {
+  const n = ES.n, t = Array.from({ length: n }, (_, i) => (4 * Math.PI * i) / (n - 1));
+  const xt = t.map(Math.sin);
+  const A = [];
+  for (let i = 0; i < n; i++) {
+    const row = new Float64Array(n); let sum = 0;
+    for (let j = 0; j < n; j++) { row[j] = Math.exp(-0.5 * ((i - j) / ES.width) ** 2); sum += row[j]; }
+    for (let j = 0; j < n; j++) row[j] /= sum;
+    A.push(row);
+  }
+  const mul = (v) => A.map((row) => { let s = 0; for (let j = 0; j < n; j++) s += row[j] * v[j]; return s; });
+  const mulT = (v) => { const out = new Float64Array(n); for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) out[j] += A[i][j] * v[i]; return out; };
+  const norm = (v) => Math.sqrt(v.reduce((s, a) => s + a * a, 0));
+  const e = Array.from({ length: n }, () => ES.sigma * gauss());
+  const Ax = mul(xt), y = Ax.map((v, i) => v + e[i]), delta = norm(e);
+  // largest singular value of A by power iteration on AᵀA, then the step α = 1/σ₁²
+  let v = new Float64Array(n).fill(1), s1 = 1;
+  for (let it = 0; it < 200; it++) { const w = mulT(mul(v)); const nw = norm(w); s1 = Math.sqrt(nw / norm(v)); v = w.map((a) => a / nw); }
+  const alpha = 1 / (s1 * s1);
+  const X = new Float32Array(ES.kmax * n), R = new Float64Array(ES.kmax), E = new Float64Array(ES.kmax);
+  let x = new Float64Array(n);
+  for (let k = 0; k < ES.kmax; k++) {
+    const r = mul(x).map((a, i) => y[i] - a), g = mulT(r);
+    for (let j = 0; j < n; j++) x[j] += alpha * g[j];
+    X.set(x, k * n);
+    R[k] = norm(mul(x).map((a, i) => a - y[i]));
+    E[k] = norm(x.map((a, i) => a - xt[i]));
+  }
+  let kBest = 0; for (let k = 1; k < ES.kmax; k++) if (E[k] < E[kBest]) kBest = k;
+  let kDp = -1; for (let k = 0; k < ES.kmax; k++) if (R[k] <= delta) { kDp = k; break; }
+  return { n, t, xt, y, delta, alpha, X, R, E, kBest, kDp, k: 1, tRun: 0, stopped: false, speed: 18 };
+}
+function startES() {
+  G = makeWorld('run', G);
+  G.mode = 'es'; G.es = makeES();
+  resetPlayer();
+  hideAllOverlays(); hideChallenge(); show('hud'); show('esPanel'); show('stopWrap');
+  $('tally').textContent = 'Early Stopping';
+  $('score').textContent = 'k = 1';
+  $('lives').replaceChildren();
+  if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  for (let i = 1; i <= 4; i++) { const z = 30 * i; G.objs.push({ kind: 'esflag', z, prevZ: z, label: '' }); }
+  last = performance.now(); drawESPlot();
+}
+const kAt = (secs) => clamp(Math.floor(Math.exp((Math.log(ES.kmax) / ES.secs) * secs)), 1, ES.kmax);
+function esUpdate(dt) {
+  const es = G.es;
+  es.tRun += dt;
+  const k = kAt(es.tRun);
+  if (k !== es.k) { es.k = k; $('esK').textContent = `k = ${fmt(k)}`; $('score').textContent = `k = ${fmt(k)}`; drawESPlot(); }
+  if (es.k >= ES.kmax) stopES(true);
+  // iteration markers on the course at k = 10, 100 and 1000
+  for (const o of G.objs) if (o.kind === 'esflag' && !o.label && o.z < 60) o.label = 'k ' + fmt(kAt(es.tRun + o.z / Math.max(1, G.speed)));
+  if (!G.objs.some((o) => o.kind === 'esflag' && o.z > 90)) { const z = 120; G.objs.push({ kind: 'esflag', z, prevZ: z, label: '' }); }
+}
+function stopES(timeout) {
+  const es = G.es;
+  if (!es || es.stopped || G.state !== 'run') return;
+  es.stopped = true; es.timeout = !!timeout;
+  G.state = 'braking'; sfx(timeout ? 'bad' : 'brake'); spray(-1, 18); spray(1, 18);
+  hide('stopWrap');
+  setTimeout(showESResult, 900);
+}
+function showESResult() {
+  const es = G.es; G.state = 'esdone';
+  const k = es.k - 1, eYou = es.E[k], eBest = es.E[es.kBest];
+  const score = Math.round(1000 * eBest / eYou);
+  const isBest = score > esBest; if (isBest) { esBest = score; store.set('esBest', esBest); }
+  hide('esPanel'); hide('hud');
+  $('esScore').textContent = fmt(score);
+  const f2 = (v) => v.toFixed(3);
+  const dp = es.kDp >= 0 ? `The discrepancy principle (stop once ‖Ax_k − y‖ ≤ δ, with δ = ‖e‖ known) would have stopped at k = ${fmt(es.kDp + 1)}, error ${f2(es.E[es.kDp])}.` : 'The misfit never reached the noise level here.';
+  $('esStats').textContent = (es.timeout ? `You never stopped: after ${fmt(ES.kmax)} iterations the error is ${f2(eYou)}. ` : `You stopped at k = ${fmt(es.k)}, with error ‖x_k − x_true‖ = ${f2(eYou)}. `)
+    + `The best possible stop was k = ${fmt(es.kBest + 1)}, error ${f2(eBest)}. ${dp}` + (isBest ? ' New best on this device.' : ` Best on this device: ${fmt(esBest)}.`);
+  $('esWhy').textContent = 'Early iterations recover the smooth components with large singular values. Later ones add components with small singular values, where the noise is amplified, so the error falls and then rises: semi-convergence. The misfit keeps falling, so it cannot tell you when to stop on its own; the iteration count is the regularisation parameter.';
+  const lg = $('esLegend'); lg.replaceChildren();
+  for (const [c, t] of [['#ffc93c', 'You'], ['#3ddc97', 'Best possible'], ['#5d92f2', 'Discrepancy principle'], ['#ff7468', 'Error ‖x_k − x_true‖'], ['#cfe6ff', 'Misfit ‖Ax_k − y‖']]) {
+    const li = document.createElement('li'); const i = document.createElement('i'); i.style.background = c; li.append(i, t); lg.append(li);
+  }
+  esLastResult = `Regularisation Run · Early Stopping: ${fmt(score)}/1,000 · stopped at k = ${fmt(es.k)} (best k = ${fmt(es.kBest + 1)})`;
+  $('esCopyBtn').textContent = 'Copy my result'; $('esCopyText').hidden = true;
+  show('esOv'); drawESFigure(); $('esAgainBtn').focus({ preventScroll: true });
+}
+let esLastResult = '';
+// small helpers for the two plots
+function logAxisX(k, x0, x1) { return x0 + (x1 - x0) * Math.log(k) / Math.log(ES.kmax); }
+function drawCurve(c, vals, kTo, x0, x1, yOf, color, width) {
+  c.strokeStyle = color; c.lineWidth = width; c.beginPath();
+  let started = false;
+  for (let k = 1; k <= kTo; k = k < 40 ? k + 1 : Math.ceil(k * 1.03)) {
+    const x = logAxisX(k, x0, x1), y = yOf(vals[k - 1]);
+    if (!started) { c.moveTo(x, y); started = true; } else c.lineTo(x, y);
+  }
+  c.stroke();
+}
+function drawSignal(c, vals, x0, x1, yTop, yBot, lo, hi, color, width, dash) {
+  c.strokeStyle = color; c.lineWidth = width; c.setLineDash(dash || []); c.beginPath();
+  for (let i = 0; i < vals.length; i++) {
+    const x = x0 + (x1 - x0) * i / (vals.length - 1), y = yBot - (yBot - yTop) * (clamp(vals[i], lo, hi) - lo) / (hi - lo);
+    if (i) c.lineTo(x, y); else c.moveTo(x, y);
+  }
+  c.stroke(); c.setLineDash([]);
+}
+function drawESPlot() {
+  const c = $('esPlot').getContext('2d'), w = 320, h = 190, es = G.es;
+  c.clearRect(0, 0, w, h);
+  c.font = '700 11px ' + BODY; c.textBaseline = 'middle';
+  // top: misfit on log–log axes
+  const x0 = 34, x1 = w - 8, t0 = 8, t1 = 82;
+  const lmin = Math.log(es.delta * 0.3), lmax = Math.log(es.R[0] * 1.5);
+  const yR = (v) => t1 - (t1 - t0) * (Math.log(Math.max(v, 1e-12)) - lmin) / (lmax - lmin);
+  c.strokeStyle = 'rgba(207,230,255,0.25)'; c.lineWidth = 1; c.strokeRect(x0, t0, x1 - x0, t1 - t0);
+  c.setLineDash([5, 4]); c.strokeStyle = '#5d92f2'; c.beginPath(); c.moveTo(x0, yR(es.delta)); c.lineTo(x1, yR(es.delta)); c.stroke(); c.setLineDash([]);
+  c.fillStyle = '#5d92f2'; c.textAlign = 'right'; c.fillText('δ', x0 - 6, yR(es.delta));
+  c.fillStyle = '#cfe6ff'; c.fillText('misfit', x0 - 4, t0 + 6);
+  drawCurve(c, es.R, es.k, x0, x1, yR, '#cfe6ff', 2);
+  c.fillStyle = '#ffc93c'; c.beginPath(); c.arc(logAxisX(es.k, x0, x1), yR(es.R[es.k - 1]), 3.5, 0, Math.PI * 2); c.fill();
+  // bottom: current reconstruction over the data
+  const b0 = 98, b1 = h - 6;
+  c.strokeStyle = 'rgba(207,230,255,0.25)'; c.strokeRect(x0, b0, x1 - x0, b1 - b0);
+  c.fillStyle = 'rgba(207,230,255,0.55)';
+  for (let i = 0; i < es.n; i++) { const x = x0 + (x1 - x0) * i / (es.n - 1), y = b1 - (b1 - b0) * (clamp(es.y[i], -1.6, 1.6) + 1.6) / 3.2; c.fillRect(x - 1, y - 1, 2, 2); }
+  drawSignal(c, Array.from(es.X.subarray((es.k - 1) * es.n, es.k * es.n)), x0, x1, b0, b1, -1.6, 1.6, '#ffc93c', 2);
+  c.fillStyle = '#ffc93c'; c.textAlign = 'right'; c.fillText('x_k', x0 - 4, b0 + 8);
+}
+function drawESFigure() {
+  const cvs = $('esFig'), c = cvs.getContext('2d'), w = cvs.width, h = cvs.height, es = G.es;
+  c.clearRect(0, 0, w, h);
+  c.font = '700 13px ' + BODY; c.textBaseline = 'middle';
+  const x0 = 46, x1 = w - 12, t0 = 30, t1 = 190;
+  const all = [...es.E, ...es.R].filter((v) => v > 0);
+  const lmin = Math.log(Math.min(es.delta * 0.5, ...all)), lmax = Math.log(Math.max(...all) * 1.3);
+  const yL = (v) => t1 - (t1 - t0) * (Math.log(Math.max(v, 1e-12)) - lmin) / (lmax - lmin);
+  c.strokeStyle = 'rgba(207,230,255,0.25)'; c.lineWidth = 1; c.strokeRect(x0, t0, x1 - x0, t1 - t0);
+  c.fillStyle = '#a7bcd8'; c.textAlign = 'center';
+  for (const k of [1, 10, 100, 1000]) { const x = logAxisX(k, x0, x1); c.fillText(fmt(k), x, t1 + 12); c.fillRect(x, t1, 1, 4); }
+  c.textAlign = 'left'; c.fillText('iteration k (log scale)', x0, t1 + 27);
+  c.setLineDash([5, 4]); c.strokeStyle = '#5d92f2'; c.beginPath(); c.moveTo(x0, yL(es.delta)); c.lineTo(x1, yL(es.delta)); c.stroke(); c.setLineDash([]);
+  c.fillStyle = '#5d92f2'; c.textAlign = 'right'; c.fillText('δ', x0 - 6, yL(es.delta));
+  drawCurve(c, es.R, ES.kmax, x0, x1, yL, '#cfe6ff', 2);
+  drawCurve(c, es.E, ES.kmax, x0, x1, yL, '#ff7468', 2.5);
+  // labels sit on two rows above the plot so neighbouring markers don't collide
+  const mark = (k, color, lab, row) => { const x = logAxisX(k, x0, x1); c.strokeStyle = color; c.lineWidth = 2; c.beginPath(); c.moveTo(x, t0 - (row ? 2 : 14)); c.lineTo(x, t1); c.stroke(); c.fillStyle = color; c.textAlign = 'center'; c.fillText(lab, clamp(x, x0 + 18, x1 - 18), row ? 8 : 20); };
+  if (es.kDp >= 0) mark(es.kDp + 1, '#5d92f2', 'DP', 1);
+  mark(es.kBest + 1, '#3ddc97', 'best', 1);
+  mark(es.k, '#ffc93c', 'you', 0);
+  // reconstructions: the truth, your stop, and the last iterate
+  const b0 = 256, b1 = h - 8;
+  c.strokeStyle = 'rgba(207,230,255,0.25)'; c.lineWidth = 1; c.strokeRect(x0, b0, x1 - x0, b1 - b0);
+  const last = Array.from(es.X.subarray((ES.kmax - 1) * es.n, ES.kmax * es.n)), mine = Array.from(es.X.subarray((es.k - 1) * es.n, es.k * es.n));
+  const lo = -1.8, hi = 1.8;
+  drawSignal(c, last, x0, x1, b0, b1, lo, hi, 'rgba(255,116,104,0.75)', 1.5);
+  drawSignal(c, es.xt, x0, x1, b0, b1, lo, hi, '#f6fbff', 2, [6, 5]);
+  drawSignal(c, mine, x0, x1, b0, b1, lo, hi, '#ffc93c', 2.5);
+  c.fillStyle = '#a7bcd8'; c.textAlign = 'left';
+  c.fillText('x_true (dashed), your x_k (gold), x at k = 3,000 (red)', x0, b0 - 10);
+}
+
+// ---------- sound and music (on by default; audio starts at the first click, tap or key press) ----------
+let actx = null, sfxBus = null, musicBus = null, noiseBuf = null, audioUnlocked = false;
+function makeNoise(ac) {
+  const b = ac.createBuffer(1, Math.floor(ac.sampleRate * 0.5), ac.sampleRate), d = b.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  return b;
+}
+function ensureAudio() {
+  if (!audioUnlocked) return false;
+  if (actx) { if (actx.state !== 'running' && actx.state !== 'closed') actx.resume().catch(() => {}); return true; }
+  try {
+    actx = new (window.AudioContext || window.webkitAudioContext)();
+    const comp = actx.createDynamicsCompressor();
+    comp.threshold.value = -14; comp.ratio.value = 4; comp.connect(actx.destination);
+    musicBus = actx.createGain(); musicBus.gain.value = 0; musicBus.connect(comp);
+    sfxBus = actx.createGain(); sfxBus.connect(comp);
+    noiseBuf = makeNoise(actx);
+    return true;
+  } catch (e) { actx = null; return false; }
+}
+const TONES = { flake: [1175, 0.07, 'square', 0.03], good: [660, 0.16, 'triangle', 0.08], bad: [140, 0.32, 'sawtooth', 0.06], jump: [392, 0.12, 'sine', 0.05], bump: [110, 0.1, 'square', 0.04], gate: [880, 0.1, 'triangle', 0.05] };
+function sfx(name) {
+  if (!soundOn || !ensureAudio()) return;
+  try {
+    const t0 = actx.currentTime;
+    if (name === 'carve' || name === 'land' || name === 'wipe' || name === 'brake') {
+      const spec = { carve: [2500, 0.12, 0.05], land: [400, 0.18, 0.12], wipe: [300, 0.6, 0.14], brake: [1800, 0.7, 0.1] }[name];
+      voiceNoise(actx, sfxBus, t0, spec[2], spec[0], spec[1]); return;
+    }
+    const [f, d, type, vol] = TONES[name];
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t0);
+    if (name === 'good' || name === 'jump') o.frequency.linearRampToValueAtTime(f * 1.5, t0 + d);
+    g.gain.setValueAtTime(vol, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d);
+    o.connect(g); g.connect(sfxBus); o.start(t0); o.stop(t0 + d + 0.02);
+  } catch (e) { /* audio unavailable */ }
+}
+
+// An original tune in the spirit of the Cool Boarders 3 course music (1998), written to a measured profile of
+// four in-game tracks rather than copied from any of them: heavy alt-rock riffs at about 110 bpm, centred on
+// E♭ (guitars tuned down a half step), palm-muted chugs on a low tonic pedal with accents on ♭VI, ♭VII and the
+// Phrygian ♭II, a low bass doubling the riff, a distorted lead around E4, and a driving rock kit. All synthesised.
+const BPM = 110, STEP = 60 / BPM / 4;
+const mtof = (m) => 440 * 2 ** ((m - 69) / 12);
+// riff roots as MIDI notes (bass register); power chords are voiced an octave above
+const RT = { Eb: 39, E: 40, Gb: 42, Ab: 44, Bb: 46, B: 35, Db: 37, D: 38 };
+// riff events per bar: [step (0–15), root, length in steps, palm-muted?]
+const RIFF_A = [
+  [[0, 'Eb', 3, 0], [3, 'Eb', 1, 1], [4, 'Eb', 1, 1], [5, 'Eb', 1, 1], [6, 'Eb', 2, 0], [8, 'Eb', 1, 1], [9, 'Eb', 1, 1], [10, 'Eb', 1, 1], [11, 'Eb', 1, 1], [12, 'Eb', 2, 0], [14, 'Gb', 2, 0]],
+  [[0, 'Eb', 3, 0], [3, 'Eb', 1, 1], [4, 'Eb', 1, 1], [5, 'Eb', 1, 1], [6, 'Eb', 2, 0], [8, 'Eb', 1, 1], [9, 'Eb', 1, 1], [10, 'E', 2, 0], [12, 'B', 2, 0], [14, 'Db', 2, 0]],
+];
+const RIFF_B = [
+  [[0, 'B', 6, 0], [6, 'B', 2, 1], [8, 'Db', 6, 0], [14, 'Db', 2, 1]],
+  [[0, 'Eb', 10, 0], [10, 'Eb', 1, 1], [11, 'Eb', 1, 1], [12, 'Db', 2, 0], [14, 'D', 2, 0]],
+  [[0, 'B', 6, 0], [6, 'B', 2, 1], [8, 'Db', 6, 0], [14, 'Db', 2, 1]],
+  [[0, 'Gb', 8, 0], [8, 'E', 6, 0], [14, 'E', 2, 1]],
+];
+const CHUG = (accents) => Array.from({ length: 16 }, (_, s) => accents[s] ? [s, accents[s], 2, 0] : [s, 'Eb', 1, 1]).filter((e, i, a) => !a.some((f) => f[0] === e[0] - 1 && f[2] === 2));
+const RIFF_C = [CHUG({ 0: 'Eb', 6: 'Gb', 12: 'E' }), CHUG({ 0: 'Eb', 6: 'B', 12: 'Db' }), CHUG({ 0: 'Eb', 6: 'Gb', 12: 'E' }), [[0, 'B', 4, 0], [4, 'Db', 4, 0], [8, 'D', 4, 0], [12, 'Eb', 4, 0]]];
+// lead notes per bar: [step, MIDI note, length in steps]
+const LEAD_B = [
+  [[0, 66, 6], [6, 65, 2], [8, 63, 4], [12, 61, 4]],
+  [[0, 63, 6], [6, 65, 2], [8, 66, 4], [12, 68, 4]],
+  [[0, 70, 6], [6, 68, 2], [8, 66, 4], [12, 65, 4]],
+  [[0, 66, 4], [4, 64, 4], [8, 63, 8]],
+];
+const SONG = [
+  { riff: RIFF_A, bars: 4, drums: 'rock', crash: true },
+  { riff: RIFF_A, bars: 4, drums: 'rock' },
+  { riff: RIFF_B, bars: 4, drums: 'half', lead: LEAD_B, crash: true },
+  { riff: RIFF_C, bars: 4, drums: 'double', fill: true },
+];
+const SONG_BARS = SONG.reduce((n, sec) => n + sec.bars, 0), SONG_STEPS = SONG_BARS * 16;
+function envGain(ac, t, vol, attack, dur) {
+  const g = ac.createGain();
+  g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + attack);
+  g.gain.setValueAtTime(vol, t + Math.max(attack, dur * 0.6)); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  return g;
+}
+function lowpass(ac, hz, q) { const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = hz; f.Q.value = q || 0.7; return f; }
+let driveCurve = null;
+function drive(ac) {
+  if (!driveCurve) { driveCurve = new Float32Array(1024); for (let i = 0; i < 1024; i++) { const x = i / 511.5 - 1; driveCurve[i] = Math.tanh(6 * x); } }
+  const sh = ac.createWaveShaper(); sh.curve = driveCurve; return sh;
+}
+function voicePower(ac, dest, t, root, dur, vol, muted) { // power chord (root, fifth, octave) through distortion; palm mutes are short and dark
+  const sh = drive(ac), f = lowpass(ac, muted ? 1700 : 4800, muted ? 1.2 : 0.8), g = envGain(ac, t, vol, 0.004, dur);
+  for (const [m, d] of [[root + 12, -7], [root + 19, 7], [root + 24, 0]]) {
+    const o = ac.createOscillator(); o.type = 'sawtooth'; o.frequency.value = mtof(m); o.detune.value = d;
+    const og = ac.createGain(); og.gain.value = 0.45; o.connect(og); og.connect(sh); o.start(t); o.stop(t + dur + 0.03);
+  }
+  sh.connect(f); f.connect(g); g.connect(dest);
+}
+function voiceBass(ac, dest, t, m, dur) {
+  // E♭2 with an octave layer: low enough to drive the riff, high enough for small speakers
+  const o = ac.createOscillator(), o2 = ac.createOscillator(), f = lowpass(ac, 520, 1.5);
+  o.type = 'square'; o.frequency.value = mtof(m); o2.type = 'sawtooth'; o2.frequency.value = mtof(m + 12);
+  const g = envGain(ac, t, 0.08, 0.004, dur), g2 = ac.createGain(); g2.gain.value = 0.4;
+  o.connect(f); o2.connect(g2); g2.connect(f); f.connect(g); g.connect(dest);
+  for (const x of [o, o2]) { x.start(t); x.stop(t + dur + 0.03); }
+}
+function voiceLead(ac, dest, t, m, dur) { // distorted lead with delayed vibrato, like a held guitar note
+  const sh = drive(ac), f = lowpass(ac, 3000), g = envGain(ac, t, 0.05, 0.01, dur), lfo = ac.createOscillator(), vib = ac.createGain();
+  lfo.frequency.value = 5.5; vib.gain.setValueAtTime(0, t); vib.gain.linearRampToValueAtTime(mtof(m) * 0.012, t + Math.min(0.35, dur * 0.6));
+  lfo.connect(vib);
+  for (const d of [-5, 5]) { const o = ac.createOscillator(); o.type = 'sawtooth'; o.frequency.value = mtof(m); o.detune.value = d; vib.connect(o.frequency); o.connect(sh); o.start(t); o.stop(t + dur + 0.05); }
+  lfo.start(t); lfo.stop(t + dur + 0.05);
+  sh.connect(f); f.connect(g); g.connect(dest);
+}
+function voiceKick(ac, dest, t) {
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = 'sine'; o.frequency.setValueAtTime(140, t); o.frequency.exponentialRampToValueAtTime(45, t + 0.12);
+  g.gain.setValueAtTime(0.5, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+  o.connect(g); g.connect(dest); o.start(t); o.stop(t + 0.24);
+}
+function voiceNoise(ac, dest, t, vol, hp, dur) {
+  const n = ac.createBufferSource(), f = ac.createBiquadFilter(), g = ac.createGain();
+  n.buffer = ac === actx ? noiseBuf : (ac.__noise || (ac.__noise = makeNoise(ac)));
+  f.type = 'highpass'; f.frequency.value = hp;
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  n.connect(f); f.connect(g); g.connect(dest); n.start(t); n.stop(t + dur + 0.02);
+}
+function voiceSnare(ac, dest, t, vol) {
+  voiceNoise(ac, dest, t, vol, 1000, 0.17);
+  const o = ac.createOscillator(), g = ac.createGain();
+  o.type = 'triangle'; o.frequency.value = 180;
+  g.gain.setValueAtTime(vol * 0.8, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+  o.connect(g); g.connect(dest); o.start(t); o.stop(t + 0.1);
+}
+const musicMute = new Set();  // parts silenced in local render tests only
+function playStep(ac, dest, step, t) {
+  let bar = Math.floor(step / 16) % SONG_BARS, sec = SONG[0];
+  for (const x of SONG) { if (bar < x.bars) { sec = x; break; } bar -= x.bars; }
+  const s = step % 16, riffBar = sec.riff[bar % sec.riff.length];
+  for (const [at, root, len, muted] of riffBar) if (at === s) {
+    if (!musicMute.has('guitar')) voicePower(ac, dest, t, RT[root], len * STEP * (muted ? 0.75 : 0.95), muted ? 0.055 : 0.075, muted);
+    if (!musicMute.has('bass')) voiceBass(ac, dest, t, RT[root], len * STEP * 0.92);
+  }
+  if (sec.lead && !musicMute.has('lead')) for (const [at, m, len] of sec.lead[bar % sec.lead.length]) if (at === s) voiceLead(ac, dest, t, m, len * STEP * 0.95);
+  if (musicMute.has('drums')) return;
+  // drums: a straight rock beat, a half-time feel under the lead, and double time to finish the loop
+  const last = bar === sec.bars - 1;
+  if (sec.crash && bar === 0 && s === 0) voiceNoise(ac, dest, t, 0.09, 4500, 1.1);
+  if (sec.drums === 'rock') {
+    if (s === 0 || s === 6 || s === 8 || s === 11) voiceKick(ac, dest, t);
+    if (s === 4 || s === 12) voiceSnare(ac, dest, t, 0.22);
+    if (s % 2 === 0) voiceNoise(ac, dest, t, s === 14 ? 0.07 : 0.045, 7000, s === 14 ? 0.12 : 0.035);
+  } else if (sec.drums === 'half') {
+    if (s === 0 || s === 3 || s === 10) voiceKick(ac, dest, t);
+    if (s === 8) voiceSnare(ac, dest, t, 0.24);
+    if (s % 2 === 0) voiceNoise(ac, dest, t, 0.055, 6000, 0.07);
+  } else {
+    if (s % 4 === 0 || s === 10) voiceKick(ac, dest, t);
+    if (s === 4 || s === 12) voiceSnare(ac, dest, t, 0.22);
+    else if (sec.fill && last && s > 8 && s % 2 === 1) voiceSnare(ac, dest, t, 0.08 + 0.025 * (s - 8));
+    voiceNoise(ac, dest, t, s % 2 === 0 ? 0.05 : 0.028, 7500, 0.03);
+  }
+}
+// Local testing only: with ?render-music in the URL, window.renderMusic(seconds) renders the loop offline as WAV bytes.
+if (/render-music/.test(location.search)) window.renderMusic = async (secs, mute) => {
+  musicMute.clear(); for (const m of mute || []) musicMute.add(m);
+  const sr = 22050, ac = new OfflineAudioContext(1, Math.ceil(sr * secs), sr);
+  for (let st = 0, t = 0.05; t < secs; st++, t += STEP) playStep(ac, ac.destination, st % SONG_STEPS, t);
+  const ch = (await ac.startRendering()).getChannelData(0);
+  return Array.from(new Uint8Array(new Int16Array(ch.map((v) => Math.max(-1, Math.min(1, v)) * 32767)).buffer));
+};
+const music = { playing: false, step: 0, next: 0, timer: 0, ducked: null };
+function musicTick() {
+  if (!music.playing || !actx) return;
+  if (actx.state !== 'running') { music.next = actx.currentTime + 0.1; return; }
+  while (music.next < actx.currentTime + 0.15) {
+    playStep(actx, musicBus, music.step, music.next);
+    music.next += STEP; music.step = (music.step + 1) % SONG_STEPS;
+  }
+}
+function musicStart() {
+  if (!ensureAudio()) return;
+  Object.assign(music, { playing: true, step: 0, next: actx.currentTime + 0.1, ducked: null });
+  clearInterval(music.timer); music.timer = setInterval(musicTick, 25); musicTick();
+}
+function musicStop() {
+  music.playing = false; clearInterval(music.timer);
+  if (musicBus) musicBus.gain.setTargetAtTime(0, actx.currentTime, 0.05);
+}
+// Music plays with the sound on, quietens while a card is open, and stops when paused or over.
+function syncMusic() {
+  const want = soundOn && audioUnlocked && !document.hidden && G.state !== 'paused' && G.state !== 'over' && G.state !== 'esdone';
+  if (want && !music.playing) musicStart(); else if (!want && music.playing) musicStop();
+  if (music.playing && musicBus) {
+    const duck = G.state === 'question' || G.state === 'card';
+    if (duck !== music.ducked) { music.ducked = duck; musicBus.gain.setTargetAtTime(duck ? 0.25 : 0.75, actx.currentTime, 0.12); }
+  }
+}
+let primed = false;
+function unlockAudio() {
+  audioUnlocked = true;
+  if (!soundOn) return;
+  // iPhones mute Web Audio when the ring/silent switch is on silent, unless the page asks to be treated as
+  // media playback (Safari 16.4 and later).
+  try { if (navigator.audioSession && navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback'; } catch (e) { /* not supported */ }
+  if (ensureAudio() && !primed) {
+    try { const s = actx.createBufferSource(); s.buffer = actx.createBuffer(1, 1, 22050); s.connect(actx.destination); s.start(0); primed = true; } catch (e) { /* ignore */ }
+  }
+}
+for (const ev of ['touchend', 'pointerup', 'click', 'keydown']) addEventListener(ev, unlockAudio, true);
+function toggleSound() {
+  soundOn = !soundOn; store.set('sound', soundOn);
+  unlockAudio(); renderSound(); if (soundOn) sfx('good');
+  syncMusic();
+}
+function renderSound() {
+  const b = $('soundBtn'); b.textContent = soundOn ? 'Sound on' : 'Sound off'; b.setAttribute('aria-pressed', String(soundOn));
+  const m = $('menuSoundBtn'); m.textContent = soundOn ? 'Sound and music: on' : 'Sound and music: off'; m.setAttribute('aria-pressed', String(soundOn));
+}
+
+// ---------- drawing ----------
+let skyCache = null;
+// The sky is drawn once per size with ordered dithering between bands, like a 15-bit console palette.
+function buildSky() {
+  const w = cv.width, hz = Math.max(1, Math.round(view.horizon * cv.height / H) + 2);
+  const off = document.createElement('canvas'); off.width = w; off.height = hz;
+  const c = off.getContext('2d'), img = c.createImageData(w, hz), d = img.data;
+  const stops = [[0, [40, 96, 196]], [0.55, [92, 162, 236]], [1, [196, 228, 255]]];
+  const bayer = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
+  for (let y = 0; y < hz; y++) {
+    const u = y / hz;
+    let a = stops[0], b = stops[stops.length - 1];
+    for (let i = 0; i < stops.length - 1; i++) if (u >= stops[i][0] && u <= stops[i + 1][0]) { a = stops[i]; b = stops[i + 1]; }
+    const f = (u - a[0]) / (b[0] - a[0] || 1);
+    for (let x = 0; x < w; x++) {
+      const th = (bayer[(y % 4) * 4 + (x % 4)] + 0.5) / 16, q = 12;
+      const p = (y * w + x) * 4;
+      for (let ch = 0; ch < 3; ch++) { const v = a[1][ch] + (b[1][ch] - a[1][ch]) * f; d[p + ch] = clamp(Math.floor(v / q + th) * q, 0, 255); }
+      d[p + 3] = 255;
+    }
+  }
+  c.putImageData(img, 0, 0);
+  skyCache = off;
+}
+function render(time) {
+  ctx.save();
+  if (G.shake > 0 && !reduceMotion) ctx.translate((Math.random() - 0.5) * G.shake * 10, (Math.random() - 0.5) * G.shake * 8);
+  drawSky(time); drawMountains(); drawGround();
+  // Painter's order by depth. A kicker sorts by its lip (far end), so the ramp stays behind the rider while he rides up it.
+  const depth = (o) => (o.kind === 'kicker' ? o.z + o.len : o.z);
+  const list = G.objs.filter((o) => o.z < Z_VIS && o.z + (o.len || 0.6) > NEAR).sort((a, b) => depth(b) - depth(a));
+  let drawn = false;
+  for (const o of list) {
+    if (!drawn && depth(o) < 0.2) { drawPlayer(time); drawn = true; }
+    ctx.globalAlpha = clamp((Z_VIS - o.z) / 28, 0, 1);
+    drawObj(o, time);
+    ctx.globalAlpha = 1;
+  }
+  if (!drawn) drawPlayer(time);
+  ctx.fillStyle = '#ffffff';
+  for (const p of parts) { ctx.globalAlpha = clamp(p.life * 2, 0, 1); ctx.fillRect(p.x - p.r, p.y - p.r, p.r * 2, p.r * 2); }
+  ctx.globalAlpha = 1;
+  ctx.restore();
+}
+function drawSky(time) {
+  if (!skyCache) buildSky();
+  ctx.drawImage(skyCache, 0, 0, skyCache.width, skyCache.height, 0, 0, W, skyCache.height * H / cv.height);
+  // sun and a few drifting clouds
+  const hz = view.horizon, sx = ((W * 0.78 - G.bg * 0.02) % W + W) % W, sy = hz * 0.28, r = Math.min(W, H) * 0.05;
+  ctx.fillStyle = 'rgba(255,240,190,0.35)'; ctx.beginPath(); ctx.arc(sx, sy, r * 1.8, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#fff6d8'; ctx.beginPath(); ctx.arc(sx, sy, r, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  for (let i = 0; i < 4; i++) {
+    const cx = ((i * 0.31 * W - G.bg * 0.05 + time * 6) % (W * 1.3) + W * 1.3) % (W * 1.3) - W * 0.15, cy = hz * (0.18 + 0.12 * (i % 2));
+    for (const [dx, dy, rr] of [[0, 0, 1], [0.9, 0.15, 0.75], [-0.85, 0.2, 0.7]]) { ctx.beginPath(); ctx.arc(cx + dx * 22, cy + dy * 14, rr * 16, 0, Math.PI * 2); ctx.fill(); }
+  }
+}
+const RANGES = [
+  { amp: 0.42, f1: 0.009, f2: 0.023, ph: 1.3, par: 0.25, col: '#7d9fcf', cap: '#eef5ff' },
+  { amp: 0.3, f1: 0.013, f2: 0.031, ph: 4.1, par: 0.5, col: '#5f83b8', cap: '#e2edfb' },
+  { amp: 0.16, f1: 0.02, f2: 0.05, ph: 2.2, par: 1, col: '#3f6a5a', cap: null },
+];
+function peak(L, x) { const X = x + G.bg * L.par + cam.x * L.par * 12; return Math.abs(Math.sin(X * L.f1 + L.ph)) * 0.75 + 0.25 * Math.sin(X * L.f2 + L.ph * 2); }
+function drawMountains() {
+  const hz = view.horizon;
+  RANGES.forEach((L) => {
+    const yOf = (x) => hz - hz * L.amp * (0.35 + 0.65 * peak(L, x));
+    ctx.beginPath(); ctx.moveTo(-10, hz + 2);
+    for (let x = -10; x <= W + 10; x += 5) ctx.lineTo(x, yOf(x));
+    ctx.lineTo(W + 10, hz + 2); ctx.closePath(); ctx.fillStyle = L.col; ctx.fill();
+    if (L.cap) { // snow caps above a snow line
+      ctx.save(); ctx.clip();
+      ctx.fillStyle = L.cap; ctx.fillRect(-10, 0, W + 20, hz - hz * L.amp * 0.72);
+      ctx.restore();
+    }
+  });
+}
+function drawGround() {
+  const hz = view.horizon;
+  ctx.fillStyle = '#dce9f7'; ctx.fillRect(-20, hz, W + 40, H - hz + 20);
+  // the groomed piste as strips, bending with the course; alternate bands give a sense of speed
+  const step = 1.6;
+  let z = Math.floor((Z_FAR + G.dist) / step) * step - G.dist;
+  for (; z > NEAR; z -= step) {
+    const za = Math.max(z, NEAR), zb = z + step;
+    const band = Math.floor((z + G.dist) / step) % 2 === 0;
+    quad(P(-PISTE, 0, za), P(PISTE, 0, za), P(PISTE, 0, zb), P(-PISTE, 0, zb), band ? '#f4f9ff' : '#e8f1fc');
+    quad(P(-PISTE - 0.6, 0, za), P(-PISTE, 0, za), P(-PISTE, 0, zb), P(-PISTE - 0.6, 0, zb), '#c4d8f0');
+    quad(P(PISTE, 0, za), P(PISTE + 0.6, 0, za), P(PISTE + 0.6, 0, zb), P(PISTE, 0, zb), '#c4d8f0');
+  }
+  // corduroy lines from the groomer
+  for (const x of [-3.6, -1.2, 1.2, 3.6]) {
+    ctx.strokeStyle = 'rgba(160,190,226,0.45)'; ctx.lineWidth = 1; ctx.beginPath();
+    for (let zz = NEAR + 0.1, i = 0; zz < Z_VIS; zz += 3, i++) { const p = P(x, 0, zz); if (i) ctx.lineTo(p[0], p[1]); else ctx.moveTo(p[0], p[1]); }
+    ctx.stroke();
+  }
+  const fh = (view.groundY - hz) * 0.25;
+  const fg = ctx.createLinearGradient(0, hz, 0, hz + fh);
+  fg.addColorStop(0, 'rgba(200,226,255,0.8)'); fg.addColorStop(1, 'rgba(200,226,255,0)');
+  ctx.fillStyle = fg; ctx.fillRect(-20, hz, W + 40, fh);
+}
+function drawObj(o, time) {
+  switch (o.kind) {
+    case 'pole': {
+      const x = o.side * (PISTE + 0.25);
+      box(x - 0.06, x + 0.06, 0, 1.4, o.z, o.z + 0.12, COL.pole);
+      break;
+    }
+    case 'pine': pine(o.x, o.z, o.h); break;
+    case 'tree': {
+      const x = laneX(o.lane);
+      pine(x, o.z + 0.4, 3.4, '#174a39');
+      break;
+    }
+    case 'log': {
+      const x = laneX(o.lane);
+      const f = box(x - 1.05, x + 1.05, 0, 0.55, o.z, o.z + o.len, COL.log);
+      if (f) { ctx.fillStyle = '#c99a6b'; for (const u of [0.12, 0.88]) { ctx.beginPath(); ctx.arc(f.x + f.w * u, f.y + f.h * 0.5, Math.max(1, f.h * 0.38), 0, Math.PI * 2); ctx.fill(); } }
+      if (f) { ctx.fillStyle = '#f6fbff'; ctx.fillRect(f.x + f.w * 0.1, f.y - f.h * 0.12, f.w * 0.8, f.h * 0.18); }
+      break;
+    }
+    case 'flake': {
+      const [cx, cy, s] = P(laneX(o.lane), o.y, o.z);
+      const r = 0.32 * s, spin = reduceMotion ? 0 : time * 3 + o.z * 0.2;
+      ctx.save(); ctx.translate(cx, cy); ctx.rotate(spin);
+      ctx.strokeStyle = '#ffc93c'; ctx.lineWidth = Math.max(1, r * 0.22); ctx.lineCap = 'round';
+      for (let i = 0; i < 3; i++) { ctx.rotate(Math.PI / 3); ctx.beginPath(); ctx.moveTo(-r, 0); ctx.lineTo(r, 0); ctx.stroke(); }
+      ctx.restore();
+      if (r > 9) canvasText('λ', cx, cy, r * 1.1, BODY, 700, '#13284a');
+      break;
+    }
+    case 'gate': {
+      const flagCol = (l) => o.picked === l ? (o.ok ? COL.pass : COL.fail) : (o.red ? COL.gateRed : COL.gateBlue);
+      for (let l = 0; l < 3; l++) {
+        const x = laneX(l), col = flagCol(l);
+        for (const px of [x - 0.95, x + 0.95]) {
+          box(px - 0.05, px + 0.05, 0, 2.3, o.z, o.z + 0.1, COL.pole);
+          box(px < x ? px + 0.05 : px - 0.65, px < x ? px + 0.65 : px - 0.05, 1.45, 2.2, o.z + 0.02, o.z + 0.06, col);
+        }
+        const [nx, ny, s] = P(x, 2.65, o.z);
+        if (o.z > 2 && s > 14) canvasText(String(l + 1), nx, ny, 0.5 * s, DISPLAY, 400, o.red ? '#e8413c' : '#2f6fe0');
+      }
+      break;
+    }
+    case 'kicker': {
+      const z0 = o.z, z1 = o.z + o.len, hw = PISTE - 0.2;
+      if (z1 <= NEAR) break;
+      const za = Math.max(z0, NEAR + 0.01), ha = o.h * (za - z0) / o.len;
+      quad(P(-hw, ha, za), P(hw, ha, za), P(hw, o.h, z1), P(-hw, o.h, z1), '#ffffff');
+      for (let i = 1; i < 4; i++) { const zz = z0 + o.len * i / 4; if (zz > za) quad(P(-hw, o.h * i / 4, zz), P(hw, o.h * i / 4, zz), P(hw, o.h * i / 4 + 0.04, zz + 0.05), P(-hw, o.h * i / 4 + 0.04, zz + 0.05), '#cfe0f4'); }
+      quad(P(-hw, o.h, z1), P(hw, o.h, z1), P(hw, o.h - 0.12, z1 + 0.02), P(-hw, o.h - 0.12, z1 + 0.02), '#ff8a2a');
+      const [bx, by, s] = P(0, o.h + 0.9, z1);
+      if (o.z > 3 && s > 12) canvasText('BIG AIR', bx, by, 0.55 * s, DISPLAY, 400, '#2f6fe0');
+      break;
+    }
+    case 'row': {
+      for (let l = 0; l < 3; l++) {
+        const t = o.tokens[l];
+        if (!t || o.picked === l) continue;
+        const x = laneX(l);
+        for (const px of [x - 0.95, x + 0.95]) box(px - 0.05, px + 0.05, 0, 1.9, o.z, o.z + 0.1, COL.pole);
+        const f = box(x - 0.95, x + 0.95, 1.1, 1.85, o.z, o.z + 0.06, COL.banner);
+        if (f) { ctx.strokeStyle = '#ffc93c'; ctx.lineWidth = Math.max(1, 0.08 * f.s); ctx.strokeRect(f.x, f.y, f.w, f.h); canvasText(String(l + 1), f.x + f.w / 2, f.y + f.h / 2, f.h * 0.7, DISPLAY, 400, '#13284a'); }
+      }
+      break;
+    }
+    case 'esflag': {
+      for (const sd of [-1, 1]) box(sd * (PISTE - 0.3) - 0.06, sd * (PISTE - 0.3) + 0.06, 0, 3.0, o.z, o.z + 0.1, COL.pole);
+      const f = box(-PISTE + 0.3, PISTE - 0.3, 2.3, 3.0, o.z, o.z + 0.06, COL.sign);
+      if (f && o.label) canvasText(o.label, f.x + f.w / 2, f.y + f.h / 2, f.h * 0.62, DISPLAY, 400, '#ffc93c');
+      break;
+    }
+  }
+}
+function drawPlayer(time) {
+  const [sx, sy, s] = P(player.x, player.y, 0);
+  const [gx, gy] = P(player.x, groundAt(), 0);
+  ctx.save();
+  ctx.globalAlpha = 0.3 * (1 - Math.min(0.7, (player.y - groundAt()) / 3));
+  ctx.fillStyle = '#5c7aa3'; ctx.beginPath(); ctx.ellipse(gx, gy, 0.8 * s, 0.18 * s, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+  ctx.save();
+  if (G.invuln > 0 && Math.floor(time * 12) % 2 === 0) ctx.globalAlpha = 0.45;
+  const moving = G.state === 'run' || G.state === 'menu';
+  const bob = !player.air && moving && !reduceMotion ? Math.sin(time * 10) * 0.025 * s : 0;
+  ctx.translate(sx, sy - 0.1 * s + bob);
+  ctx.rotate(player.tumble ? player.tumble : player.lean * 0.9);
+  const spin = Math.cos(player.spin), u = s;
+  ctx.scale(player.spin ? (Math.abs(spin) < 0.25 ? 0.25 * Math.sign(spin || 1) : spin) : 1, 1);
+  // board, seen from behind, slightly angled across the fall line
+  ctx.fillStyle = '#ff8a2a'; rrect(-0.85 * u, -0.14 * u, 1.7 * u, 0.16 * u, 0.08 * u); ctx.fill();
+  ctx.fillStyle = '#13284a'; ctx.fillRect(-0.62 * u, -0.1 * u, 1.24 * u, 0.04 * u);
+  // legs, bent
+  ctx.strokeStyle = '#1e3a66'; ctx.lineWidth = 0.18 * u; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  for (const sg of [-1, 1]) { ctx.beginPath(); ctx.moveTo(sg * 0.32 * u, -0.16 * u); ctx.lineTo(sg * 0.36 * u, -0.55 * u); ctx.lineTo(sg * 0.16 * u, -0.92 * u); ctx.stroke(); }
+  // arms out for balance
+  const swing = moving && !reduceMotion ? Math.sin(time * 7) * 0.04 * u : 0;
+  ctx.strokeStyle = '#c92f2a'; ctx.lineWidth = 0.15 * u;
+  for (const sg of [-1, 1]) { ctx.beginPath(); ctx.moveTo(sg * 0.26 * u, -1.38 * u); ctx.lineTo(sg * 0.72 * u, -1.08 * u + sg * swing); ctx.stroke(); }
+  // jacket with a back number, helmet and goggles strap
+  ctx.fillStyle = '#e8413c'; rrect(-0.34 * u, -1.55 * u, 0.68 * u, 0.7 * u, 0.16 * u); ctx.fill();
+  ctx.fillStyle = '#f6fbff'; rrect(-0.2 * u, -1.45 * u, 0.4 * u, 0.36 * u, 0.06 * u); ctx.fill();
+  if (u > 34) canvasText('λ', 0, -1.27 * u, 0.3 * u, BODY, 700, '#2f6fe0');
+  ctx.fillStyle = '#2f6fe0'; ctx.beginPath(); ctx.arc(0, -1.78 * u, 0.24 * u, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#ffc93c'; ctx.fillRect(-0.24 * u, -1.8 * u, 0.48 * u, 0.07 * u);
+  ctx.restore();
+}
+
+// ---------- input ----------
+addEventListener('keydown', (e) => {
+  const k = e.key;
+  if (G.state === 'question') {
+    if ((Q.mode === 'gate' || Q.mode === 'air') && !Q.answered) {
+      if (k === '1' || k === '2' || k === '3') { e.preventDefault(); answerQ(Number(k) - 1); }
+      else if (k === 'Enter' || k === ' ') { e.preventDefault(); const i = qOptEls.indexOf(document.activeElement); if (i >= 0) answerQ(i); }
+    } else if (k === 'Enter' || k === ' ') { e.preventDefault(); continueQ(); }
+    return;
+  }
+  if (G.state === 'card') { if (k === ' ' || k === 'Enter') { e.preventDefault(); continueFromCard(); } return; }
+  if (G.state === 'paused') { if (k === 'p' || k === 'P' || k === 'Escape') { e.preventDefault(); resume(); } return; }
+  if (G.state !== 'run') return;
+  if (G.mode === 'es') {
+    if (k === ' ' || k === 'Enter' || k === 'ArrowDown' || k === 's' || k === 'S') { e.preventDefault(); stopES(false); }
+    else if (k === 'p' || k === 'P' || k === 'Escape') { e.preventDefault(); pause(); }
+    return;
+  }
+  if (k === 'ArrowLeft' || k === 'a' || k === 'A') { e.preventDefault(); move(-1); }
+  else if (k === 'ArrowRight' || k === 'd' || k === 'D') { e.preventDefault(); move(1); }
+  else if (k === 'ArrowUp' || k === 'w' || k === 'W' || k === ' ') { e.preventDefault(); jump(); }
+  else if (k === 'p' || k === 'P' || k === 'Escape') { e.preventDefault(); pause(); }
+});
+let ptr = null;
+cv.addEventListener('pointerdown', (e) => { ptr = { x: e.clientX, y: e.clientY, fired: false }; try { cv.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ } });
+cv.addEventListener('pointermove', (e) => {
+  if (!ptr || ptr.fired) return;
+  const dx = e.clientX - ptr.x, dy = e.clientY - ptr.y;
+  if (Math.hypot(dx, dy) < 26) return;
+  ptr.fired = true;
+  if (Math.abs(dx) > Math.abs(dy)) move(dx > 0 ? 1 : -1); else if (dy < 0) jump();
+});
+cv.addEventListener('pointerup', (e) => {
+  if (!ptr) return;
+  const fired = ptr.fired; ptr = null;
+  if (fired || G.state !== 'run' || G.mode !== 'run') return;
+  const rx = (e.clientX - cv.getBoundingClientRect().left) / W;
+  if (rx < 0.33) move(-1); else if (rx > 0.67) move(1); else jump();
+});
+cv.addEventListener('pointercancel', () => { ptr = null; });
+qOptEls.forEach((b, i) => b.addEventListener('click', () => answerQ(i)));
+$('qGo').addEventListener('click', continueQ);
+$('fbBtn').addEventListener('click', continueFromCard);
+$('cardOv').addEventListener('click', (e) => { if (e.target === e.currentTarget) continueFromCard(); });
+$('pauseBtn').addEventListener('click', pause);
+$('resumeBtn').addEventListener('click', resume);
+$('quitBtn').addEventListener('click', endFromPause);
+$('againBtn').addEventListener('click', startRun);
+$('copyBtn').addEventListener('click', () => copyText(lastResult, $('copyBtn'), $('copyText'), $('copyNote'), 'Now paste it into the leaderboard thread on Canvas.'));
+$('menuBtn').addEventListener('click', toMenu);
+$('startBtn').addEventListener('click', startRun);
+$('esBtn').addEventListener('click', startES);
+$('stopBtn').addEventListener('click', () => stopES(false));
+$('esAgainBtn').addEventListener('click', startES);
+$('esMenuBtn').addEventListener('click', toMenu);
+$('esCopyBtn').addEventListener('click', () => copyText(esLastResult, $('esCopyBtn'), $('esCopyText'), null, ''));
+$('soundBtn').addEventListener('click', () => { toggleSound(); if (document.activeElement) document.activeElement.blur(); });
+$('menuSoundBtn').addEventListener('click', toggleSound);
+document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
+addEventListener('resize', resize);
+
+// ---------- menu ----------
+function renderMenu() {
+  const wrap = $('topicChips'); wrap.replaceChildren();
+  for (const [n, name] of TOPICS) {
+    const count = BANK.gates.filter((g) => g.topic === n).length + BANK.sequences.filter((s) => s.topic === n).length;
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'topic'; b.id = 'topic-' + n;
+    b.setAttribute('aria-pressed', String(selectedTopics.has(n)));
+    const t = document.createElement('b'); t.textContent = `Run ${n} · ${name}`;
+    const sm = document.createElement('small'); sm.textContent = `${count} ${count === 1 ? 'item' : 'items'}`;
+    b.append(t, sm);
+    b.addEventListener('click', () => {
+      if (selectedTopics.has(n)) selectedTopics.delete(n); else selectedTopics.add(n);
+      store.set('topics', [...selectedTopics]); renderMenu(); $('topic-' + n).focus({ preventScroll: true });
+    });
+    wrap.append(b);
+  }
+  const ok = selectedTopics.size > 0;
+  const sb = $('startBtn'); sb.disabled = !ok; sb.textContent = ok ? 'Drop in' : 'Pick at least one run';
+  const bits = [];
+  if (best) bits.push(`Best run on this device: ${fmt(best)} points`);
+  if (esBest) bits.push(`Early Stopping best: ${fmt(esBest)} of 1,000`);
+  const bl = $('bestLine'); bl.hidden = !bits.length; bl.textContent = bits.join(' · ');
+}
+
+// ---------- hazard label ----------
+const hazTag = $('hazTag');
+function updateHazTag() {
+  let near = null;
+  if (G.state === 'run' && G.mode === 'run') {
+    const lane = nearestLane();
+    for (const o of G.objs) if ((o.kind === 'tree' || o.kind === 'log') && o.haz && o.lane === lane && o.z > 1.5 && o.z < 45 && (!near || o.z < near.z)) near = o;
+  }
+  if (!near) { if (!hazTag.hidden) hazTag.hidden = true; return; }
+  if (hazTag.dataset.name !== near.haz.name) { hazTag.dataset.name = near.haz.name; $('hazName').textContent = near.haz.name; }
+  const [x, y] = P(laneX(near.lane), near.kind === 'tree' ? 3.6 : 0.6, near.z);
+  const half = hazTag.offsetWidth / 2 + 8;
+  const tx = Math.round(clamp(x, half, W - half)), ty = Math.round(Math.max(64, y - 10));
+  hazTag.style.transform = `translate(${tx}px, ${ty}px) translate(-50%, -100%)`;
+  hazTag.hidden = false;
+}
+
+// ---------- main loop ----------
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, Math.max(0, (now - last) / 1000)); last = now;
+  update(dt); render(now / 1000); updateHazTag(); syncMusic();
+  requestAnimationFrame(frame);
+}
+function boot(data) {
+  if (data && Array.isArray(data.topics)) selectedTopics = new Set(data.topics);
+  resize(); renderSound(); renderMenu();
+  if (document.fonts && document.fonts.load) { document.fonts.load(`700 16px ${BODY}`).catch(() => {}); document.fonts.load(`400 16px ${DISPLAY}`).catch(() => {}); }
+  requestAnimationFrame((t) => { last = t; frame(t); });
+}
+window.claude?.hot?.snapshot?.(() => ({ topics: [...selectedTopics] }));
+window.claude?.hot?.ready ? window.claude.hot.ready(boot) : boot(window.claude?.hot?.data ?? {});
+})();
+</script>
+</body>
+</html>
